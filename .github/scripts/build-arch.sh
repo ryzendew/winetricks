@@ -72,9 +72,16 @@ docker run --rm \
             su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch' || true
         }
         
-        # Find and copy any created packages
-        find /home/builder/build -name '*.pkg.tar.zst' -type f -exec cp {} /build/ \; 2>/dev/null || true
+        # Find and copy any created packages - search thoroughly
+        echo 'Searching for package files created by makepkg...'
+        find /home/builder/build -type f -name '*.pkg.tar.zst' 2>/dev/null | while read -r pkg; do
+            echo "Found package: $pkg"
+            cp "$pkg" /build/ 2>/dev/null && echo "Copied to /build: $(basename "$pkg")" || echo "Failed to copy: $pkg"
+        done
+        # Also search for any other package extensions
+        find /home/builder/build -type f \( -name '*.pkg.tar.*' -o -name '*winetricks*.tar*' \) 2>/dev/null | head -5
         echo 'Package search complete'
+        echo 'Packages in /build:'
         ls -lh /build/*.pkg.tar.* 2>/dev/null || echo 'No packages found in /build'
     " || {
     echo "Docker build failed, trying with podman..."
@@ -118,38 +125,82 @@ docker run --rm \
                 su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch' || true
             }
             
-            # Find and copy any created packages
-            find /home/builder/build -name '*.pkg.tar.zst' -type f -exec cp {} /build/ \; 2>/dev/null || true
+            # Find and copy any created packages - search thoroughly
+            echo 'Searching for package files created by makepkg...'
+            find /home/builder/build -type f -name '*.pkg.tar.zst' 2>/dev/null | while read -r pkg; do
+                echo "Found package: $pkg"
+                cp "$pkg" /build/ 2>/dev/null && echo "Copied to /build: $(basename "$pkg")" || echo "Failed to copy: $pkg"
+            done
+            # Also search for any other package extensions
+            find /home/builder/build -type f \( -name '*.pkg.tar.*' -o -name '*winetricks*.tar*' \) 2>/dev/null | head -5
             echo 'Package search complete'
+            echo 'Packages in /build:'
             ls -lh /build/*.pkg.tar.* 2>/dev/null || echo 'No packages found in /build'
         "
 }
 
-# Find and copy the package - check both current directory and any subdirectories
-# Look for either the original name or any .pkg.tar.zst file
-PKG=$(find . -name "*.pkg.tar.zst" -type f 2>/dev/null | head -1)
+# Find and copy the package - search thoroughly instead of guessing
+echo "Searching for Arch package files..."
+echo "Looking in current directory and all subdirectories..."
+
+# Search for any .pkg.tar.zst files recursively
+PKG=$(find . -type f -name "*.pkg.tar.zst" 2>/dev/null | grep -v ".git" | head -1)
+
+# If not found, search for any .pkg.tar.* files
+if [ -z "$PKG" ] || [ ! -f "$PKG" ]; then
+    echo "No .pkg.tar.zst found, searching for any .pkg.tar.* files..."
+    PKG=$(find . -type f -name "*.pkg.tar.*" 2>/dev/null | grep -v ".git" | head -1)
+fi
+
+# Also check if Docker copied it to a specific location
+if [ -z "$PKG" ] || [ ! -f "$PKG" ]; then
+    echo "Checking common Docker output locations..."
+    for dir in . ./target ./target/release ./release build; do
+        if [ -f "$dir"/*.pkg.tar.zst ] 2>/dev/null; then
+            PKG=$(ls "$dir"/*.pkg.tar.zst 2>/dev/null | head -1)
+            break
+        fi
+    done
+fi
+
 if [ -n "$PKG" ] && [ -f "$PKG" ]; then
-    echo "Package found: $PKG"
-    # Copy to root directory for upload
-    cp "$PKG" . 2>/dev/null || true
+    echo "✅ Package found: $PKG"
+    echo "   Full path: $(realpath "$PKG" 2>/dev/null || echo "$(pwd)/$PKG")"
+    echo "   Size: $(ls -lh "$PKG" | awk '{print $5}')"
+    
+    # Copy to root directory for upload (if not already there)
+    PKG_DIR=$(dirname "$PKG")
+    if [ "$PKG_DIR" != "." ]; then
+        echo "   Copying from $PKG_DIR to root directory..."
+        cp "$PKG" . 2>/dev/null || true
+        FINAL_PKG=$(basename "$PKG")
+    else
+        FINAL_PKG="$PKG"
+    fi
+    
     # Verify it exists in current directory
-    FINAL_PKG=$(basename "$PKG")
     if [ -f "$FINAL_PKG" ]; then
         # Rename to Winetricks.rs-<version>
         NEW_NAME="Winetricks.rs-${VERSION}.pkg.tar.zst"
-        mv "$FINAL_PKG" "$NEW_NAME" || echo "Failed to rename $FINAL_PKG"
-        echo "Package ready for upload: $NEW_NAME"
+        if [ "$FINAL_PKG" != "$NEW_NAME" ]; then
+            mv "$FINAL_PKG" "$NEW_NAME" || echo "Failed to rename $FINAL_PKG"
+        fi
+        echo "✅ Package ready for upload: $NEW_NAME"
         ls -lh "$NEW_NAME"
     else
         echo "Warning: Could not copy package to root directory"
         ls -lh "$PKG"
     fi
 else
-    echo "Error: Package file not found"
-    echo "Searching for any .pkg.tar files..."
-    find . -name "*.pkg.tar.*" -type f 2>/dev/null | head -10
+    echo "❌ Error: Package file not found"
     echo ""
-    echo "Listing current directory contents:"
-    ls -la
+    echo "Searching for any .pkg.tar files recursively..."
+    find . -type f -name "*.pkg.tar.*" 2>/dev/null | grep -v ".git" | head -10
+    echo ""
+    echo "Listing current directory tree (limited to 3 levels)..."
+    find . -maxdepth 3 -type d 2>/dev/null | head -20
+    echo ""
+    echo "Checking if makepkg created files with different extensions..."
+    find . -type f \( -name "*.pkg.*" -o -name "*winetricks*.tar*" -o -name "*winetricks*.zst" \) 2>/dev/null | grep -v ".git" | head -10
 fi
 
