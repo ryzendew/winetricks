@@ -10,14 +10,14 @@ pub mod cosmic_impl {
     };
     use cosmic::iced::{Alignment, Element, Length, Renderer};
     use cosmic::{ApplicationExt, Element as CosmicElement};
-    
+
     // Helper macros since cosmic wraps iced
     macro_rules! column {
         ($($item:expr),* $(,)?) => {
             column(vec![$($item.into()),*])
         };
     }
-    
+
     macro_rules! row {
         ($($item:expr),* $(,)?) => {
             row(vec![$($item.into()),*])
@@ -105,16 +105,12 @@ pub mod cosmic_impl {
             &mut self.core
         }
 
-        fn init(
-            core: Core,
-            _flags: Self::Flags,
-        ) -> (Self, Command<Self::Message>) {
+        fn init(core: Core, _flags: Self::Flags) -> (Self, Command<Self::Message>) {
             let config = Config::new().unwrap_or_else(|_| Config::default());
             let metadata_dir = config.metadata_dir();
 
             let registry = if metadata_dir.exists() {
-                VerbRegistry::load_from_dir(metadata_dir)
-                    .unwrap_or_else(|_| VerbRegistry::new())
+                VerbRegistry::load_from_dir(metadata_dir).unwrap_or_else(|_| VerbRegistry::new())
             } else {
                 VerbRegistry::new()
             };
@@ -201,16 +197,16 @@ pub mod cosmic_impl {
                         .output()
                     {
                         if output.status.success() {
-                            let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                            let selected =
+                                String::from_utf8_lossy(&output.stdout).trim().to_string();
                             if !selected.is_empty() {
                                 self.wineprefix_input = selected.clone();
-                                let new_path = if let Ok(path) =
-                                    PathBuf::from(&selected).canonicalize()
-                                {
-                                    path
-                                } else {
-                                    PathBuf::from(&selected)
-                                };
+                                let new_path =
+                                    if let Ok(path) = PathBuf::from(&selected).canonicalize() {
+                                        path
+                                    } else {
+                                        PathBuf::from(&selected)
+                                    };
                                 self.config.wineprefix = Some(new_path);
                                 self.installed_verbs = load_installed_verbs(&self.config);
                                 return Command::none();
@@ -227,16 +223,16 @@ pub mod cosmic_impl {
                         .output()
                     {
                         if output.status.success() {
-                            let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                            let selected =
+                                String::from_utf8_lossy(&output.stdout).trim().to_string();
                             if !selected.is_empty() && !selected.starts_with("Error:") {
                                 self.wineprefix_input = selected.clone();
-                                let new_path = if let Ok(path) =
-                                    PathBuf::from(&selected).canonicalize()
-                                {
-                                    path
-                                } else {
-                                    PathBuf::from(&selected)
-                                };
+                                let new_path =
+                                    if let Ok(path) = PathBuf::from(&selected).canonicalize() {
+                                        path
+                                    } else {
+                                        PathBuf::from(&selected)
+                                    };
                                 self.config.wineprefix = Some(new_path);
                                 self.installed_verbs = load_installed_verbs(&self.config);
                                 return Command::none();
@@ -253,16 +249,16 @@ pub mod cosmic_impl {
                         .output()
                     {
                         if output.status.success() {
-                            let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                            let selected =
+                                String::from_utf8_lossy(&output.stdout).trim().to_string();
                             if !selected.is_empty() {
                                 self.wineprefix_input = selected.clone();
-                                let new_path = if let Ok(path) =
-                                    PathBuf::from(&selected).canonicalize()
-                                {
-                                    path
-                                } else {
-                                    PathBuf::from(&selected)
-                                };
+                                let new_path =
+                                    if let Ok(path) = PathBuf::from(&selected).canonicalize() {
+                                        path
+                                    } else {
+                                        PathBuf::from(&selected)
+                                    };
                                 self.config.wineprefix = Some(new_path);
                                 self.installed_verbs = load_installed_verbs(&self.config);
                                 return Command::none();
@@ -276,7 +272,11 @@ pub mod cosmic_impl {
                     );
                     let file_managers = ["xdg-open", "open", "cygstart"];
                     for fm in &file_managers {
-                        if std::process::Command::new(fm).arg(&start_dir).spawn().is_ok() {
+                        if std::process::Command::new(fm)
+                            .arg(&start_dir)
+                            .spawn()
+                            .is_ok()
+                        {
                             break;
                         }
                     }
@@ -319,7 +319,7 @@ pub mod cosmic_impl {
                 row(vec![self.sidebar().into(), self.content().into()])
                     .spacing(0)
                     .width(Length::Fill)
-                    .height(Length::Fill)
+                    .height(Length::Fill),
             )
             .width(Length::Fill)
             .height(Length::Fill)
@@ -343,17 +343,17 @@ pub mod cosmic_impl {
                     self.sidebar_button(
                         "Installed",
                         is_installed,
-                        Message::ViewChanged(View::Installed)
+                        Message::ViewChanged(View::Installed),
                     ),
                     self.sidebar_button(
                         "Preferences",
                         is_prefs,
-                        Message::ViewChanged(View::Preferences)
+                        Message::ViewChanged(View::Preferences),
                     ),
                     self.sidebar_button(
                         "Wine Tools",
                         is_tools,
-                        Message::ViewChanged(View::WineTools)
+                        Message::ViewChanged(View::WineTools),
                     ),
                 ])
                 .spacing(4),
@@ -363,7 +363,12 @@ pub mod cosmic_impl {
             .into()
         }
 
-        fn sidebar_button<'a>(&self, label: &str, _active: bool, msg: Message) -> Element<'a, Message> {
+        fn sidebar_button<'a>(
+            &self,
+            label: &str,
+            _active: bool,
+            msg: Message,
+        ) -> Element<'a, Message> {
             button(text(label).size(14))
                 .width(Length::Fill)
                 .padding([12, 16])
@@ -402,7 +407,8 @@ pub mod cosmic_impl {
             let settings_btn =
                 self.category_button("Settings", settings_active, Some(VerbCategory::Settings));
 
-            let category_row = row(vec![all_btn, apps_btn, dlls_btn, fonts_btn, settings_btn]).spacing(8);
+            let category_row =
+                row(vec![all_btn, apps_btn, dlls_btn, fonts_btn, settings_btn]).spacing(8);
 
             let verbs: Vec<_> = if let Some(category) = self.selected_category {
                 self.registry
@@ -452,15 +458,15 @@ pub mod cosmic_impl {
                             column(vec![
                                 text(&verb.title).size(16),
                                 text(verb.publisher.as_deref().unwrap_or("")).size(12),
-                            ]
+                            ])
                             .spacing(4)
                             .width(Length::Fill),
                             self.action_button(
                                 if is_installed { "Uninstall" } else { "Install" },
                                 !is_installed,
-                                action_msg
-                            )
-                        ]
+                                action_msg,
+                            ),
+                        ])
                         .spacing(16)
                         .align_items(Alignment::Center)
                         .padding(16),
@@ -476,7 +482,7 @@ pub mod cosmic_impl {
                     search_bar.width(Length::Fill),
                     category_row,
                     column(verb_list).spacing(8),
-                ]
+                ])
                 .spacing(20)
                 .width(Length::Fill),
             )
@@ -496,7 +502,12 @@ pub mod cosmic_impl {
                 .into()
         }
 
-        fn action_button<'a>(&self, label: &str, _primary: bool, msg: Message) -> Element<'a, Message> {
+        fn action_button<'a>(
+            &self,
+            label: &str,
+            _primary: bool,
+            msg: Message,
+        ) -> Element<'a, Message> {
             button(text(label).size(13))
                 .padding([10, 20])
                 .on_press(msg)
@@ -514,9 +525,9 @@ pub mod cosmic_impl {
                             self.action_button(
                                 "Uninstall",
                                 false,
-                                Message::UninstallVerb(verb_name.clone())
-                            )
-                        ]
+                                Message::UninstallVerb(verb_name.clone()),
+                            ),
+                        ])
                         .spacing(16)
                         .align_items(Alignment::Center)
                         .padding(16),
@@ -530,7 +541,7 @@ pub mod cosmic_impl {
                     text("Installed Verbs").size(32),
                     text("View and manage installed verbs in your wineprefix").size(14),
                     column(installed_list).spacing(8),
-                ]
+                ])
                 .spacing(20),
             )
             .into()
@@ -555,11 +566,11 @@ pub mod cosmic_impl {
                                         .width(Length::Fill),
                                     button(text("Browse").size(13))
                                         .padding([10, 16])
-                                        .on_press(Message::BrowseWineprefix)
-                                ]
+                                        .on_press(Message::BrowseWineprefix),
+                                ])
                                 .spacing(8)
                                 .width(Length::Fill)
-                                .into()
+                                .into(),
                             ),
                             self.setting_row(
                                 "Architecture",
@@ -567,14 +578,14 @@ pub mod cosmic_impl {
                                 pick_list(
                                     WineArch::all(),
                                     self.winearch_selection,
-                                    Message::WinearchChanged
+                                    Message::WinearchChanged,
                                 )
                                 .padding(10)
                                 .width(Length::Fill)
-                                .into()
+                                .into(),
                             ),
-                        ]
-                        .into()
+                        ])
+                        .into(),
                     ),
                     self.settings_section(
                         "Installation Options",
@@ -584,28 +595,28 @@ pub mod cosmic_impl {
                                 "Force Reinstall",
                                 "Don't check if packages are already installed (-f, --force)",
                                 self.config.force,
-                                Message::ForceToggled
+                                Message::ForceToggled,
                             ),
                             self.checkbox_row(
                                 "Unattended Mode",
                                 "Don't ask questions, install automatically (-q, --unattended)",
                                 self.config.unattended,
-                                Message::UnattendedToggled
+                                Message::UnattendedToggled,
                             ),
                             self.checkbox_row(
                                 "Isolate Prefixes",
                                 "Install each app in its own WINEPREFIX (--isolate)",
                                 self.config.isolate,
-                                Message::IsolateToggled
+                                Message::IsolateToggled,
                             ),
                             self.checkbox_row(
                                 "Keep Temp Directories",
                                 "Don't delete temp directories (--no-clean, useful for debugging)",
                                 self.config.no_clean,
-                                Message::NoCleanToggled
+                                Message::NoCleanToggled,
                             ),
-                        ]
-                        .into()
+                        ])
+                        .into(),
                     ),
                     self.settings_section(
                         "Network Options",
@@ -615,7 +626,7 @@ pub mod cosmic_impl {
                                 "Use Torify",
                                 "Run downloads under torify, if available (-t, --torify)",
                                 self.config.torify,
-                                Message::TorifyToggled
+                                Message::TorifyToggled,
                             ),
                             self.setting_row(
                                 "Country Code",
@@ -624,10 +635,10 @@ pub mod cosmic_impl {
                                     .on_input(Message::CountryChanged)
                                     .padding(10)
                                     .width(Length::Fixed(100.0))
-                                    .into()
+                                    .into(),
                             ),
-                        ]
-                        .into()
+                        ])
+                        .into(),
                     ),
                     self.settings_section(
                         "Verbosity",
@@ -637,31 +648,37 @@ pub mod cosmic_impl {
                                 "Verbose",
                                 "Echo all commands as they are executed (-v, --verbose)",
                                 self.config.verbosity >= 1,
-                                |v| Message::VerbosityChanged(if v { 1 } else { 0 })
+                                |v| Message::VerbosityChanged(if v { 1 } else { 0 }),
                             ),
                             self.checkbox_row(
                                 "Really Verbose",
                                 "Really verbose mode (-vv, --really-verbose)",
                                 self.config.verbosity >= 2,
-                                |v| Message::VerbosityChanged(if v { 2 } else { 0 })
+                                |v| Message::VerbosityChanged(if v { 2 } else { 0 }),
                             ),
-                        ]
-                        .into()
+                        ])
+                        .into(),
                     ),
                     self.settings_section(
                         "Information",
                         "Paths and directories used by Winetricks",
                         column(vec![
-                            self.info_row("Cache Directory", &self.config.cache_dir.to_string_lossy()),
-                            self.info_row("Data Directory", &self.config.data_dir.to_string_lossy()),
+                            self.info_row(
+                                "Cache Directory",
+                                &self.config.cache_dir.to_string_lossy(),
+                            ),
+                            self.info_row(
+                                "Data Directory",
+                                &self.config.data_dir.to_string_lossy(),
+                            ),
                             self.info_row(
                                 "Prefixes Root",
-                                &self.config.prefixes_root.to_string_lossy()
+                                &self.config.prefixes_root.to_string_lossy(),
                             ),
-                        ]
-                        .into()
+                        ])
+                        .into(),
                     ),
-                ]
+                ])
                 .spacing(20)
                 .width(Length::Fill),
             )
@@ -678,8 +695,8 @@ pub mod cosmic_impl {
                 column(vec![
                     text(title).size(20),
                     text(description).size(13),
-                    container(content).padding(16)
-                ]
+                    container(content).padding(16),
+                ])
                 .spacing(12)
                 .padding(20),
             )
@@ -693,11 +710,11 @@ pub mod cosmic_impl {
             control: Element<'a, Message>,
         ) -> Element<'a, Message> {
             row(vec![
-                column(vec![text(title).size(15), text(description).size(12)]
+                column(vec![text(title).size(15), text(description).size(12)])
                     .spacing(4)
                     .width(Length::Fill),
-                container(control).width(Length::Fixed(300.0))
-            ]
+                container(control).width(Length::Fixed(300.0)),
+            ])
             .spacing(16)
             .align_items(Alignment::Center)
             .padding([12, 0])
@@ -712,11 +729,11 @@ pub mod cosmic_impl {
             msg_fn: fn(bool) -> Message,
         ) -> Element<'_, Message> {
             row(vec![
-                column(vec![text(title).size(15), text(description).size(12)]
+                column(vec![text(title).size(15), text(description).size(12)])
                     .spacing(4)
                     .width(Length::Fill),
-                checkbox("", checked).text_size(14).on_toggle(msg_fn)
-            ]
+                checkbox("", checked).text_size(14).on_toggle(msg_fn),
+            ])
             .spacing(16)
             .align_items(Alignment::Center)
             .padding([12, 0])
@@ -727,7 +744,7 @@ pub mod cosmic_impl {
             row(vec![
                 text(title).size(14).width(Length::Fill),
                 text(value).size(13),
-            ]
+            ])
             .spacing(16)
             .padding([8, 0])
             .into()
@@ -738,30 +755,64 @@ pub mod cosmic_impl {
                 column(vec![
                     text("Wine Tools").size(32),
                     text("Quick access to Wine utilities").size(14),
-                    self.tool_card("Wine Configuration", "Configure Wine settings, libraries, and applications", "winecfg"),
-                    self.tool_card("Registry Editor", "Edit Windows registry entries", "regedit"),
-                    self.tool_card("Task Manager", "View running processes and applications", "taskmgr"),
-                    self.tool_card("File Explorer", "Browse Wine filesystem in Windows explorer", "explorer"),
+                    self.tool_card(
+                        "Wine Configuration",
+                        "Configure Wine settings, libraries, and applications",
+                        "winecfg",
+                    ),
+                    self.tool_card(
+                        "Registry Editor",
+                        "Edit Windows registry entries",
+                        "regedit",
+                    ),
+                    self.tool_card(
+                        "Task Manager",
+                        "View running processes and applications",
+                        "taskmgr",
+                    ),
+                    self.tool_card(
+                        "File Explorer",
+                        "Browse Wine filesystem in Windows explorer",
+                        "explorer",
+                    ),
                     self.tool_card("Uninstaller", "Manage installed programs", "uninstaller"),
-                    self.tool_card("Wine Shell", "Open interactive shell with Wine environment", "shell"),
-                    self.tool_card("Command Prompt", "Open Windows command prompt (cmd.exe)", "winecmd"),
-                    self.tool_card("Open Prefix Folder", "Open WINEPREFIX directory in file manager", "folder"),
-                    self.tool_card("Winetricks Wiki", "Open Winetricks documentation in browser", "help"),
-                ]
+                    self.tool_card(
+                        "Wine Shell",
+                        "Open interactive shell with Wine environment",
+                        "shell",
+                    ),
+                    self.tool_card(
+                        "Command Prompt",
+                        "Open Windows command prompt (cmd.exe)",
+                        "winecmd",
+                    ),
+                    self.tool_card(
+                        "Open Prefix Folder",
+                        "Open WINEPREFIX directory in file manager",
+                        "folder",
+                    ),
+                    self.tool_card(
+                        "Winetricks Wiki",
+                        "Open Winetricks documentation in browser",
+                        "help",
+                    ),
+                ])
                 .spacing(12),
             )
             .into()
         }
 
-        fn tool_card<'a>(&self, title: &str, description: &str, tool: &str) -> Element<'a, Message> {
+        fn tool_card<'a>(
+            &self,
+            title: &str,
+            description: &str,
+            tool: &str,
+        ) -> Element<'a, Message> {
             container(
                 button(
-                    column(vec![
-                        text(title).size(16),
-                        text(description).size(13),
-                    ]
-                    .spacing(4)
-                    .align_items(Alignment::Start),
+                    column(vec![text(title).size(16), text(description).size(13)])
+                        .spacing(4)
+                        .align_items(Alignment::Start),
                 )
                 .width(Length::Fill)
                 .padding(20)
@@ -772,8 +823,8 @@ pub mod cosmic_impl {
     }
 
     fn run_wine_tool(config: &Config, tool: &str) {
-        use winetricks_lib::Wine;
         use which::which;
+        use winetricks_lib::Wine;
 
         let wine = match Wine::detect() {
             Ok(w) => w,
@@ -823,13 +874,19 @@ pub mod cosmic_impl {
                 let wine_path = wine.wine_bin.to_string_lossy().to_string();
                 let prefix_path = wineprefix.to_string_lossy().to_string();
 
-                let terminals = ["gnome-terminal", "konsole", "xterm", "mate-terminal", "terminator"];
+                let terminals = [
+                    "gnome-terminal",
+                    "konsole",
+                    "xterm",
+                    "mate-terminal",
+                    "terminator",
+                ];
                 let term = terminals.iter().find(|t| which(*t).is_ok());
 
                 if let Some(term) = term {
                     let term_args = match *term {
-                        "gnome-terminal" => vec!["--".to_string(), shell.clone()]),
-                        _ => vec!["-e".to_string(), shell.clone()]),
+                        "gnome-terminal" => vec!["--".to_string(), shell.clone()],
+                        _ => vec!["-e".to_string(), shell.clone()],
                     };
                     let _ = std::process::Command::new(*term)
                         .args(term_args)
@@ -853,11 +910,18 @@ pub mod cosmic_impl {
             "folder" => {
                 let file_managers = ["xdg-open", "open", "cygstart"];
                 for fm in &file_managers {
-                    if std::process::Command::new(fm).arg(&wineprefix).spawn().is_ok() {
+                    if std::process::Command::new(fm)
+                        .arg(&wineprefix)
+                        .spawn()
+                        .is_ok()
+                    {
                         return;
                     }
                 }
-                eprintln!("Could not open file manager. Please open: {}", wineprefix.display());
+                eprintln!(
+                    "Could not open file manager. Please open: {}",
+                    wineprefix.display()
+                );
             }
             "help" => {
                 let url = "https://github.com/Winetricks/winetricks/wiki";

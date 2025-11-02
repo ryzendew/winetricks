@@ -40,9 +40,31 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
+          sudo apt-get install -y libssl-dev pkg-config ccache
+          
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
+          
       - name: Run tests
-        run: cargo test --all
+        run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          cargo test --all
+        env:
+          CCACHE_DIR: ~/.ccache
 
   build:
     name: Build All
@@ -53,11 +75,37 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
+          sudo apt-get install -y libssl-dev pkg-config ccache
+          
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
+          
       - name: Build all binaries
         run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
           cargo build --release --all
           cargo build --release --bin winetricks
           cargo build --release --bin winetricks-gui
           cargo build --release --bin winetricks-converter
+        env:
+          CCACHE_DIR: ~/.ccache
+          
+      - name: Show ccache statistics
+        run: ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 

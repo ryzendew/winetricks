@@ -35,12 +35,12 @@ docker run --rm \
     -e PKGEXT=".pkg.tar.zst" \
     archlinux:latest \
     bash -c "
-        pacman -Syu --noconfirm rust cargo openssl base-devel
+        pacman -Syu --noconfirm rust cargo openssl base-devel wine || echo 'Warning: wine installation failed, continuing anyway'
         useradd -m -s /bin/bash builder
         mkdir -p /home/builder/build
         cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
         chown -R builder:builder /home/builder/build
-        su builder -c 'cd /home/builder/build && makepkg -s --noconfirm --skipinteg'
+        su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg'
         cp /home/builder/build/*.pkg.tar.zst /build/ 2>/dev/null || true
     " || {
     echo "Docker build failed, trying with podman..."
@@ -48,28 +48,37 @@ docker run --rm \
         -v "$(pwd)":/build:ro \
         archlinux:latest \
         bash -c "
-            pacman -Syu --noconfirm rust cargo openssl base-devel
+            pacman -Syu --noconfirm rust cargo openssl base-devel wine || echo 'Warning: wine installation failed, continuing anyway'
             useradd -m -s /bin/bash builder
             mkdir -p /home/builder/build
             cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
             chown -R builder:builder /home/builder/build
-            su builder -c 'cd /home/builder/build && makepkg -s --noconfirm --skipinteg'
+            su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg'
             cp /home/builder/build/*.pkg.tar.zst /build/ 2>/dev/null || true
         "
 }
 
-# Find and copy the package
-PKG=$(ls -t winetricks-*.pkg.tar.zst 2>/dev/null | head -1)
+# Find and copy the package - check both current directory and any subdirectories
+PKG=$(find . -name "winetricks-*.pkg.tar.zst" -type f 2>/dev/null | head -1)
 if [ -n "$PKG" ] && [ -f "$PKG" ]; then
-    echo "Package created: $PKG"
-    # Ensure it's in the current directory for upload
+    echo "Package found: $PKG"
+    # Copy to root directory for upload
     cp "$PKG" . 2>/dev/null || true
-    ls -lh "$PKG" || ls -lh winetricks-*.pkg.tar.zst
+    # Verify it exists in current directory
+    FINAL_PKG=$(basename "$PKG")
+    if [ -f "$FINAL_PKG" ]; then
+        echo "Package ready for upload: $FINAL_PKG"
+        ls -lh "$FINAL_PKG"
+    else
+        echo "Warning: Could not copy package to root directory"
+        ls -lh "$PKG"
+    fi
 else
-    echo "Warning: Package file not found in current directory"
-    echo "Searching in build directory..."
-    ls -la *.pkg.tar.* 2>/dev/null || true
-    # Try to find it in subdirectories
-    find . -name "winetricks-*.pkg.tar.zst" -type f 2>/dev/null | head -5
+    echo "Error: Package file not found"
+    echo "Searching for any .pkg.tar files..."
+    find . -name "*.pkg.tar.*" -type f 2>/dev/null | head -10
+    echo ""
+    echo "Listing current directory contents:"
+    ls -la
 fi
 

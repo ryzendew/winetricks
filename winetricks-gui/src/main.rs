@@ -38,7 +38,11 @@ fn main() -> cosmic::Result {
 #[cfg(all(feature = "cosmic", feature = "iced"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Check if we should use Cosmic (if COSMIC desktop is detected)
-    if std::env::var("COSMIC_SESSION").is_ok() || std::env::var("XDG_CURRENT_DESKTOP").map(|v| v.contains("COSMIC")).unwrap_or(false) {
+    if std::env::var("COSMIC_SESSION").is_ok()
+        || std::env::var("XDG_CURRENT_DESKTOP")
+            .map(|v| v.contains("COSMIC"))
+            .unwrap_or(false)
+    {
         cosmic_app::cosmic_impl::run_cosmic()?;
         Ok(())
     } else {
@@ -61,10 +65,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(not(any(feature = "iced", feature = "cosmic")))]
 fn main() {
-    eprintln!("Error: No GUI backend enabled. Please build with --features iced or --features cosmic");
+    eprintln!(
+        "Error: No GUI backend enabled. Please build with --features iced or --features cosmic"
+    );
     std::process::exit(1);
 }
 
+#[cfg(feature = "iced")]
 struct WinetricksApp {
     config: Config,
     registry: VerbRegistry,
@@ -145,6 +152,7 @@ mod colors {
     pub const TEXT_DIM: Color = Color::from_rgb(0.5, 0.5, 0.55);
 }
 
+#[cfg(feature = "iced")]
 impl Sandbox for WinetricksApp {
     type Message = Message;
 
@@ -385,6 +393,7 @@ impl Sandbox for WinetricksApp {
     }
 }
 
+#[cfg(feature = "iced")]
 impl WinetricksApp {
     fn sidebar(&self) -> Element<'_, Message> {
         let is_browse = self.current_view == View::Browse;
@@ -992,9 +1001,11 @@ impl WinetricksApp {
     }
 }
 
-// Custom container styles
+// Custom container styles (Iced only)
+#[cfg(feature = "iced")]
 struct BackgroundContainerStyle;
 
+#[cfg(feature = "iced")]
 impl container::StyleSheet for BackgroundContainerStyle {
     type Style = iced::Theme;
 
@@ -1006,8 +1017,10 @@ impl container::StyleSheet for BackgroundContainerStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct SidebarContainerStyle;
 
+#[cfg(feature = "iced")]
 impl container::StyleSheet for SidebarContainerStyle {
     type Style = iced::Theme;
 
@@ -1019,8 +1032,10 @@ impl container::StyleSheet for SidebarContainerStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct CardContainerStyle;
 
+#[cfg(feature = "iced")]
 impl container::StyleSheet for CardContainerStyle {
     type Style = iced::Theme;
 
@@ -1033,10 +1048,12 @@ impl container::StyleSheet for CardContainerStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct CategoryContainerStyle {
     active: bool,
 }
 
+#[cfg(feature = "iced")]
 impl container::StyleSheet for CategoryContainerStyle {
     type Style = iced::Theme;
 
@@ -1056,12 +1073,14 @@ impl container::StyleSheet for CategoryContainerStyle {
     }
 }
 
-// Custom button styles
+// Custom button styles (Iced only)
+#[cfg(feature = "iced")]
 #[allow(dead_code)]
 struct SidebarButtonStyle {
     _active: bool,
 }
 
+#[cfg(feature = "iced")]
 impl button::StyleSheet for SidebarButtonStyle {
     type Style = iced::Theme;
 
@@ -1082,11 +1101,13 @@ impl button::StyleSheet for SidebarButtonStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 #[allow(dead_code)]
 struct CategoryButtonStyle {
     _active: bool,
 }
 
+#[cfg(feature = "iced")]
 impl button::StyleSheet for CategoryButtonStyle {
     type Style = iced::Theme;
 
@@ -1099,10 +1120,12 @@ impl button::StyleSheet for CategoryButtonStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct ActionButtonStyle {
     primary: bool,
 }
 
+#[cfg(feature = "iced")]
 impl button::StyleSheet for ActionButtonStyle {
     type Style = iced::Theme;
 
@@ -1137,8 +1160,10 @@ impl button::StyleSheet for ActionButtonStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct ToolButtonStyle;
 
+#[cfg(feature = "iced")]
 impl button::StyleSheet for ToolButtonStyle {
     type Style = iced::Theme;
 
@@ -1159,8 +1184,10 @@ impl button::StyleSheet for ToolButtonStyle {
     }
 }
 
+#[cfg(feature = "iced")]
 struct SearchInputStyle;
 
+#[cfg(feature = "iced")]
 impl text_input::StyleSheet for SearchInputStyle {
     type Style = iced::Theme;
 

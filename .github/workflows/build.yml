@@ -37,16 +37,52 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
+          sudo apt-get install -y libssl-dev pkg-config ccache
+          
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Build CLI (Release)
-        run: cargo build --release --bin winetricks
+        run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          cargo build --release --bin winetricks
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Build GUI (Release)
-        run: cargo build --release --bin winetricks-gui
+        run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          cargo build --release --bin winetricks-gui
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Build Converter (Release)
-        run: cargo build --release --bin winetricks-converter
+        run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          cargo build --release --bin winetricks-converter
+        env:
+          CCACHE_DIR: ~/.ccache
+          
+      - name: Show ccache statistics
+        run: ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Upload CLI artifacts
         uses: actions/upload-artifact@v4
@@ -80,15 +116,41 @@ jobs:
             dh-make \
             debhelper \
             devscripts \
-            fakeroot
+            fakeroot \
+            ccache
+            
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Install cargo-deb
         run: cargo install cargo-deb
 
       - name: Build binaries
         run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
           cargo build --release --bin winetricks
           cargo build --release --bin winetricks-gui
+        env:
+          CCACHE_DIR: ~/.ccache
+          
+      - name: Show ccache statistics
+        run: ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Create Debian package
         run: |
@@ -120,15 +182,41 @@ jobs:
             build-essential \
             libssl-dev \
             pkg-config \
-            rpm
+            rpm \
+            ccache
           # rpm-build command is provided by rpm package on Ubuntu
           # Verify rpmbuild is available
           which rpmbuild || (echo "rpmbuild not found, rpm package may be incomplete" && exit 1)
+          
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Build binaries
         run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
           cargo build --release --bin winetricks
           cargo build --release --bin winetricks-gui
+        env:
+          CCACHE_DIR: ~/.ccache
+          
+      - name: Show ccache statistics
+        run: ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Create RPM package
         run: |
@@ -159,7 +247,8 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             libssl-dev \
-            pkg-config
+            pkg-config \
+            ccache
           # Install Docker (avoid conflicts with existing containerd)
           sudo apt-get install -y docker.io || \
             (sudo apt-get remove -y containerd.io 2>/dev/null || true; \
@@ -167,11 +256,36 @@ jobs:
           sudo systemctl start docker || true
           # Verify Docker works
           sudo docker ps || echo "Docker verification skipped"
+          
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=compression=true
+          ccache --set-config=max_size=500M
+          ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Build binaries
         run: |
+          export CC="ccache gcc"
+          export CXX="ccache g++"
           cargo build --release --bin winetricks
           cargo build --release --bin winetricks-gui
+        env:
+          CCACHE_DIR: ~/.ccache
+          
+      - name: Show ccache statistics
+        run: ccache -s
+        env:
+          CCACHE_DIR: ~/.ccache
 
       - name: Update PKGBUILD version
         run: |
