@@ -14,7 +14,7 @@ sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD || echo "PKGBUILD update skipp
 # Start Docker service
 sudo systemctl start docker || true
 
-# Build in Docker (Arch Linux)
+# Build in Docker (Arch Linux) - run as builder user to avoid root restriction
 docker run --rm \
     -v "$(pwd)":/build \
     -w /build \
@@ -22,7 +22,9 @@ docker run --rm \
     archlinux:latest \
     bash -c "
         pacman -Syu --noconfirm rust cargo openssl base-devel
-        makepkg -s --noconfirm --skipinteg
+        useradd -m -s /bin/bash builder || true
+        chown -R builder:builder /build
+        su builder -c 'cd /build && makepkg -s --noconfirm --skipinteg'
     " || {
     echo "Docker build failed, trying with podman..."
     podman run --rm \
@@ -31,7 +33,9 @@ docker run --rm \
         archlinux:latest \
         bash -c "
             pacman -Syu --noconfirm rust cargo openssl base-devel
-            makepkg -s --noconfirm --skipinteg
+            useradd -m -s /bin/bash builder || true
+            chown -R builder:builder /build
+            su builder -c 'cd /build && makepkg -s --noconfirm --skipinteg'
         "
 }
 

@@ -1,13 +1,19 @@
-//! Winetricks Iced GUI
+//! Winetricks GUI
 //!
-//! Modern, cross-platform GUI built with Iced
+//! Modern, cross-platform GUI built with Iced (default) or libcosmic (COSMIC desktop)
 
+#[cfg(feature = "cosmic")]
+mod cosmic_app;
+
+#[cfg(feature = "iced")]
 use iced::widget::{
     button, checkbox, column, container, pick_list, row, scrollable, text, text_input,
 };
+#[cfg(feature = "iced")]
 use iced::{Alignment, Color, Element, Length, Pixels, Sandbox, Settings, Theme};
 use winetricks_lib::{Config, VerbCategory, VerbRegistry};
 
+#[cfg(feature = "iced")]
 fn main() -> iced::Result {
     WinetricksApp::run(Settings {
         window: iced::window::Settings {
@@ -21,6 +27,42 @@ fn main() -> iced::Result {
         antialiasing: true,
         ..Default::default()
     })
+}
+
+#[cfg(feature = "cosmic")]
+#[cfg(not(feature = "iced"))]
+fn main() -> cosmic::Result {
+    cosmic_app::cosmic_impl::run_cosmic()
+}
+
+#[cfg(all(feature = "cosmic", feature = "iced"))]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Check if we should use Cosmic (if COSMIC desktop is detected)
+    if std::env::var("COSMIC_SESSION").is_ok() || std::env::var("XDG_CURRENT_DESKTOP").map(|v| v.contains("COSMIC")).unwrap_or(false) {
+        cosmic_app::cosmic_impl::run_cosmic()?;
+        Ok(())
+    } else {
+        // Default to Iced
+        WinetricksApp::run(Settings {
+            window: iced::window::Settings {
+                size: iced::Size::new(1000.0, 750.0),
+                resizable: true,
+                min_size: Some(iced::Size::new(800.0, 600.0)),
+                ..Default::default()
+            },
+            default_font: iced::Font::default(),
+            default_text_size: Pixels(14.0),
+            antialiasing: true,
+            ..Default::default()
+        })?;
+        Ok(())
+    }
+}
+
+#[cfg(not(any(feature = "iced", feature = "cosmic")))]
+fn main() {
+    eprintln!("Error: No GUI backend enabled. Please build with --features iced or --features cosmic");
+    std::process::exit(1);
 }
 
 struct WinetricksApp {

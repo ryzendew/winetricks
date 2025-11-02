@@ -10,8 +10,16 @@ mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
 # Create tarball
 mkdir -p winetricks-${VERSION}
-cp -r winetricks-cli winetricks-gui winetricks-lib winetricks-converter winetricks-${VERSION}/
-cp Cargo.toml Cargo.lock README.md COPYING winetricks-${VERSION}/
+# Copy directories (one at a time to avoid issues)
+[ -d winetricks-cli ] && cp -r winetricks-cli winetricks-${VERSION}/
+[ -d winetricks-gui ] && cp -r winetricks-gui winetricks-${VERSION}/
+[ -d winetricks-lib ] && cp -r winetricks-lib winetricks-${VERSION}/
+[ -d winetricks-converter ] && cp -r winetricks-converter winetricks-${VERSION}/
+# Copy files
+[ -f Cargo.toml ] && cp Cargo.toml winetricks-${VERSION}/
+[ -f Cargo.lock ] && cp Cargo.lock winetricks-${VERSION}/
+[ -f README.md ] && cp README.md winetricks-${VERSION}/
+[ -f COPYING ] && cp COPYING winetricks-${VERSION}/
 tar czf rpmbuild/SOURCES/winetricks-${VERSION}.tar.gz winetricks-${VERSION}
 rm -rf winetricks-${VERSION}
 

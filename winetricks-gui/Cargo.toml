@@ -9,12 +9,22 @@ license = "LGPL-2.1-or-later"
 name = "winetricks-gui"
 path = "src/main.rs"
 
+[features]
+default = ["iced"]
+iced = ["dep:iced"]
+cosmic = ["dep:cosmic", "dep:cosmic-text"]
+
 [dependencies]
 # Core library
 winetricks-lib = { path = "../winetricks-lib" }
 
-# Iced GUI framework
-iced = { version = "0.12", features = ["tokio", "image", "svg"] }
+# Iced GUI framework (default)
+iced = { version = "0.12", features = ["tokio", "image", "svg"], optional = true }
+
+# Cosmic GUI framework (alternative - for COSMIC desktop)
+# Note: cosmic crate may need to be sourced from git until stable release
+cosmic = { version = "0.1", optional = true }
+cosmic-text = { version = "0.1", optional = true }
 
 # Async runtime (shared with workspace)
 tokio = { workspace = true }
