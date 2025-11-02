@@ -1,0 +1,34 @@
+Source: winetricks
+Section: otherosfs
+Priority: optional
+Maintainer: Winetricks Contributors <winetricks@example.com>
+Build-Depends: debhelper (>= 12),
+               cargo,
+               rustc (>= 1.70),
+               libssl-dev,
+               pkg-config
+Standards-Version: 4.5.0
+Homepage: https://github.com/Winetricks/winetricks
+Rules-Requires-Root: no
+
+Package: winetricks
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, wine
+Description: A fast, modern package manager for Wine
+ Winetricks is a package manager for Wine. This is a fast, modern Rust rewrite
+ that maintains compatibility with the original winetricks while providing
+ better performance and a modern GUI.
+ .
+ Features:
+  - Fast: Built with Rust for maximum performance
+  - Modern: Clean architecture with separation of concerns
+  - Modular: Library + CLI + GUI
+  - Compatible: Maintains CLI compatibility with original winetricks
+
+Package: winetricks-gui
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, winetricks (= ${binary:Version})
+Description: GUI for Winetricks
+ Modern Iced-based GUI for Winetricks package manager.
+ Provides a user-friendly interface for managing Wine packages.
+

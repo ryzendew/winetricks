@@ -9,11 +9,8 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    name: Build Linux binaries
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
@@ -39,12 +36,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+
       - name: Build CLI (Release)
         run: cargo build --release --bin winetricks
 
       - name: Build GUI (Release)
         run: cargo build --release --bin winetricks-gui
-        continue-on-error: true  # GUI may not build on all platforms yet
 
       - name: Build Converter (Release)
         run: cargo build --release --bin winetricks-converter
@@ -52,10 +53,9 @@ jobs:
       - name: Upload CLI artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: winetricks-cli-${{ matrix.os }}
+          name: winetricks-binaries
           path: target/release/winetricks*
           if-no-files-found: warn
           
       - name: Run tests
         run: cargo test --release
-
