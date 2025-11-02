@@ -51,6 +51,19 @@ impl Executor {
             if self.config.unattended { "1" } else { "0" },
         );
 
+        // Set WINE_D3D_CONFIG if configured
+        // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
+        if let Some(ref renderer) = self.config.renderer {
+            let wine_renderer = match renderer.to_lowercase().as_str() {
+                "opengl" | "gl" | "w" => "gl",
+                "vulkan" | "vk" | "v" => "vulkan",
+                "gdi" => "gdi",
+                "no3d" => "no3d",
+                _ => renderer.as_str(),
+            };
+            std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
+        }
+
         // Try to find original winetricks script for fallback
         let original_script = find_original_winetricks();
 
@@ -525,6 +538,33 @@ impl Executor {
             "W_OPT_UNATTENDED",
             if self.config.unattended { "1" } else { "0" },
         );
+
+        // Set WINE_D3D_CONFIG if configured
+        // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
+        if let Some(ref renderer) = self.config.renderer {
+            let wine_renderer = match renderer.to_lowercase().as_str() {
+                "opengl" | "gl" | "w" => "gl",
+                "vulkan" | "vk" | "v" => "vulkan",
+                "gdi" => "gdi",
+                "no3d" => "no3d",
+                _ => renderer.as_str(),
+            };
+            std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
+        }
+
+        // Set DISPLAY for Wayland/XWayland if configured
+        if let Some(ref wayland) = self.config.wayland {
+            match wayland.to_lowercase().as_str() {
+                "wayland" => {
+                    std::env::remove_var("DISPLAY");
+                }
+                "xwayland" | "x11" => {
+                    let display = std::env::var("DISPLAY").unwrap_or_else(|_| ":0".to_string());
+                    std::env::set_var("DISPLAY", &display);
+                }
+                _ => {} // Auto - don't modify
+            }
+        }
 
         let mut cmd = std::process::Command::new("sh");
         cmd.arg(script_path);

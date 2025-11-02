@@ -34,6 +34,12 @@ pub struct Config {
     /// Wine architecture (win32 or win64)
     pub winearch: Option<String>,
 
+    /// Wine D3D renderer (opengl, vulkan, or none)
+    pub renderer: Option<String>,
+
+    /// Wine display driver (wayland, xwayland, or auto)
+    pub wayland: Option<String>,
+
     /// Isolate each app in its own prefix (--isolate)
     pub isolate: bool,
 
@@ -66,6 +72,8 @@ impl Config {
             unattended: false,
             torify: false,
             winearch: None,
+            renderer: None,
+            wayland: None,
             isolate: false,
             no_clean: false,
         })
@@ -90,6 +98,368 @@ impl Config {
         std::fs::create_dir_all(&self.data_dir)?;
         std::fs::create_dir_all(&self.prefixes_root)?;
         std::fs::create_dir_all(self.metadata_dir())?;
+        Ok(())
+    }
+
+    /// Set D3D renderer in wineprefix registry (persistent setting)
+    pub fn set_renderer_in_registry(&self, renderer: Option<&str>) -> Result<()> {
+        use std::fs;
+        use std::io::Write;
+        use std::process::Command;
+        use crate::Wine;
+
+        let wineprefix = self.wineprefix();
+        
+        // Create temp directory for registry file
+        let temp_dir = dirs::cache_dir()
+            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
+            .join("winetricks");
+        fs::create_dir_all(&temp_dir)?;
+
+        let reg_file = temp_dir.join("set_renderer.reg");
+        let wine = Wine::detect()?;
+
+        // Convert renderer to Wine format
+        let renderer_value = match renderer {
+            Some(r) => match r.to_lowercase().as_str() {
+                "opengl" | "gl" | "w" => "gl",
+                "vulkan" | "vk" | "v" => "vulkan",
+                "gdi" => "gdi",
+                "no3d" => "no3d",
+                _ => r,
+            },
+            None => {
+                // If None, remove the setting (set to empty string or remove key)
+                // For now, we'll just return success without writing
+                return Ok(());
+            }
+        };
+
+        // Create registry file
+        let reg_content = format!(
+            r#"REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\Direct3D]
+"renderer"="{}"
+"#,
+            renderer_value
+        );
+
+        let mut file = fs::File::create(&reg_file)?;
+        file.write_all(reg_content.as_bytes())?;
+        file.sync_all()?;
+
+        // Convert Unix path to Wine Windows path
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        let reg_file_str = reg_file.to_string_lossy().to_string();
+        
+        // Get Windows path for the reg file
+        let output = Command::new(&wine.wine_bin)
+            .arg("winepath")
+            .arg("-w")
+            .arg(&reg_file_str)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine winepath -w {:?}", reg_file_str),
+                error: e.to_string(),
+            })?;
+
+        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        // Import registry file using wine regedit
+        let status = Command::new(&wine.wine_bin)
+            .arg("regedit")
+            .arg("/S") // Silent mode
+            .arg(&reg_file_win)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine regedit /S {:?}", reg_file_win),
+                error: e.to_string(),
+            })?;
+
+        // Clean up temp file
+        let _ = fs::remove_file(&reg_file);
+
+        if !status.success() {
+            return Err(WinetricksError::Config(format!(
+                "Failed to set renderer in registry (exit code: {:?})",
+                status.code()
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Get D3D renderer from wineprefix registry
+    pub fn get_renderer_from_registry(&self) -> Option<String> {
+        use std::process::Command;
+        use crate::Wine;
+
+        let wineprefix = self.wineprefix();
+        let wine = match Wine::detect() {
+            Ok(w) => w,
+            Err(_) => return None,
+        };
+
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+
+        // Query registry using wine reg query
+        // HKEY_CURRENT_USER\Software\Wine\Direct3D -> renderer value
+        let output = Command::new(&wine.wine_bin)
+            .arg("reg")
+            .arg("query")
+            .arg("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D")
+            .arg("/v")
+            .arg("renderer")
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .ok()?;
+
+        if !output.status.success() {
+            return None;
+        }
+
+        // Parse output: should contain "renderer" REG_SZ "value"
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            if line.contains("renderer") && line.contains("REG_SZ") {
+                // Extract value between quotes or after last whitespace
+                // Format: "    renderer    REG_SZ    gl"
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if let Some(value) = parts.last() {
+                    let value = value.trim().trim_matches('"');
+                    if !value.is_empty() {
+                        // Convert Wine format back to user-friendly format
+                        match value.to_lowercase().as_str() {
+                            "gl" => return Some("opengl".to_string()),
+                            "vulkan" | "vk" | "v" => return Some("vulkan".to_string()),
+                            "gdi" => return Some("gdi".to_string()),
+                            "no3d" => return Some("no3d".to_string()),
+                            _ => return Some(value.to_string()),
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Load renderer setting from wineprefix (registry) if available
+    pub fn load_renderer_from_prefix(&mut self) {
+        if let Some(renderer) = self.get_renderer_from_registry() {
+            self.renderer = Some(renderer);
+        }
+    }
+
+    /// Get Graphics driver from wineprefix registry
+    pub fn get_wayland_from_registry(&self) -> Option<String> {
+        use std::process::Command;
+        use crate::Wine;
+
+        let wineprefix = self.wineprefix();
+        let wine = match Wine::detect() {
+            Ok(w) => w,
+            Err(_) => return None,
+        };
+
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+
+        // Query registry for Graphics driver
+        let output = Command::new(&wine.wine_bin)
+            .arg("reg")
+            .arg("query")
+            .arg("HKEY_CURRENT_USER\\Software\\Wine\\Drivers")
+            .arg("/v")
+            .arg("Graphics")
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .ok()?;
+
+        if !output.status.success() {
+            return None;
+        }
+
+        // Parse output
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            if line.contains("Graphics") && line.contains("REG_SZ") {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if let Some(value) = parts.last() {
+                    let value = value.trim().trim_matches('"').to_lowercase();
+                    if !value.is_empty() {
+                        match value.as_str() {
+                            "wayland" => return Some("wayland".to_string()),
+                            "x11" | "xwayland" => return Some("xwayland".to_string()),
+                            _ => return Some(value),
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Detect current display server (Wayland or XWayland)
+    pub fn detect_display_server(&self) -> Option<String> {
+        // Check environment variables to detect current display server
+        let wayland_display = std::env::var("WAYLAND_DISPLAY").ok();
+        let display = std::env::var("DISPLAY").ok();
+
+        if wayland_display.is_some() && (display.is_none() || display.as_deref() == Some("")) {
+            // Wayland is available and DISPLAY is unset/empty - likely using Wayland
+            return Some("wayland".to_string());
+        } else if display.is_some() && !display.as_ref().unwrap().is_empty() {
+            // DISPLAY is set - using X11/XWayland
+            return Some("xwayland".to_string());
+        }
+
+        None
+    }
+
+    /// Load wayland setting from wineprefix (registry) if available
+    /// Does NOT fall back to environment detection (preserves Auto setting)
+    pub fn load_wayland_from_prefix(&mut self) {
+        // First try registry
+        if let Some(wayland) = self.get_wayland_from_registry() {
+            self.wayland = Some(wayland);
+            return;
+        }
+        
+        // If no registry setting, clear it (don't use environment as fallback)
+        // This allows Auto to remain as Auto when user selects it
+        self.wayland = None;
+    }
+    
+    /// Load wayland setting with environment fallback (for initial detection)
+    pub fn load_wayland_from_prefix_with_env(&mut self) {
+        // First try registry
+        if let Some(wayland) = self.get_wayland_from_registry() {
+            self.wayland = Some(wayland);
+            return;
+        }
+        
+        // Fallback to detection from environment (for initial load only)
+        if let Some(display_server) = self.detect_display_server() {
+            self.wayland = Some(display_server);
+        }
+    }
+
+    /// Set Graphics driver in wineprefix registry (persistent setting)
+    pub fn set_wayland_in_registry(&self, wayland: Option<&str>) -> Result<()> {
+        use std::fs;
+        use std::io::Write;
+        use std::process::Command;
+        use crate::Wine;
+
+        let wineprefix = self.wineprefix();
+        
+        // Create temp directory for registry file
+        let temp_dir = dirs::cache_dir()
+            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
+            .join("winetricks");
+        fs::create_dir_all(&temp_dir)?;
+
+        let reg_file = temp_dir.join("set_wayland.reg");
+        let wine = Wine::detect()?;
+
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Handle Auto - delete the registry key to let Wine decide
+        if wayland.is_none() {
+            // Delete the Graphics key using wine reg delete
+            let status = Command::new(&wine.wine_bin)
+                .arg("reg")
+                .arg("delete")
+                .arg("HKEY_CURRENT_USER\\Software\\Wine\\Drivers")
+                .arg("/v")
+                .arg("Graphics")
+                .arg("/f") // Force delete
+                .env("WINEPREFIX", &wineprefix_str)
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("wine reg delete HKEY_CURRENT_USER\\Software\\Wine\\Drivers /v Graphics /f"),
+                    error: e.to_string(),
+                })?;
+
+            // It's OK if the key doesn't exist (exit code 1)
+            if !status.success() && status.code() != Some(1) {
+                return Err(WinetricksError::Config(format!(
+                    "Failed to delete Graphics driver from registry (exit code: {:?})",
+                    status.code()
+                )));
+            }
+
+            return Ok(());
+        }
+
+        // Convert wayland option to Wine format
+        let graphics_value = match wayland {
+            Some("wayland") => "wayland",
+            Some("xwayland") | Some("x11") => "x11",
+            _ => {
+                return Err(WinetricksError::Config(
+                    format!("Invalid wayland value: {}", wayland.unwrap_or("None"))
+                ));
+            }
+        };
+
+        // Create registry file
+        let reg_content = format!(
+            r#"REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\Drivers]
+"Graphics"="{}"
+"#,
+            graphics_value
+        );
+
+        let mut file = fs::File::create(&reg_file)?;
+        file.write_all(reg_content.as_bytes())?;
+        file.sync_all()?;
+
+        // Convert Unix path to Wine Windows path
+        let reg_file_str = reg_file.to_string_lossy().to_string();
+        
+        // Get Windows path for the reg file
+        let output = Command::new(&wine.wine_bin)
+            .arg("winepath")
+            .arg("-w")
+            .arg(&reg_file_str)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine winepath -w {:?}", reg_file_str),
+                error: e.to_string(),
+            })?;
+
+        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        // Import registry file using wine regedit
+        let status = Command::new(&wine.wine_bin)
+            .arg("regedit")
+            .arg("/S") // Silent mode
+            .arg(&reg_file_win)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine regedit /S {:?}", reg_file_win),
+                error: e.to_string(),
+            })?;
+
+        // Clean up temp file
+        let _ = fs::remove_file(&reg_file);
+
+        if !status.success() {
+            return Err(WinetricksError::Config(format!(
+                "Failed to set Graphics driver in registry (exit code: {:?})",
+                status.code()
+            )));
+        }
+
         Ok(())
     }
 }

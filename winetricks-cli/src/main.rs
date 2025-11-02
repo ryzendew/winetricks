@@ -4,7 +4,7 @@ use clap::Parser;
 use std::io::{self, Write};
 use std::process;
 use std::str::FromStr;
-use tracing::info;
+use tracing::{info, warn};
 use winetricks_lib::{Config, Executor, Result, VerbCategory, VerbRegistry, WinetricksError};
 
 async fn install_verb(config: &Config, verb_name: &str) -> Result<()> {
@@ -53,6 +53,7 @@ COMMANDS:
     winecmd               Open Wine command prompt (cmd.exe)
     prefix=NAME           Select WINEPREFIX
     arch=32|64            Set wine architecture (win32/win64)
+    renderer=opengl|vulkan Set Wine D3D renderer (opengl or vulkan)
     annihilate            Delete WINEPREFIX (WARNING: deletes all data!)
     
     VERB_NAME             Install a verb (e.g., dotnet48, vcrun2019, corefonts)
@@ -89,6 +90,8 @@ EXAMPLES:
     winetricks help                          # Open wiki in browser
     winetricks annihilate                    # Delete WINEPREFIX (with confirmation)
     winetricks prefix=myprefix dotnet48      # Install to custom prefix
+    winetricks renderer=vulkan dotnet48      # Install with Vulkan renderer
+    winetricks wayland=wayland dotnet48      # Install using Wayland display driver
 
 NOTE: This is a Rust rewrite. Verb installation uses hybrid mode:
       - Tries Rust implementation first
@@ -133,6 +136,7 @@ COMMANDS:
     winecmd               Open Wine command prompt (cmd.exe)
     prefix=NAME           Select WINEPREFIX
     arch=32|64            Set wine architecture (win32/win64)
+    renderer=opengl|vulkan Set Wine D3D renderer (opengl or vulkan)
     annihilate            Delete WINEPREFIX (WARNING: deletes all data!)
     
     VERB_NAME             Install a verb (e.g., dotnet48, vcrun2019, corefonts)
@@ -336,6 +340,48 @@ async fn main() -> Result<()> {
         std::env::set_var("WINEARCH", arch);
     }
 
+    // Set WINE_D3D_CONFIG from config if specified
+    // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
+    // Valid values: gl (OpenGL/wined3d), vulkan, gdi, no3d, etc.
+    if let Some(ref renderer) = config.renderer {
+        // Normalize renderer name to Wine format
+        let wine_renderer = match renderer.to_lowercase().as_str() {
+            "opengl" | "gl" | "w" => "gl",      // Wine uses 'gl' for OpenGL
+            "vulkan" | "vk" | "v" => "vulkan",   // Wine uses 'vulkan' for Vulkan
+            "gdi" => "gdi",
+            "no3d" => "no3d",
+            _ => {
+                eprintln!("Warning: Unknown renderer '{}'. Using '{}'.", renderer, renderer);
+                renderer.as_str()
+            }
+        };
+        std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
+        info!("Set WINE_D3D_CONFIG=renderer={}", wine_renderer);
+    }
+
+    // Set DISPLAY environment variable for Wayland/XWayland
+    // Wayland: DISPLAY="" or unset
+    // XWayland: DISPLAY=":0" (use current X11 display)
+    if let Some(ref wayland) = config.wayland {
+        match wayland.to_lowercase().as_str() {
+            "wayland" => {
+                // Force Wayland by unsetting DISPLAY
+                std::env::remove_var("DISPLAY");
+                info!("Set DISPLAY= (using Wayland)");
+            }
+            "xwayland" | "x11" => {
+                // Use XWayland - set DISPLAY to current or default
+                let display_val = std::env::var("DISPLAY").unwrap_or_else(|_| ":0".to_string());
+                std::env::set_var("DISPLAY", &display_val);
+                info!("Set DISPLAY={} (using XWayland)", display_val);
+            }
+            "auto" | _ => {
+                // Auto - don't modify DISPLAY, let system decide
+                info!("Using auto display server detection");
+            }
+        }
+    }
+
     config.ensure_dirs()?;
 
     // Show startup message
@@ -371,6 +417,84 @@ async fn main() -> Result<()> {
             config.winearch = Some(winearch.to_string());
             std::env::set_var("WINEARCH", winearch);
             info!("Set WINEARCH={}", winearch);
+            i += 1;
+            continue;
+        }
+
+        // Process renderer= command (can be set anytime)
+        if let Some(renderer_val) = cmd.strip_prefix("renderer=") {
+            let renderer = match renderer_val.to_lowercase().as_str() {
+                "opengl" | "gl" | "w" => "opengl",
+                "vulkan" | "vk" | "v" => "vulkan",
+                _ => {
+                    eprintln!(
+                        "Error: Invalid renderer '{}'. Use opengl or vulkan",
+                        renderer_val
+                    );
+                    std::process::exit(1);
+                }
+            };
+
+            config.renderer = Some(renderer.to_string());
+            // Convert to Wine environment variable format
+            // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
+            let wine_renderer = match renderer {
+                "opengl" => "gl",      // Wine uses 'gl' for OpenGL
+                "vulkan" => "vulkan",  // Wine uses 'vulkan' for Vulkan
+                _ => unreachable!(),
+            };
+            std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
+            
+            // Also set in wineprefix registry for persistence
+            if let Err(e) = config.set_renderer_in_registry(Some(renderer)) {
+                warn!("Failed to set renderer in registry (will use environment variable): {}", e);
+            }
+            
+            info!("Set WINE_D3D_CONFIG=renderer={} (renderer={})", wine_renderer, renderer);
+            i += 1;
+            continue;
+        }
+
+        // Process wayland= command (can be set anytime)
+        if let Some(wayland_val) = cmd.strip_prefix("wayland=") {
+            let wayland = match wayland_val.to_lowercase().as_str() {
+                "wayland" => "wayland",
+                "xwayland" | "x11" => "xwayland",
+                "auto" => "auto",
+                _ => {
+                    eprintln!(
+                        "Error: Invalid wayland value '{}'. Use wayland, xwayland, or auto",
+                        wayland_val
+                    );
+                    std::process::exit(1);
+                }
+            };
+
+            config.wayland = Some(wayland.to_string());
+            
+            // Set DISPLAY environment variable
+            match wayland {
+                "wayland" => {
+                    std::env::remove_var("DISPLAY");
+                }
+                "xwayland" => {
+                    let display = std::env::var("DISPLAY").unwrap_or_else(|_| ":0".to_string());
+                    std::env::set_var("DISPLAY", &display);
+                }
+                _ => {} // Auto - don't modify
+            }
+            
+            // Also set in wineprefix registry for persistence (or clear if auto)
+            let wayland_for_registry = if wayland == "auto" {
+                None
+            } else {
+                Some(wayland)
+            };
+            if let Err(e) = config.set_wayland_in_registry(wayland_for_registry) {
+                warn!("Failed to set Graphics driver in registry (will use environment variable): {}", e);
+            }
+            
+            info!("Set wayland={}", wayland);
             i += 1;
             continue;
         }
@@ -665,8 +789,11 @@ async fn main() -> Result<()> {
                         "benchmarks",
                         "prefix=",
                         "arch=",
+                        "renderer=",
+                        "wayland=",
                     ]
-                    .contains(&verb_name.as_str())
+                    .iter()
+                    .any(|&cmd| verb_name.starts_with(cmd) || verb_name == cmd.trim_end_matches('='))
                     {
                         break;
                     }
