@@ -51,7 +51,7 @@ jobs:
         run: cargo build --release --bin winetricks-converter
 
       - name: Upload CLI artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: winetricks-binaries
           path: target/release/winetricks*
