@@ -29,7 +29,7 @@ fi
 sudo systemctl start docker || true
 
 # Build in Docker (Arch Linux) - run as builder user to avoid root restriction
-# Note: We can't chown mounted volumes, so we copy files to a directory owned by builder
+# Note: We mount the workspace which includes the built binaries
 docker run --rm \
     -v "$(pwd)":/build:ro \
     -e PKGEXT=".pkg.tar.zst" \
@@ -39,8 +39,22 @@ docker run --rm \
         pacman -Syu --noconfirm rust cargo openssl base-devel || true
         useradd -m -s /bin/bash builder || true
         mkdir -p /home/builder/build
+        # Copy repo files
         cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
+        # Explicitly copy target directory if it exists (binaries from previous build step)
+        if [ -d /build/target ]; then
+            cp -r /build/target /home/builder/build/ 2>/dev/null || true
+        fi
         chown -R builder:builder /home/builder/build
+        # Verify binaries exist
+        echo 'Checking for binaries...'
+        ls -la /home/builder/build/target/release/ 2>/dev/null || echo 'No target/release directory found'
+        if [ ! -f /home/builder/build/target/release/winetricks ]; then
+            echo 'ERROR: Binary winetricks not found in target/release/'
+            echo 'Building binaries inside Docker...'
+            su builder -c 'cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui' || echo 'Build failed'
+        fi
+        ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo 'Binaries still not found'
         
         # Temporarily modify PKGBUILD to remove wine from depends (runtime dependency, not needed for build)
         # Also ensure source is empty since we're using pre-built binaries
@@ -72,8 +86,22 @@ docker run --rm \
             pacman -Syu --noconfirm rust cargo openssl base-devel || true
             useradd -m -s /bin/bash builder || true
             mkdir -p /home/builder/build
+            # Copy repo files
             cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
+            # Explicitly copy target directory if it exists (binaries from previous build step)
+            if [ -d /build/target ]; then
+                cp -r /build/target /home/builder/build/ 2>/dev/null || true
+            fi
             chown -R builder:builder /home/builder/build
+            # Verify binaries exist
+            echo 'Checking for binaries...'
+            ls -la /home/builder/build/target/release/ 2>/dev/null || echo 'No target/release directory found'
+            if [ ! -f /home/builder/build/target/release/winetricks ]; then
+                echo 'ERROR: Binary winetricks not found in target/release/'
+                echo 'Building binaries inside Docker...'
+                su builder -c 'cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui' || echo 'Build failed'
+            fi
+            ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo 'Binaries still not found'
             
             # Temporarily modify PKGBUILD to remove wine from depends
             sed -i 's/^depends=(\x27wine\x27)/depends=()/' /home/builder/build/PKGBUILD || \
