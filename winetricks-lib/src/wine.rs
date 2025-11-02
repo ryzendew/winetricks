@@ -26,12 +26,53 @@ pub struct Wine {
 
 impl Wine {
     /// Detect Wine installation
+    /// Checks for custom Wine in WINEPREFIX first, then falls back to PATH
     pub fn detect() -> Result<Self> {
-        let wine_bin = which("wine")
-            .map_err(|_| WinetricksError::Wine("wine binary not found in PATH".into()))?;
+        // Check if WINEPREFIX has a custom Wine installation
+        // Common locations: WINEPREFIX/bin/wine, WINEPREFIX/wine/bin/wine, WINEPREFIX/../ElementalWarriorWine/bin/wine
+        let wineprefix = Self::get_wineprefix();
+        let mut wine_bin = None;
+        let mut wineserver_bin = None;
+        
+        // Try common custom Wine locations
+        let mut custom_wine_paths = vec![
+            wineprefix.join("bin").join("wine"),
+            wineprefix.join("wine").join("bin").join("wine"),
+        ];
+        
+        // Add parent directory paths if they exist
+        if let Some(parent) = wineprefix.parent() {
+            custom_wine_paths.push(parent.join("ElementalWarriorWine").join("bin").join("wine"));
+            custom_wine_paths.push(parent.join("wine").join("bin").join("wine"));
+        }
+        
+        for wine_path in &custom_wine_paths {
+            if wine_path.exists() && wine_path.is_file() {
+                let potential_wineserver = wine_path.parent()
+                    .and_then(|p| Some(p.join("wineserver")));
+                
+                if let Some(ws_path) = potential_wineserver {
+                    if ws_path.exists() {
+                        wine_bin = Some(wine_path.clone());
+                        wineserver_bin = Some(ws_path);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Fall back to PATH if no custom Wine found
+        let wine_bin = match wine_bin {
+            Some(bin) => bin,
+            None => which("wine")
+                .map_err(|_| WinetricksError::Wine("wine binary not found in PATH".into()))?,
+        };
 
-        let wineserver_bin = which("wineserver")
-            .map_err(|_| WinetricksError::Wine("wineserver binary not found in PATH".into()))?;
+        let wineserver_bin = match wineserver_bin {
+            Some(bin) => bin,
+            None => which("wineserver")
+                .map_err(|_| WinetricksError::Wine("wineserver binary not found in PATH".into()))?,
+        };
 
         let version = Self::get_version(&wine_bin)?;
         let version_stripped = Self::strip_version(&version);

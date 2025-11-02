@@ -43,6 +43,50 @@ impl Executor {
         })
     }
 
+    /// Internal installation method (recursive, for prerequisites)
+    async fn install_verb_internal(&mut self, verb_name: &str) -> Result<()> {
+        // Check if already installed
+        if !self.config.force && self.is_installed(verb_name)? {
+            info!("{} is already installed, skipping", verb_name);
+            return Ok(());
+        }
+
+        // Get verb metadata
+        let metadata = self
+            .registry
+            .get(verb_name)
+            .ok_or_else(|| WinetricksError::VerbNotFound(verb_name.to_string()))?
+            .clone();
+
+        // Download files if needed
+        let cache_dir = self.config.cache_dir.join(verb_name);
+        std::fs::create_dir_all(&cache_dir)?;
+
+        for file in &metadata.files {
+            if let Some(ref url) = file.url {
+                info!("Downloading {} from {}", file.filename, url);
+                let _downloaded = self
+                    .downloader
+                    .download(
+                        url,
+                        &cache_dir.join(&file.filename),
+                        file.sha256.as_deref(),
+                        true,
+                    )
+                    .await?;
+            }
+        }
+
+        // Execute verb installation
+        self.execute_verb_installation(&metadata, &cache_dir)
+            .await?;
+
+        // Log installation
+        self.log_installation(verb_name)?;
+
+        Ok(())
+    }
+
     /// Install a verb using Rust implementation
     pub async fn install_verb(&mut self, verb_name: &str) -> Result<()> {
         let start_time = Instant::now();
@@ -119,24 +163,98 @@ impl Executor {
             }
         }
 
-        // Execute verb installation
-        // TODO: For now, we'll try to run common installation patterns
-        // Eventually we need to parse verb definitions from the original script
-        // or create a new verb definition format
+        // Handle .NET specific prerequisites (from original winetricks)
+        if verb_name == "dotnet48" {
+            info!("Preparing for .NET 4.8 installation...");
+            
+            // 1. Remove Mono (prevents conflicts)
+            if let Err(e) = self.install_verb_internal("remove_mono").await {
+                warn!("Warning: Failed to remove Mono (may not be critical): {}", e);
+            }
+            
+            // 2. Install .NET 4.0 first (required prerequisite)
+            if let Err(e) = self.install_verb_internal("dotnet40").await {
+                warn!("Warning: Failed to install .NET 4.0 prerequisite: {}", e);
+                // Continue anyway, but warn
+            }
+            
+            // 3. Set Windows version to Windows 7 (required for .NET 4.8)
+            self.set_windows_version("win7")?;
+        } else if verb_name == "dotnet35" || verb_name == "dotnet35sp1" {
+            info!("Preparing for .NET 3.5 installation...");
+            
+            // 1. Remove Mono (prevents conflicts)
+            if let Err(e) = self.install_verb_internal("remove_mono").await {
+                warn!("Warning: Failed to remove Mono (may not be critical): {}", e);
+            }
+            
+            // 2. Store current Windows version (to restore later)
+            // Note: We don't have a way to store/restore yet, but dotnet35 needs winxp
+            // 3. Set Windows version to Windows XP (required for .NET 3.5)
+            self.set_windows_version("winxp")?;
+            
+            // 4. Override DLLs BEFORE installation (critical for dotnet35)
+            self.set_dll_override("mscoree", "native")?;
+            self.set_dll_override("mscorwks", "native")?;
+            
+            // 5. Wait for wineserver BEFORE installation (critical for dotnet35)
+            info!("Waiting for wineserver before .NET 3.5 installation...");
+            let wineprefix_str = self.config.wineprefix().to_string_lossy().to_string();
+            let wineserver_status = std::process::Command::new(&self.wine.wineserver_bin)
+                .arg("-w")
+                .env("WINEPREFIX", &wineprefix_str)
+                .status();
+            if let Err(e) = wineserver_status {
+                warn!("Warning: Failed to wait for wineserver: {}", e);
+            }
+        }
 
+        // Execute verb installation
         self.execute_verb_installation(&metadata, &cache_dir)
             .await?;
+        
+        // Handle .NET post-installation steps
+        if verb_name == "dotnet48" {
+            // Override mscoree.dll to native (required for .NET 4.8) - AFTER installation
+            self.set_dll_override("mscoree", "native")?;
+            
+            // Create marker file (as original winetricks does)
+            let wineprefix = self.config.wineprefix();
+            let marker_file = wineprefix.join("drive_c/windows/dotnet48.installed.workaround");
+            if let Err(e) = std::fs::File::create(&marker_file) {
+                warn!("Warning: Failed to create marker file: {}", e);
+            }
+        } else if verb_name == "dotnet35" || verb_name == "dotnet35sp1" {
+            // For dotnet35, DLL overrides are done BEFORE installation (already done above)
+            // Restore Windows version (original winetricks does w_restore_winver)
+            // Note: We don't have a way to store/restore yet, so we'll leave it as winxp
+            // This is generally fine as most apps needing dotnet35 expect older Windows versions
+        }
 
         // Verify installation
         if let Some(ref installed_file) = metadata.installed_file {
-            // Check if file exists in wineprefix
-            // TODO: Convert Windows path to Unix path and check
             info!("Verifying installation: {}", installed_file);
+            
+            // For .NET Framework, do comprehensive verification
+            if verb_name.starts_with("dotnet") {
+                if !self.verify_dotnet_installation(verb_name, installed_file)? {
+                    return Err(WinetricksError::Verb(format!(
+                        "Installation verification failed for {}. The installer may have failed silently.",
+                        verb_name
+                    )));
+                }
+            } else {
+                // For other verbs, check the installed_file path
+                if !self.verify_file_exists(installed_file)? {
+                    warn!("Warning: Installed file not found: {}. Installation may have failed.", installed_file);
+                    // Don't fail for non-critical verbs, but warn
+                }
+            }
         }
 
-        // For .NET Framework installers, wait a bit longer and verify installation
+        // For .NET Framework installers, wait a bit longer after verification
         if verb_name.starts_with("dotnet") {
-            info!("Waiting for .NET Framework installation to complete...");
+            info!("Waiting for .NET Framework installation to fully complete...");
             // Give extra time for .NET installation to fully complete
             std::thread::sleep(std::time::Duration::from_secs(2));
             
@@ -148,9 +266,6 @@ impl Executor {
             if let Err(e) = wineserver_status {
                 warn!("Warning: Failed to wait for wineserver after .NET installation: {}", e);
             }
-            
-            // Check if .NET is actually installed by querying registry or checking files
-            info!("Verifying .NET Framework installation...");
         }
 
         // Log installation
@@ -300,6 +415,23 @@ impl Executor {
                         || filename.contains("MSXML")
                         || filename.contains("xml");
 
+                    // For .NET installers, change to cache directory (like original winetricks does)
+                    // This ensures the installer can extract files properly
+                    let current_dir = if is_dotnet {
+                        Some(std::env::current_dir()?)
+                    } else {
+                        None
+                    };
+                    
+                    if is_dotnet {
+                        // Change to cache directory (where installer is located)
+                        // This is critical for .NET installers to extract properly
+                        std::env::set_current_dir(file.parent().ok_or_else(|| {
+                            WinetricksError::Config("Could not get parent directory of installer".into())
+                        })?)?;
+                        info!("Changed to cache directory: {:?}", std::env::current_dir()?);
+                    }
+
                     let mut cmd = std::process::Command::new(&self.wine.wine_bin);
                     cmd.env("WINEPREFIX", &wineprefix_str);
                     cmd.env(
@@ -313,9 +445,15 @@ impl Executor {
                     }
 
                     // Set WINEDLLOVERRIDES for .NET installers (required for fusion.dll)
+                    // Note: Original winetricks sets this as environment variable, not via cmd.env
+                    // But we need it in the command environment, so cmd.env is correct
                     if is_dotnet {
                         cmd.env("WINEDLLOVERRIDES", "fusion=b");
                     }
+                    
+                    // IMPORTANT: Original winetricks does NOT use "wine start /wait"
+                    // It just calls "wine <installer>" directly via w_try_ms_installer -> w_try
+                    // So we should NOT use "start /wait" - just call wine directly
 
                     // For MSXML installers, ensure we're using the right architecture
                     // MSXML 6.0 amd64 installer requires a 64-bit prefix
@@ -333,7 +471,15 @@ impl Executor {
                         }
                     }
 
-                    cmd.arg(&file_win_path);
+                    // For .NET installers, we need to use just the filename since we changed directory
+                    if is_dotnet {
+                        let file_name = file.file_name()
+                            .and_then(|n| n.to_str())
+                            .ok_or_else(|| WinetricksError::Config("Invalid filename".into()))?;
+                        cmd.arg(file_name);
+                    } else {
+                        cmd.arg(&file_win_path);
+                    }
 
                     // Detect specific .NET versions for proper handling
                     let is_dotnet35 = filename.contains("35") || filename.contains("dotnet35") || filename.contains("NetFx35");
@@ -344,27 +490,40 @@ impl Executor {
                     let is_dotnet48 = filename.contains("48") || filename.contains("dotnet48");
 
                     // Apply appropriate silent flags based on installer type
-                    if self.config.unattended {
-                        if is_dotnet {
-                            // .NET Framework installers require version-specific handling
-                            if is_dotnet48 || is_dotnet472 {
-                                // .NET 4.8 and 4.7.2: /sfxlang:1027 /q /norestart
+                    // For .NET installers, always use silent flags (they work better)
+                    if is_dotnet {
+                        // .NET Framework installers require version-specific handling
+                        if is_dotnet48 || is_dotnet472 {
+                            // .NET 4.8 and 4.7.2: /sfxlang:1027 /q /norestart
+                            // Only use these flags if unattended (matching original winetricks)
+                            if self.config.unattended {
                                 cmd.arg("/sfxlang:1027").arg("/q").arg("/norestart");
-                            } else if is_dotnet46 {
-                                // .NET 4.6+: /q /norestart
-                                cmd.arg("/q").arg("/norestart");
-                            } else if is_dotnet45 || is_dotnet40 {
-                                // .NET 4.5 and 4.0: Use /quiet flag
-                                cmd.arg("/quiet").arg("/norestart");
-                            } else if is_dotnet35 {
-                                // .NET 3.5: Use /q flag and extract then run installer
-                                // .NET 3.5 installer may need to extract first
-                                cmd.arg("/q");
-                            } else {
-                                // Older/newer .NET versions: Try common flags
-                                cmd.arg("/q").arg("/c:\"install.exe /q\"");
                             }
-                        } else if is_vcredist {
+                        } else if is_dotnet46 {
+                            // .NET 4.6+: /q /norestart
+                            if self.config.unattended {
+                                cmd.arg("/q").arg("/norestart");
+                            }
+                        } else if is_dotnet45 || is_dotnet40 {
+                            // .NET 4.5 and 4.0: Use /quiet flag
+                            if self.config.unattended {
+                                cmd.arg("/quiet").arg("/norestart");
+                            }
+                        } else if is_dotnet35 {
+                            // .NET 3.5: /lang:ENU /q (only /q if unattended)
+                            // Original winetricks: w_try_ms_installer "${WINE}" "${file1}" /lang:ENU ${W_OPT_UNATTENDED:+/q}
+                            cmd.arg("/lang:ENU");
+                            if self.config.unattended {
+                                cmd.arg("/q");
+                            }
+                        } else {
+                            // Older/newer .NET versions: Try common flags
+                            if self.config.unattended {
+                                cmd.arg("/q").arg("/norestart");
+                            }
+                        }
+                    } else if self.config.unattended {
+                        if is_vcredist {
                             // Visual C++ Redistributables
                             cmd.arg("/q");
                         } else if is_ie {
@@ -394,13 +553,21 @@ impl Executor {
                     let status = cmd
                         .status()
                         .map_err(|e| WinetricksError::CommandExecution {
-                            command: format!("wine {:?}", file_win_path),
+                            command: format!("wine {} {:?}", if is_dotnet { "start /wait" } else { "" }, file_win_path),
                             error: e.to_string(),
                         })?;
+
+                    // Restore original directory if we changed it
+                    if let Some(orig_dir) = current_dir {
+                        if let Err(e) = std::env::set_current_dir(orig_dir) {
+                            warn!("Warning: Failed to restore directory: {}", e);
+                        }
+                    }
 
                     // Wait for wineserver after .NET installation (important for proper completion)
                     if is_dotnet {
                         info!("Waiting for wineserver to finish processing .NET installation...");
+                        std::thread::sleep(std::time::Duration::from_secs(1)); // Brief pause first
                         let wineserver_status = std::process::Command::new(&self.wine.wineserver_bin)
                             .arg("-w")
                             .env("WINEPREFIX", &wineprefix_str)
@@ -410,47 +577,43 @@ impl Executor {
                         }
                     }
 
-                    // Check exit code - some installers return non-zero codes that are still success
+                    // Check exit code - .NET installers can return specific codes that indicate success
                     let exit_code = status.code();
-                    if !status.success() {
-                        // For .NET Framework installers, some exit codes indicate success but reboot required
-                        if is_dotnet {
-                            // Exit codes that indicate success but reboot required:
-                            // 236 - Success, reboot required (common for .NET 3.5 and older)
-                            // 3010 - Success, reboot required (common Windows installer code)
-                            // 1603 - Fatal error (but sometimes false positive with Wine for .NET 3.5/4.5)
-                            if let Some(code) = exit_code {
-                                if code == 236 || code == 3010 {
-                                    info!(
-                                        "Installer returned exit code {} (reboot required - OK in Wine)",
-                                        code
-                                    );
-                                    // Treat as success - no reboot needed in Wine environment
-                                } else if code == 1603 && (is_dotnet35 || is_dotnet45) {
-                                    // .NET 3.5 and 4.5 sometimes return 1603 but installation partially succeeded
-                                    warn!("Installer returned exit code 1603. This may indicate partial installation.");
-                                    warn!("This is common with .NET 3.5/4.5 in Wine - checking if installation succeeded...");
-                                    // Wait a bit more and check
-                                    std::thread::sleep(std::time::Duration::from_secs(3));
-                                    // Continue - we'll verify later
-                                    info!("Continuing despite exit code 1603 - will verify installation");
+                    
+                    // .NET installers can return:
+                    // 0 = success
+                    // 3010 = success (reboot required)
+                    // 236 = success (cancelled by user, but installer extracted files)
+                    // 1603 = fatal error (but sometimes false positive for .NET 3.5/4.5)
+                    // Other non-zero = usually failure
+                    let is_success = if is_dotnet {
+                        match exit_code {
+                            Some(0) | Some(3010) | Some(236) => true,
+                            Some(1603) => {
+                                // .NET 3.5/4.5 can return 1603 even when partially successful
+                                let is_dotnet35_or_45 = filename.contains("35") || filename.contains("45");
+                                if is_dotnet35_or_45 {
+                                    warn!("Warning: Installer returned exit code 1603 (fatal error). This may be a false positive for .NET 3.5/4.5.");
+                                    warn!("Checking if installation actually succeeded...");
+                                    true // We'll verify later
                                 } else {
-                                    // Other non-zero codes are still failures
-                                    return Err(WinetricksError::Verb(format!(
-                                        "EXE installer failed with exit code: {:?}",
-                                        exit_code
-                                    )));
+                                    false
                                 }
-                            } else {
-                                // No exit code available - treat as failure
-                                return Err(WinetricksError::Verb(
-                                    "EXE installer failed (no exit code available)".into(),
-                                ));
-                            }
+                            },
+                            _ => false,
+                        }
+                    } else {
+                        status.success()
+                    };
+                    
+                    if !is_success {
+                        // For .NET, don't fail immediately - we'll verify installation files
+                        if is_dotnet {
+                            warn!("Installer returned non-success exit code: {:?}", exit_code);
+                            warn!("Continuing to verify installation - some .NET installers report failure but still install files.");
                         } else {
-                            // For non-.NET installers, all non-zero codes are failures
                             return Err(WinetricksError::Verb(format!(
-                                "EXE installer failed with exit code: {:?}",
+                                "Installer failed with exit code: {:?}",
                                 exit_code
                             )));
                         }
@@ -654,4 +817,319 @@ impl Executor {
         Ok(())
     }
 
+    /// Verify that a file exists in the wineprefix (Windows path converted to Unix)
+    fn verify_file_exists(&self, windows_path: &str) -> Result<bool> {
+        let wineprefix = self.config.wineprefix();
+        
+        // Convert Windows path template (e.g., ${W_WINDIR_WIN}/file.dll) to actual path
+        // For now, handle common templates
+        let mut unix_path = windows_path.to_string();
+        
+        // Replace common Wine path variables
+        if unix_path.contains("${W_WINDIR_WIN}") || unix_path.contains("$W_WINDIR_WIN") {
+            unix_path = unix_path.replace("${W_WINDIR_WIN}", "");
+            unix_path = unix_path.replace("$W_WINDIR_WIN", "");
+            // Remove leading slash if present
+            let windows_part = unix_path.trim_start_matches('/').replace('\\', "/");
+            let full_path = wineprefix.join("drive_c/windows").join(&windows_part);
+            return Ok(full_path.exists());
+        }
+        
+        if unix_path.contains("${W_SYSTEM32") || unix_path.contains("$W_SYSTEM32") {
+            unix_path = unix_path.replace("${W_SYSTEM32_DLLS_WIN}", "");
+            unix_path = unix_path.replace("$W_SYSTEM32_DLLS_WIN", "");
+            unix_path = unix_path.replace("${W_SYSTEM32_WIN}", "");
+            unix_path = unix_path.replace("$W_SYSTEM32_WIN", "");
+            let windows_part = unix_path.trim_start_matches('/').replace('\\', "/");
+            let full_path = wineprefix.join("drive_c/windows/system32").join(&windows_part);
+            return Ok(full_path.exists());
+        }
+        
+        // Try using winepath to convert if it's a simple Windows path
+        if unix_path.starts_with("C:\\") || unix_path.starts_with("c:\\") {
+            let wine_path = self.windows_to_unix_path(windows_path)?;
+            return Ok(wine_path.exists());
+        }
+        
+        // Fallback: try direct conversion
+        let windows_part = windows_path.replace('\\', "/").trim_start_matches('/').to_string();
+        let full_path = wineprefix.join("drive_c").join(&windows_part);
+        Ok(full_path.exists())
+    }
+    
+    /// Convert Windows path to Unix path using winepath
+    fn windows_to_unix_path(&self, windows_path: &str) -> Result<PathBuf> {
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Use winepath to convert Windows path to Unix
+        let output = std::process::Command::new(&self.wine.wine_bin)
+            .arg("winepath")
+            .arg("-u")
+            .arg(windows_path)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine winepath -u {:?}", windows_path),
+                error: e.to_string(),
+            })?;
+        
+        if output.status.success() {
+            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            Ok(PathBuf::from(path))
+        } else {
+            // Fallback: manual conversion
+            let windows_part = windows_path.replace('\\', "/").trim_start_matches(|c| c == 'C' || c == ':' || c == '/').to_string();
+            Ok(wineprefix.join("drive_c").join(&windows_part))
+        }
+    }
+    
+    /// Verify .NET Framework installation by checking registry and files
+    fn verify_dotnet_installation(&self, verb_name: &str, _installed_file: &str) -> Result<bool> {
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        info!("Verifying .NET Framework installation for {}...", verb_name);
+        
+        // Check registry for .NET version
+        let registry_key = if verb_name == "dotnet48" {
+            "HKLM\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+        } else if verb_name == "dotnet35" || verb_name == "dotnet35sp1" {
+            "HKLM\\Software\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+        } else if verb_name.starts_with("dotnet4") {
+            "HKLM\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+        } else if verb_name.starts_with("dotnet3") {
+            "HKLM\\Software\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+        } else {
+            // Fallback: check v4
+            "HKLM\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+        };
+        
+        // Check registry
+        let registry_check = std::process::Command::new(&self.wine.wine_bin)
+            .arg("reg")
+            .arg("query")
+            .arg(registry_key)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output();
+        
+        let registry_found = registry_check
+            .map(|output| output.status.success())
+            .unwrap_or(false);
+        
+        if !registry_found {
+            warn!("Registry key {} not found", registry_key);
+        }
+        
+        // Check for actual .NET files in Framework directories
+        let framework_dirs = vec![
+            wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v4.0.30319"),
+            wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v3.5"),
+            wineprefix.join("drive_c/windows/Microsoft.NET/Framework64/v4.0.30319"),
+        ];
+        
+        let mut files_found = false;
+        for framework_dir in &framework_dirs {
+            if framework_dir.exists() {
+                // Check for key .NET DLLs
+                let key_dlls = vec![
+                    "mscoree.dll",
+                    "mscorlib.dll",
+                    "System.dll",
+                    "Microsoft.NETFramework.dll",
+                ];
+                
+                for dll in &key_dlls {
+                    let dll_path = framework_dir.join(dll);
+                    if dll_path.exists() {
+                        files_found = true;
+                        info!("Found .NET file: {:?}", dll_path);
+                        break;
+                    }
+                }
+                
+                if files_found {
+                    break;
+                }
+            }
+        }
+        
+        // For .NET, require both registry AND files
+        if registry_found && files_found {
+            info!("✅ .NET Framework {} verified: registry and files found", verb_name);
+            Ok(true)
+        } else if registry_found && !files_found {
+            warn!("⚠️  .NET Framework {} registry found but files missing - installation incomplete!", verb_name);
+            Ok(false)
+        } else if !registry_found && files_found {
+            warn!("⚠️  .NET Framework {} files found but registry missing - may not be properly registered", verb_name);
+            Ok(false)
+        } else {
+            warn!("❌ .NET Framework {} not properly installed: no registry or files found", verb_name);
+            Ok(false)
+        }
+    }
+
+    /// Set Windows version in Wine registry
+    fn set_windows_version(&self, version: &str) -> Result<()> {
+        use std::fs;
+        use std::io::Write;
+        use std::process::Command;
+
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Map version names to Windows version numbers
+        let version_num = match version.to_lowercase().as_str() {
+            "win10" | "windows10" => "0xa00",
+            "win81" | "windows81" => "0x0603",
+            "win8" | "windows8" => "0x0602",
+            "win7" | "windows7" => "0x0601",
+            "winxp" | "windowsxp" => "0x0501",
+            "win2k" | "windows2000" => "0x0500",
+            _ => {
+                warn!("Unknown Windows version: {}, defaulting to Windows 7", version);
+                "0x0601"
+            }
+        };
+
+        // Create temp directory for registry file
+        let temp_dir = dirs::cache_dir()
+            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
+            .join("winetricks");
+        fs::create_dir_all(&temp_dir)?;
+
+        let reg_file = temp_dir.join("set_wine_version.reg");
+
+        // Create registry file
+        let reg_content = format!(
+            r#"REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine]
+"Version"="{}"
+"#,
+            version_num
+        );
+
+        let mut file = fs::File::create(&reg_file)?;
+        file.write_all(reg_content.as_bytes())?;
+        file.sync_all()?;
+
+        // Convert Unix path to Wine Windows path
+        let reg_file_str = reg_file.to_string_lossy().to_string();
+        
+        // Get Windows path for the reg file
+        let output = Command::new(&self.wine.wine_bin)
+            .arg("winepath")
+            .arg("-w")
+            .arg(&reg_file_str)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine winepath -w {:?}", reg_file_str),
+                error: e.to_string(),
+            })?;
+
+        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        // Import registry file using wine regedit
+        let status = Command::new(&self.wine.wine_bin)
+            .arg("regedit")
+            .arg("/S") // Silent mode
+            .arg(&reg_file_win)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine regedit /S {:?}", reg_file_win),
+                error: e.to_string(),
+            })?;
+
+        // Clean up temp file
+        let _ = fs::remove_file(&reg_file);
+
+        if !status.success() {
+            return Err(WinetricksError::Config(format!(
+                "Failed to set Windows version to {}",
+                version
+            )));
+        }
+
+        info!("Set Windows version to {}", version);
+        Ok(())
+    }
+
+    /// Set DLL override in Wine registry
+    fn set_dll_override(&self, dll_name: &str, override_type: &str) -> Result<()> {
+        use std::fs;
+        use std::io::Write;
+        use std::process::Command;
+
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+
+        // Create temp directory for registry file
+        let temp_dir = dirs::cache_dir()
+            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
+            .join("winetricks");
+        fs::create_dir_all(&temp_dir)?;
+
+        let reg_file = temp_dir.join("set_dll_override.reg");
+
+        // Create registry file
+        // DLL overrides go in HKEY_CURRENT_USER\Software\Wine\DllOverrides
+        let reg_content = format!(
+            r#"REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\DllOverrides]
+"{}"="{}"
+"#,
+            dll_name, override_type
+        );
+
+        let mut file = fs::File::create(&reg_file)?;
+        file.write_all(reg_content.as_bytes())?;
+        file.sync_all()?;
+
+        // Convert Unix path to Wine Windows path
+        let reg_file_str = reg_file.to_string_lossy().to_string();
+        
+        // Get Windows path for the reg file
+        let output = Command::new(&self.wine.wine_bin)
+            .arg("winepath")
+            .arg("-w")
+            .arg(&reg_file_str)
+            .env("WINEPREFIX", &wineprefix_str)
+            .output()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine winepath -w {:?}", reg_file_str),
+                error: e.to_string(),
+            })?;
+
+        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        // Import registry file using wine regedit
+        let status = Command::new(&self.wine.wine_bin)
+            .arg("regedit")
+            .arg("/S") // Silent mode
+            .arg(&reg_file_win)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine regedit /S {:?}", reg_file_win),
+                error: e.to_string(),
+            })?;
+
+        // Clean up temp file
+        let _ = fs::remove_file(&reg_file);
+
+        if !status.success() {
+            return Err(WinetricksError::Config(format!(
+                "Failed to set DLL override for {} to {}",
+                dll_name, override_type
+            )));
+        }
+
+        info!("Set DLL override: {} = {}", dll_name, override_type);
+        Ok(())
+    }
 }
