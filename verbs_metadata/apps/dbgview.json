@@ -1,0 +1,15 @@
+{
+  "name": "dbgview",
+  "category": "apps",
+  "title": "Debug monitor",
+  "publisher": "Mark Russinovich",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "DebugView.zip",
+      "url": "https://download.sysinternals.com/files/DebugView.zip",
+      "sha256": "05cfa3dde3d98eb333d0582556f4f520e6207fe8d335bd1e910d90692798f913"
+    }
+  ]
+}

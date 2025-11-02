@@ -1,0 +1,16 @@
+{
+  "name": "ipamona",
+  "category": "fonts",
+  "title": "IPAMona Japanese fonts",
+  "publisher": "Jun Kobayashi",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "opfc-ModuleHP-1.1.1_withIPAMonaFonts-1.0.8.tar.gz",
+      "url": "\"https://web.archive.org/web/20190309175311/http://www.geocities.jp/ipa_mona/opfc-ModuleHP-1.1.1_withIPAMonaFonts-1.0.8.tar.gz\"",
+      "sha256": "ab77beea3b051abf606cd8cd3badf6cb24141ef145c60f508fcfef1e3852bb9d"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/ipag-mona.ttf"
+}

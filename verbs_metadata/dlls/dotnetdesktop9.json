@@ -1,0 +1,16 @@
+{
+  "name": "dotnetdesktop9",
+  "category": "dlls",
+  "title": "MS .NET Desktop Runtime 9.0 LTS",
+  "publisher": "Microsoft",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "windowsdesktop-runtime-9.0.7-win-x86.exe",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/9.0.7/windowsdesktop-runtime-9.0.7-win-x86.exe",
+      "sha256": "3e5c3181836cc55e7fc4feb6378bba3d7ed11a322e22e8b4ad91bf9ba7a1a63a"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

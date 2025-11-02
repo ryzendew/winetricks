@@ -1,0 +1,19 @@
+{
+  "name": "dotnet46",
+  "category": "dlls",
+  "title": "MS .NET 4.6",
+  "publisher": "Microsoft",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP46-KB3045557-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.microsoft.com/download/6/F/9/6F9673B1-87D1-46C4-BF04-95F24C3EB9DA/enu_netfx/NDP46-KB3045557-x86-x64-AllOS-ENU_exe/NDP46-KB3045557-x86-x64-AllOS-ENU.exe",
+      "sha256": "b21d33135e67e3486b154b11f7961d8e1cfd7a603267fb60febb4a6feab5cf87"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Migration/WTR/netfx45_upgradecleanup.inf",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

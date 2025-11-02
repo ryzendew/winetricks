@@ -1,0 +1,19 @@
+{
+  "name": "lavfilters702",
+  "category": "dlls",
+  "title": "LAV Filters 0.70.2",
+  "publisher": "Hendrik Leppkes",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "LAVFilters-0.70.2-Installer.exe",
+      "url": "https://github.com/Nevcairiel/LAVFilters/releases/download/0.70.2/LAVFilters-0.70.2-Installer.exe",
+      "sha256": "526e6f2de21759c0d5a60bfd2471880b5720cfb88a3b70163865a9d6cd2aa7cc"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/LAV Filters/x86/avfilter-lav-6.dll",
+  "conflicts": [
+    "lavfilters"
+  ]
+}

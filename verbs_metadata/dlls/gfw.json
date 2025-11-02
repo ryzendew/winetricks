@@ -1,0 +1,16 @@
+{
+  "name": "gfw",
+  "category": "dlls",
+  "title": "MS Games For Windows Live (xlive.dll)",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "gfwlivesetupmin.exe",
+      "url": "https://web.archive.org/web/20140730232216/https://download.microsoft.com/download/5/5/8/55846E20-4A46-4EF8-B272-7F988BC9090A/gfwlivesetupmin.exe",
+      "sha256": "b14609508e2f8dba0886ded84e2817ad532ebfa31f8a6d4be2e6a5a03a9d7c23"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/xlive.dll"
+}

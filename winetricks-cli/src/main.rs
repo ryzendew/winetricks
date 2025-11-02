@@ -93,10 +93,8 @@ EXAMPLES:
     winetricks renderer=vulkan dotnet48      # Install with Vulkan renderer
     winetricks wayland=wayland dotnet48      # Install using Wayland display driver
 
-NOTE: This is a Rust rewrite. Verb installation uses hybrid mode:
-      - Tries Rust implementation first
-      - Falls back to original winetricks script when needed
-      - All 466+ verbs from original winetricks are supported
+NOTE: This is a pure Rust rewrite of winetricks.
+      All verb installations are handled directly by the Rust implementation.
 "#
     );
 }
@@ -383,6 +381,9 @@ async fn main() -> Result<()> {
     }
 
     config.ensure_dirs()?;
+    
+    // Initialize cache from source JSON files if needed
+    config.ensure_cache_initialized()?;
 
     // Show startup message
     info!("Winetricks starting...");

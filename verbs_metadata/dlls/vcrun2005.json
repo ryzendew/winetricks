@@ -1,0 +1,16 @@
+{
+  "name": "vcrun2005",
+  "category": "dlls",
+  "title": "Visual C++ 2005 libraries (mfc80,msvcp80,msvcr80)",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vcredist_x86.EXE",
+      "url": "https://download.microsoft.com/download/8/B/4/8B42259F-5D70-43F4-AC2E-4B208FD8D66A/vcredist_x86.EXE",
+      "sha256": "8648c5fc29c44b9112fe52f9a33f80e7fc42d10f3b5b42b2121542a13e44adfd"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/winsxs/x86_Microsoft.VC80.MFC_1fc8b3b9a1e18e3b_8.0.50727.6195_x-ww_150c9e8b/mfc80.dll|${W_WINDIR_WIN}/winsxs/x86_microsoft.vc80.mfc_1fc8b3b9a1e18e3b_8.0.50727.6195_none_deadbeef/mfc80.dll"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "mfc70",
+  "category": "dlls",
+  "title": "Visual Studio (.NET) 2002 mfc70 library",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VS7.0sp1-KB924642-X86.exe",
+      "url": "https://download.microsoft.com/download/6/b/e/6be11d8a-e0c7-429c-ac8c-9860e313ced9/VS7.0sp1-KB924642-X86.exe",
+      "sha256": "7173a950169a58c56d7174811a7cd50e6092046f1f083db9d2b03315347fc0f4"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc70.dll"
+}

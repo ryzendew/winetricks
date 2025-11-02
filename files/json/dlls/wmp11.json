@@ -1,0 +1,16 @@
+{
+  "name": "wmp11",
+  "category": "dlls",
+  "title": "Windows Media Player 11",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "wmp11-windowsxp-x86-enu.exe",
+      "url": "https://web.archive.org/web/20170628063001/http://download.microsoft.com/download/0/9/5/0953e553-3bb6-44b1-8973-106f1b7e5049/wmp11-windowsxp-x86-enu.exe",
+      "sha256": "ffd321a441a67001a893f3bde4bb1afba07d4d2c9659bfdb0fbb057e7945d970"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Windows Media Player/wmplayer.exe"
+}

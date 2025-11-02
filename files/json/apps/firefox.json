@@ -1,0 +1,16 @@
+{
+  "name": "firefox",
+  "category": "apps",
+  "title": "Firefox 51.0",
+  "publisher": "Mozilla",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "FirefoxSetup51.0.exe",
+      "url": "\"https://download.mozilla.org/?product=firefox-51.0-SSL&os=win&lang=en-US\"",
+      "sha256": "05fa9ae012eca560f42d593e75eb37045a54e4978b665b51f6a61e4a2d376eb8"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Mozilla Firefox/firefox.exe"
+}

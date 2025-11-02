@@ -1,0 +1,20 @@
+{
+  "name": "powershell_core",
+  "category": "dlls",
+  "title": "PowerShell Core",
+  "publisher": "Microsoft",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "PowerShell-7.4.11-win-x86.msi",
+      "url": "\"https://github.com/PowerShell/PowerShell/releases/download/v7.4.11/PowerShell-7.4.11-win-x86.msi\"",
+      "sha256": "beaed5a0860421383afd18b7d4c2b2663f62b6a89b4e30ac0894575aa65226f8"
+    },
+    {
+      "filename": "PowerShell-7.4.11-win-x64.msi",
+      "url": "\"https://github.com/PowerShell/PowerShell/releases/download/v7.4.11/PowerShell-7.4.11-win-x64.msi\"",
+      "sha256": "9579011c463a3ad6abf890736a97e2fbba9a7b4e09ce851576ccf263e15bdc97"
+    }
+  ]
+}

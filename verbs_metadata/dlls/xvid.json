@@ -1,0 +1,16 @@
+{
+  "name": "xvid",
+  "category": "dlls",
+  "title": "Xvid Video Codec",
+  "publisher": "xvid.org",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "Xvid-1.3.7-20191228.exe",
+      "url": "https://downloads.xvid.com/downloads/Xvid-1.3.7-20191228.exe",
+      "sha256": "7997cb88db3331191042eef5238fbf2eba44b9d244f43554a712996eba2fff49"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Xvid/xvid.ico"
+}

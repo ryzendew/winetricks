@@ -1,0 +1,16 @@
+{
+  "name": "dxvk2050",
+  "category": "dlls",
+  "title": "Vulkan-based D3D8/D3D9/D3D10/D3D11 implementation for Linux / Wine (2.5)",
+  "publisher": "Philip Rebohle",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dxvk-2.5.tar.gz",
+      "url": "\"https://github.com/doitsujin/dxvk/releases/download/v2.5/dxvk-2.5.tar.gz\"",
+      "sha256": "6e6c63eb3164656452c128f9bcc693f83668c22fcbdc7804b2d0dc68f76c6ad6"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d8.dll"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "dotnet40_kb2468871",
+  "category": "dlls",
+  "title": "MS .NET 4.0 KB2468871",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP40-KB2468871-v2-x86.exe",
+      "url": "https://download.microsoft.com/download/2/B/F/2BF4D7D1-E781-4EE0-9E4F-FDD44A2F8934/NDP40-KB2468871-v2-x86.exe",
+      "sha256": "8822672fc864544e0766c80b635973bd9459d719b1af75f51483ff36cfb26f03"
+    }
+  ],
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

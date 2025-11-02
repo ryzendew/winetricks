@@ -1,0 +1,16 @@
+{
+  "name": "msxml4",
+  "category": "dlls",
+  "title": "MS XML Core Services 4.0",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "msxml.msi",
+      "url": "https://web.archive.org/web/20210506101448/http://download.microsoft.com/download/A/2/D/A2D8587D-0027-4217-9DAD-38AFDB0A177E/msxml.msi",
+      "sha256": "47c2ae679c37815da9267c81fc3777de900ad2551c11c19c2840938b346d70bb"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msxml4.dll"
+}

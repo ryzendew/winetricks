@@ -1,0 +1,16 @@
+{
+  "name": "icodecs",
+  "category": "dlls",
+  "title": "Indeo codecs",
+  "publisher": "Intel",
+  "year": "1998",
+  "media": "download",
+  "files": [
+    {
+      "filename": "codinstl.exe",
+      "url": "\"https://web.archive.org/web/20241217170639/http://www.cucusoft.com/codecdownload/codinstl.exe\"",
+      "sha256": "0979d43568111cadf0b3bf43cd8d746ac3de505759c14f381592b4f8439f6c95"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/ir50_32.dll"
+}

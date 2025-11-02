@@ -1,0 +1,16 @@
+{
+  "name": "vc2005express",
+  "category": "apps",
+  "title": "MS Visual C++ 2005 Express",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VC.iso",
+      "url": "https://download.microsoft.com/download/A/9/1/A91D6B2B-A798-47DF-9C7E-A97854B7DD18/VC.iso",
+      "sha256": "5ae700d0285d94ec6df23828c7dc9f5634cd250363bed72e486916af22ff9545"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Microsoft Visual Studio 8/Common7/IDE/VCExpress.exe"
+}

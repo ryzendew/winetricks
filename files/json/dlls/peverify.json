@@ -1,0 +1,14 @@
+{
+  "name": "peverify",
+  "category": "dlls",
+  "title": "MS peverify (from .NET 2.0 SDK)",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../dotnet20sdk/setup.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/peverify.exe"
+}

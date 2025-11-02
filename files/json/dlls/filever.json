@@ -1,0 +1,9 @@
+{
+  "name": "filever",
+  "category": "dlls",
+  "title": "Microsoft's filever, for dumping file version info",
+  "publisher": "Microsoft",
+  "year": "20??",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/filever.exe"
+}

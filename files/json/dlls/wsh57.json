@@ -1,0 +1,16 @@
+{
+  "name": "wsh57",
+  "category": "dlls",
+  "title": "MS Windows Script Host 5.7",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "scripten.exe",
+      "url": "https://download.microsoft.com/download/4/4/d/44de8a9e-630d-4c10-9f17-b9b34d3f6417/scripten.exe",
+      "sha256": "63c781b9e50bfd55f10700eb70b5c571a9bedfd8d35af29f6a22a77550df5e7b"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/scrrun.dll"
+}

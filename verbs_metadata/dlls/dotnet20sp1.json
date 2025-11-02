@@ -1,0 +1,19 @@
+{
+  "name": "dotnet20sp1",
+  "category": "dlls",
+  "title": "MS .NET 2.0 SP1",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NetFx20SP1_x86.exe",
+      "url": "https://download.microsoft.com/download/0/8/c/08c19fa4-4c4f-4ffb-9d6c-150906578c9e/NetFx20SP1_x86.exe",
+      "sha256": "c36c3a1d074de32d53f371c665243196a7608652a2fc6be9520312d5ce560871"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet20sp1.installed.workaround",
+  "conflicts": [
+    "dotnet20sp2"
+  ]
+}

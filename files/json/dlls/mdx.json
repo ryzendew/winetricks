@@ -1,0 +1,14 @@
+{
+  "name": "mdx",
+  "category": "dlls",
+  "title": "Managed DirectX",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_feb2010_redist.exe"
+    }
+  ],
+  "installed_file": "C:/windows/assembly/GAC/microsoft.directx/1.0.2902.0__31bf3856ad364e35/microsoft.directx.dll"
+}

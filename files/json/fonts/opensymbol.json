@@ -1,0 +1,16 @@
+{
+  "name": "opensymbol",
+  "category": "fonts",
+  "title": "OpenSymbol fonts (replacement for Wingdings)",
+  "publisher": "libreoffice.org",
+  "year": "2022",
+  "media": "download",
+  "files": [
+    {
+      "filename": "opens___.ttf",
+      "url": "\"https://raw.githubusercontent.com/apache/openoffice/5f13fa00702a0abe48858d443bc306f5c5ba26d8/main/extras/source/truetype/symbol/opens___.ttf\"",
+      "sha256": "86f6a40ca61adfc5942fb4d2fc360ffba9abd972a7e21c1ee91e494299ff0cbc"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/opens___.ttf"
+}

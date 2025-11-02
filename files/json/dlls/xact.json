@@ -1,0 +1,14 @@
+{
+  "name": "xact",
+  "category": "dlls",
+  "title": "MS XACT Engine (32-bit only)",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_Jun2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/xactengine2_0.dll"
+}

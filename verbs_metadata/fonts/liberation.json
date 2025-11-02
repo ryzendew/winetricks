@@ -1,0 +1,16 @@
+{
+  "name": "liberation",
+  "category": "fonts",
+  "title": "Red Hat Liberation fonts (Mono, Sans, SansNarrow, Serif)",
+  "publisher": "Red Hat",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "liberation-fonts-ttf-1.07.4.tar.gz",
+      "url": "\"https://releases.pagure.org/liberation-fonts/liberation-fonts-ttf-1.07.4.tar.gz\"",
+      "sha256": "61a7e2b6742a43c73e8762cdfeaf6dfcf9abdd2cfa0b099a9854d69bc4cfee5c"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/liberationmono-bolditalic.ttf"
+}

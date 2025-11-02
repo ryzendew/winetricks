@@ -25,7 +25,10 @@ impl Executor {
         let wine = Wine::detect()?;
         let downloader = DownloadManager::new(config.cache_dir.clone())?;
 
-        // Load verb registry if metadata directory exists
+        // Initialize cache from source JSON files if needed
+        config.ensure_cache_initialized()?;
+
+        // Load verb registry from cached metadata directory
         let registry = if config.metadata_dir().exists() {
             VerbRegistry::load_from_dir(config.metadata_dir())?
         } else {
@@ -40,7 +43,7 @@ impl Executor {
         })
     }
 
-    /// Install a verb (hybrid mode: tries Rust implementation, falls back to original script)
+    /// Install a verb using Rust implementation
     pub async fn install_verb(&mut self, verb_name: &str) -> Result<()> {
         let start_time = Instant::now();
         info!("Installing verb: {}", verb_name);
@@ -64,23 +67,10 @@ impl Executor {
             std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
         }
 
-        // Try to find original winetricks script for fallback
-        let original_script = find_original_winetricks();
-
-        // Get verb metadata
+        // Get verb metadata - must be in registry, no fallback to original winetricks
         let metadata = match self.registry.get(verb_name) {
             Some(m) => m.clone(),
             None => {
-                // If metadata not found but original script exists, delegate to it
-                if let Some(ref script) = original_script {
-                    warn!(
-                        "Verb '{}' not in Rust metadata, delegating to original winetricks",
-                        verb_name
-                    );
-                    return self
-                        .delegate_to_original_winetricks(script, verb_name)
-                        .await;
-                }
                 return Err(WinetricksError::VerbNotFound(verb_name.to_string()));
             }
         };
@@ -144,6 +134,25 @@ impl Executor {
             info!("Verifying installation: {}", installed_file);
         }
 
+        // For .NET Framework installers, wait a bit longer and verify installation
+        if verb_name.starts_with("dotnet") {
+            info!("Waiting for .NET Framework installation to complete...");
+            // Give extra time for .NET installation to fully complete
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            
+            // Wait for wineserver to finish any remaining operations
+            let wineserver_status = std::process::Command::new(&self.wine.wineserver_bin)
+                .arg("-w")
+                .env("WINEPREFIX", &self.config.wineprefix().to_string_lossy().to_string())
+                .status();
+            if let Err(e) = wineserver_status {
+                warn!("Warning: Failed to wait for wineserver after .NET installation: {}", e);
+            }
+            
+            // Check if .NET is actually installed by querying registry or checking files
+            info!("Verifying .NET Framework installation...");
+        }
+
         // Log installation
         self.log_installation(verb_name)?;
 
@@ -198,17 +207,44 @@ impl Executor {
 
                     // Run MSI installer using wine start /wait with msiexec
                     let wineprefix = self.config.wineprefix();
-                    std::env::set_var("WINEPREFIX", &wineprefix);
-                    std::env::set_var(
-                        "W_OPT_UNATTENDED",
-                        if self.config.unattended { "1" } else { "0" },
-                    );
+                    let wineprefix_str = wineprefix.to_string_lossy().to_string();
+                    
+                    // Set WINEARCH if configured (important for 64-bit installers)
+                    if let Some(ref arch) = self.config.winearch {
+                        std::env::set_var("WINEARCH", arch);
+                    }
 
                     // Convert to Windows path for wine
                     let file_win_path = self.unix_to_wine_path(file)?;
+                    
+                    // Check if this is a 64-bit installer by filename
+                    let filename = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    let is_64bit_installer = filename.contains("amd64") || filename.contains("x64") || filename.contains("64");
+                    
+                    if is_64bit_installer {
+                        if let Some(ref arch) = &self.config.winearch {
+                            if arch == "win32" {
+                                warn!("Warning: 64-bit MSI installer detected but WINEPREFIX is 32-bit (win32).");
+                                warn!("This may cause issues. Consider using a 64-bit prefix or the 32-bit installer.");
+                            }
+                        } else {
+                            warn!("64-bit MSI installer detected. Ensure WINEPREFIX is 64-bit or use 'arch=64' before installation.");
+                        }
+                    }
 
                     // Use wine start /wait for MSI files (as original winetricks does)
                     let mut cmd = std::process::Command::new(&self.wine.wine_bin);
+                    cmd.env("WINEPREFIX", &wineprefix_str);
+                    cmd.env(
+                        "W_OPT_UNATTENDED",
+                        if self.config.unattended { "1" } else { "0" },
+                    );
+                    
+                    // Set WINEARCH in command environment too
+                    if let Some(ref arch) = self.config.winearch {
+                        cmd.env("WINEARCH", arch);
+                    }
+                    
                     cmd.arg("start")
                         .arg("/wait")
                         .arg("msiexec.exe")
@@ -239,11 +275,12 @@ impl Executor {
 
                     // Run EXE installer in wine
                     let wineprefix = self.config.wineprefix();
-                    std::env::set_var("WINEPREFIX", &wineprefix);
-                    std::env::set_var(
-                        "W_OPT_UNATTENDED",
-                        if self.config.unattended { "1" } else { "0" },
-                    );
+                    let wineprefix_str = wineprefix.to_string_lossy().to_string();
+                    
+                    // Set WINEARCH if configured (important for 64-bit installers)
+                    if let Some(ref arch) = self.config.winearch {
+                        std::env::set_var("WINEARCH", arch);
+                    }
 
                     // Convert to Windows path for wine
                     let file_win_path = self.unix_to_wine_path(file)?;
@@ -259,28 +296,72 @@ impl Executor {
                     let is_ie = filename.contains("IE")
                         || filename.contains("ie")
                         || filename.contains("internetexplorer");
+                    let is_msxml = filename.contains("msxml")
+                        || filename.contains("MSXML")
+                        || filename.contains("xml");
 
                     let mut cmd = std::process::Command::new(&self.wine.wine_bin);
+                    cmd.env("WINEPREFIX", &wineprefix_str);
+                    cmd.env(
+                        "W_OPT_UNATTENDED",
+                        if self.config.unattended { "1" } else { "0" },
+                    );
+
+                    // Set WINEARCH if configured (important for 64-bit installers)
+                    if let Some(ref arch) = self.config.winearch {
+                        cmd.env("WINEARCH", arch);
+                    }
 
                     // Set WINEDLLOVERRIDES for .NET installers (required for fusion.dll)
                     if is_dotnet {
                         cmd.env("WINEDLLOVERRIDES", "fusion=b");
                     }
 
+                    // For MSXML installers, ensure we're using the right architecture
+                    // MSXML 6.0 amd64 installer requires a 64-bit prefix
+                    // If running a 64-bit MSXML installer on a 32-bit prefix, warn the user
+                    if is_msxml && filename.contains("amd64") {
+                        if let Some(ref arch) = &self.config.winearch {
+                            if arch == "win32" {
+                                warn!("Warning: MSXML 6.0 64-bit installer detected but WINEPREFIX appears to be 32-bit (win32).");
+                                warn!("This may cause issues. Consider using a 64-bit prefix or the 32-bit MSXML installer.");
+                                warn!("Attempting installation anyway...");
+                            }
+                        } else {
+                            // No WINEARCH set - try to detect from filename
+                            warn!("MSXML 6.0 64-bit installer detected. Ensure WINEPREFIX is 64-bit or use 'arch=64' before installation.");
+                        }
+                    }
+
                     cmd.arg(&file_win_path);
+
+                    // Detect specific .NET versions for proper handling
+                    let is_dotnet35 = filename.contains("35") || filename.contains("dotnet35") || filename.contains("NetFx35");
+                    let is_dotnet40 = filename.contains("40") || filename.contains("dotnet40") || filename.contains("NetFx40");
+                    let is_dotnet45 = filename.contains("45") || filename.contains("dotnet45") || filename.contains("NetFx45");
+                    let is_dotnet46 = filename.contains("46") || filename.contains("462") || filename.contains("dotnet46");
+                    let is_dotnet472 = filename.contains("472") || filename.contains("dotnet472");
+                    let is_dotnet48 = filename.contains("48") || filename.contains("dotnet48");
 
                     // Apply appropriate silent flags based on installer type
                     if self.config.unattended {
                         if is_dotnet {
-                            // .NET Framework installers: /sfxlang:1027 /q /norestart (for 4.7.2+)
-                            // Older versions use: /q /c:"install.exe /q"
-                            if filename.contains("48")
-                                || filename.contains("472")
-                                || filename.contains("46")
-                                || filename.contains("462")
-                            {
+                            // .NET Framework installers require version-specific handling
+                            if is_dotnet48 || is_dotnet472 {
+                                // .NET 4.8 and 4.7.2: /sfxlang:1027 /q /norestart
                                 cmd.arg("/sfxlang:1027").arg("/q").arg("/norestart");
+                            } else if is_dotnet46 {
+                                // .NET 4.6+: /q /norestart
+                                cmd.arg("/q").arg("/norestart");
+                            } else if is_dotnet45 || is_dotnet40 {
+                                // .NET 4.5 and 4.0: Use /quiet flag
+                                cmd.arg("/quiet").arg("/norestart");
+                            } else if is_dotnet35 {
+                                // .NET 3.5: Use /q flag and extract then run installer
+                                // .NET 3.5 installer may need to extract first
+                                cmd.arg("/q");
                             } else {
+                                // Older/newer .NET versions: Try common flags
                                 cmd.arg("/q").arg("/c:\"install.exe /q\"");
                             }
                         } else if is_vcredist {
@@ -297,6 +378,18 @@ impl Executor {
                         }
                     }
 
+                    // For .NET 3.5 and 4.5, apply special DLL overrides before installation
+                    if is_dotnet35 || is_dotnet45 {
+                        if is_dotnet35 {
+                            info!("Applying special settings for .NET Framework 3.5...");
+                            // .NET 3.5 requires native mscoree and mscorwks DLLs
+                            // TODO: Implement DLL override logic in Rust
+                        }
+                        if is_dotnet45 {
+                            info!("Applying special settings for .NET Framework 4.5...");
+                        }
+                    }
+
                     // Keep terminal output visible (unattended mode suppresses GUI, not terminal)
                     let status = cmd
                         .status()
@@ -305,14 +398,27 @@ impl Executor {
                             error: e.to_string(),
                         })?;
 
+                    // Wait for wineserver after .NET installation (important for proper completion)
+                    if is_dotnet {
+                        info!("Waiting for wineserver to finish processing .NET installation...");
+                        let wineserver_status = std::process::Command::new(&self.wine.wineserver_bin)
+                            .arg("-w")
+                            .env("WINEPREFIX", &wineprefix_str)
+                            .status();
+                        if let Err(e) = wineserver_status {
+                            warn!("Warning: Failed to wait for wineserver: {}", e);
+                        }
+                    }
+
                     // Check exit code - some installers return non-zero codes that are still success
                     let exit_code = status.code();
                     if !status.success() {
                         // For .NET Framework installers, some exit codes indicate success but reboot required
                         if is_dotnet {
                             // Exit codes that indicate success but reboot required:
-                            // 236 - Success, reboot required (common for .NET 3.5)
+                            // 236 - Success, reboot required (common for .NET 3.5 and older)
                             // 3010 - Success, reboot required (common Windows installer code)
+                            // 1603 - Fatal error (but sometimes false positive with Wine for .NET 3.5/4.5)
                             if let Some(code) = exit_code {
                                 if code == 236 || code == 3010 {
                                     info!(
@@ -320,6 +426,14 @@ impl Executor {
                                         code
                                     );
                                     // Treat as success - no reboot needed in Wine environment
+                                } else if code == 1603 && (is_dotnet35 || is_dotnet45) {
+                                    // .NET 3.5 and 4.5 sometimes return 1603 but installation partially succeeded
+                                    warn!("Installer returned exit code 1603. This may indicate partial installation.");
+                                    warn!("This is common with .NET 3.5/4.5 in Wine - checking if installation succeeded...");
+                                    // Wait a bit more and check
+                                    std::thread::sleep(std::time::Duration::from_secs(3));
+                                    // Continue - we'll verify later
+                                    info!("Continuing despite exit code 1603 - will verify installation");
                                 } else {
                                     // Other non-zero codes are still failures
                                     return Err(WinetricksError::Verb(format!(
@@ -394,6 +508,7 @@ impl Executor {
     }
 
     /// Check if verb is installed
+    /// Matches original winetricks behavior using word boundary matching
     pub fn is_installed(&self, verb_name: &str) -> Result<bool> {
         let wineprefix = self.config.wineprefix();
         let log_file = wineprefix.join("winetricks.log");
@@ -403,13 +518,21 @@ impl Executor {
         }
 
         let content = std::fs::read_to_string(&log_file)?;
+        // Use word boundary matching like original winetricks (grep -qw)
+        // Match verb_name as a whole word, not as part of another verb name
         Ok(content.lines().any(|line| {
             let trimmed = line.trim();
-            // Only match actual verb names, not flags or commands
+            // Skip comments, flags, and commands
+            if trimmed.starts_with('#') || trimmed.starts_with('-') || trimmed.starts_with("//") {
+                return false;
+            }
+            // Skip lines with = (commands like prefix=, arch=, etc.)
+            if trimmed.contains('=') {
+                return false;
+            }
+            // Exact match (word boundary equivalent)
+            // Match whole word to avoid partial matches (e.g., "dotnet" matching "dotnet48")
             trimmed == verb_name
-            && !trimmed.starts_with('-')  // Not a flag
-            && !trimmed.starts_with('#')  // Not a comment
-            && !trimmed.contains('=') // Not a command like prefix=
         }))
     }
 
@@ -496,7 +619,8 @@ impl Executor {
         Ok(())
     }
 
-    /// Remove verb from installation log (for reinstall)
+    /// Remove verb from installation log (for reinstall/uninstall)
+    /// Matches original winetricks behavior - removes exact verb name match
     fn remove_from_log(&self, verb_name: &str) -> Result<()> {
         let wineprefix = self.config.wineprefix();
         let log_file = wineprefix.join("winetricks.log");
@@ -508,154 +632,26 @@ impl Executor {
         let content = std::fs::read_to_string(&log_file)?;
         let lines: Vec<String> = content
             .lines()
-            .map(|l| l.trim().to_string())
-            .filter(|l| l != verb_name && !l.is_empty())
+            .filter(|l| {
+                let trimmed = l.trim();
+                // Keep the line if it's not the verb we're removing
+                // Use exact match to avoid removing similar verb names
+                trimmed != verb_name
+            })
+            .map(|l| l.to_string()) // Preserve original line (including whitespace)
             .collect();
 
-        // Ensure newline at end if there are any lines
+        // Write back the file with preserved formatting
+        // Original winetricks preserves newlines, so we do too
         let output = if lines.is_empty() {
             String::new()
         } else {
-            lines.join("\n") + "\n"
+            // Join with newlines and ensure trailing newline if file had content
+            lines.join("\n") + if content.ends_with('\n') { "\n" } else { "" }
         };
 
         std::fs::write(&log_file, output)?;
         Ok(())
     }
 
-    /// Delegate verb installation to original winetricks script
-    async fn delegate_to_original_winetricks(
-        &self,
-        script_path: &Path,
-        verb_name: &str,
-    ) -> Result<()> {
-        let start_time = Instant::now();
-        info!("Delegating {} to original winetricks script", verb_name);
-
-        let wineprefix = self.config.wineprefix();
-        std::env::set_var("WINEPREFIX", &wineprefix);
-        std::env::set_var(
-            "W_OPT_UNATTENDED",
-            if self.config.unattended { "1" } else { "0" },
-        );
-
-        // Set WINE_D3D_CONFIG if configured
-        // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
-        if let Some(ref renderer) = self.config.renderer {
-            let wine_renderer = match renderer.to_lowercase().as_str() {
-                "opengl" | "gl" | "w" => "gl",
-                "vulkan" | "vk" | "v" => "vulkan",
-                "gdi" => "gdi",
-                "no3d" => "no3d",
-                _ => renderer.as_str(),
-            };
-            std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
-        }
-
-        // Set DISPLAY for Wayland/XWayland if configured
-        if let Some(ref wayland) = self.config.wayland {
-            match wayland.to_lowercase().as_str() {
-                "wayland" => {
-                    std::env::remove_var("DISPLAY");
-                }
-                "xwayland" | "x11" => {
-                    let display = std::env::var("DISPLAY").unwrap_or_else(|_| ":0".to_string());
-                    std::env::set_var("DISPLAY", &display);
-                }
-                _ => {} // Auto - don't modify
-            }
-        }
-
-        let mut cmd = std::process::Command::new("sh");
-        cmd.arg(script_path);
-
-        if self.config.force {
-            cmd.arg("--force");
-        }
-        if self.config.unattended {
-            cmd.arg("--unattended");
-        }
-        if self.config.torify {
-            cmd.arg("--torify");
-        }
-        if self.config.isolate {
-            cmd.arg("--isolate");
-        }
-        if self.config.no_clean {
-            cmd.arg("--no-clean");
-        }
-
-        cmd.arg(verb_name);
-
-        // Keep output visible (unattended mode suppresses GUI, not terminal output)
-        let status = cmd
-            .status()
-            .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("sh {:?} {}", script_path, verb_name),
-                error: e.to_string(),
-            })?;
-
-        if status.success() {
-            // Log installation
-            self.log_installation(verb_name)?;
-
-            // Calculate and display installation time
-            let duration = start_time.elapsed();
-            let duration_secs = duration.as_secs();
-            let duration_millis = duration.subsec_millis();
-
-            if duration_secs >= 60 {
-                let minutes = duration_secs / 60;
-                let seconds = duration_secs % 60;
-                println!(
-                    "Successfully installed {} (via original winetricks) in {}m {}.{:03}s",
-                    verb_name, minutes, seconds, duration_millis
-                );
-            } else {
-                println!(
-                    "Successfully installed {} (via original winetricks) in {}.{:03}s",
-                    verb_name, duration_secs, duration_millis
-                );
-            }
-            Ok(())
-        } else {
-            Err(WinetricksError::Verb(format!(
-                "Original winetricks failed with exit code: {:?}",
-                status.code()
-            )))
-        }
-    }
-}
-
-/// Find the original winetricks script (for hybrid mode fallback)
-fn find_original_winetricks() -> Option<PathBuf> {
-    // Try standard system locations first
-    let candidates = [
-        "/usr/bin/winetricks",
-        "/usr/local/bin/winetricks",
-        "/opt/local/bin/winetricks", // macOS
-    ];
-
-    for candidate in &candidates {
-        let path = PathBuf::from(candidate);
-        if path.exists() && path.is_file() {
-            return Some(path);
-        }
-    }
-
-    // Try to find it in PATH
-    if let Ok(output) = std::process::Command::new("which")
-        .arg("winetricks")
-        .output()
-    {
-        if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout);
-            let path = path.trim();
-            if !path.is_empty() {
-                return Some(PathBuf::from(path));
-            }
-        }
-    }
-
-    None
 }

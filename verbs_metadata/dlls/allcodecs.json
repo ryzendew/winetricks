@@ -1,0 +1,8 @@
+{
+  "name": "allcodecs",
+  "category": "dlls",
+  "title": "All codecs (dirac, ffdshow, icodecs, cinepak, l3codecx, xvid) except wmp",
+  "publisher": "various",
+  "year": "1995-2009",
+  "media": "download"
+}

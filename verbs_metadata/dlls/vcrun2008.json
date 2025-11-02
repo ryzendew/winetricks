@@ -1,0 +1,16 @@
+{
+  "name": "vcrun2008",
+  "category": "dlls",
+  "title": "Visual C++ 2008 libraries (mfc90,msvcp90,msvcr90)",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vcredist_x86.exe",
+      "url": "https://download.microsoft.com/download/5/D/8/5D8C65CB-C849-4025-8E95-C3966CAFD8AE/vcredist_x86.exe",
+      "sha256": "8742bcbf24ef328a72d2a27b693cc7071e38d3bb4b9b44dec42aa3d2c8d61d92"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Common Files/Microsoft Shared/VC/msdia90.dll"
+}

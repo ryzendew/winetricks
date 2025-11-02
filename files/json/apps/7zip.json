@@ -1,0 +1,16 @@
+{
+  "name": "7zip",
+  "category": "apps",
+  "title": "7-Zip 24.09",
+  "publisher": "Igor Pavlov",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "7z2409.exe",
+      "url": "https://www.7-zip.org/a/7z2409.exe",
+      "sha256": "e35e4374100b52e697e002859aefdd5533bcbf4118e5d2210fae6de318947c41"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_WIN}/7-Zip/7zFM.exe"
+}

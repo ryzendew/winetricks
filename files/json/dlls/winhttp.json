@@ -1,0 +1,14 @@
+{
+  "name": "winhttp",
+  "category": "dlls",
+  "title": "MS Windows HTTP Services",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/winhttp.dll"
+}

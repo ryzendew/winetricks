@@ -1,0 +1,17 @@
+{
+  "name": "pdh",
+  "category": "dlls",
+  "title": "MS pdh.dll (Performance Data Helper)",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win7sp1/windows6.1-KB976932-X86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/pdh.dll",
+  "conflicts": [
+    "pdh_nt4"
+  ]
+}

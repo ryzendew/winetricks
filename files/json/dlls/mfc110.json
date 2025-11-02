@@ -1,0 +1,14 @@
+{
+  "name": "mfc110",
+  "category": "dlls",
+  "title": "Visual C++ 2012 mfc110 library; part of vcrun2012",
+  "publisher": "Microsoft",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2012/vcredist_x86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc110u.dll"
+}

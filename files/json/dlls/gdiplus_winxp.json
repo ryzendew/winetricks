@@ -1,0 +1,16 @@
+{
+  "name": "gdiplus_winxp",
+  "category": "dlls",
+  "title": "MS GDI+",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "WindowsXP-KB975337-x86-ENU.exe",
+      "url": "https://web.archive.org/web/20140615000000/http://download.microsoft.com/download/a/b/c/abc45517-97a0-4cee-a362-1957be2f24e1/WindowsXP-KB975337-x86-ENU.exe",
+      "sha256": "699e76e9f100db3d50da8762c484a369df4698d4b84f7821d4df0e37ce68bcbe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/gdiplus.dll"
+}

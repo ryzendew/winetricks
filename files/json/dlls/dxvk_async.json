@@ -1,0 +1,9 @@
+{
+  "name": "dxvk_async",
+  "category": "dlls",
+  "title": "DXVK with Async and GPL patches [USE AT OWN RISK IN GAMES WITH ANTICHEAT] (latest)",
+  "publisher": "Ph42oN",
+  "year": "2025",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d8.dll"
+}

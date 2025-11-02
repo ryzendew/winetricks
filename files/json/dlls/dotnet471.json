@@ -1,0 +1,20 @@
+{
+  "name": "dotnet471",
+  "category": "dlls",
+  "title": "MS .NET 4.7.1",
+  "publisher": "Microsoft",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP471-KB4033342-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/4312fa21-59b0-4451-9482-a1376f7f3ba4/9947fce13c11105b48cba170494e787f/NDP471-KB4033342-x86-x64-AllOS-ENU.exe",
+      "sha256": "df6e700d37ff416e2e1d8463dededdf76522ceaf5bb4cc3f197a7f2b9eccc4ad"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet471.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk",
+    "dotnet30sp1"
+  ]
+}

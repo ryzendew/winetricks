@@ -1,0 +1,16 @@
+{
+  "name": "dotnet8",
+  "category": "dlls",
+  "title": "MS .NET Runtime 8.0 LTS",
+  "publisher": "Microsoft",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnet-runtime-8.0.12-win-x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/3210417e-ab32-4d14-a152-1ad9a2fcfdd2/da097cee5aa85bd79b6d593e3866fb7f/dotnet-runtime-8.0.12-win-x86.exe",
+      "sha256": "eb0d8f39fa2dbb4ff3ff72ad325b6030773df875ab509824ea18c87a368985fa"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

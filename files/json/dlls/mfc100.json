@@ -1,0 +1,14 @@
+{
+  "name": "mfc100",
+  "category": "dlls",
+  "title": "Visual C++ 2010 mfc100 library; part of vcrun2010",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2010/vcredist_x86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc100u.dll"
+}

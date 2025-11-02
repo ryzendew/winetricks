@@ -1,0 +1,14 @@
+{
+  "name": "mfc140",
+  "category": "dlls",
+  "title": "Visual C++ 2015 mfc140 library; part of vcrun2015",
+  "publisher": "Microsoft",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2015/vc_redist.x86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc140u.dll"
+}

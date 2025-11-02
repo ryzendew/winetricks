@@ -1,0 +1,16 @@
+{
+  "name": "nook",
+  "category": "apps",
+  "title": "Nook for PC (e-book reader)",
+  "publisher": "Barnes & Noble",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "bndr2_setup_latest.exe",
+      "url": "https://web.archive.org/web/20230716074105/http://images.barnesandnoble.com/PResources/download/eReader2/bndr2_setup_latest.exe",
+      "sha256": "436616d99f0e2351909ab53d910b505c7a3fca248876ebb835fd7bce4aad9720"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Barnes & Noble/BNDesktopReader/BNDReader.exe"
+}

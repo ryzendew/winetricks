@@ -1,0 +1,14 @@
+{
+  "name": "utorrent",
+  "category": "apps",
+  "title": "µTorrent 2.2.1",
+  "publisher": "BitTorrent",
+  "year": "2011",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "utorrent_2.2.1.exe"
+    }
+  ],
+  "installed_exe": "${W_WINDIR_WIN}/utorrent.exe"
+}

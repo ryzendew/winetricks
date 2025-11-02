@@ -1,0 +1,16 @@
+{
+  "name": "jet40",
+  "category": "dlls",
+  "title": "MS Jet 4.0 Service Pack 8",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "jet40sp8_9xnt.exe",
+      "url": "https://web.archive.org/web/20210225171713/http://download.microsoft.com/download/4/3/9/4393c9ac-e69e-458d-9f6d-2fe191c51469/Jet40SP8_9xNT.exe",
+      "sha256": "b060246cd499085a31f15873689d5fa7df817e407c8261a5c71fa6b9f7042560"
+    }
+  ],
+  "installed_file": "${W_COMMONFILES_WIN}/Microsoft Shared/dao/dao360.dll"
+}

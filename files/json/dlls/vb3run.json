@@ -1,0 +1,16 @@
+{
+  "name": "vb3run",
+  "category": "dlls",
+  "title": "MS Visual Basic 3 runtime",
+  "publisher": "Microsoft",
+  "year": "1998",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vb3run.exe",
+      "url": "https://download.microsoft.com/download/vb30/utility/1/w9xnt4/en-us/vb3run.exe",
+      "sha256": "3ca3ad6332f83b5c2b86e4758afa400150f07ae66ce8b850d8f9d6bcd47ad4cd"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/Vbrun300.dll"
+}

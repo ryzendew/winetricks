@@ -1,0 +1,16 @@
+{
+  "name": "njjwp_trial",
+  "category": "apps",
+  "title": "NJStar Japanese Word Processor trial",
+  "publisher": "NJStar",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "njjwp610sw15918.exe",
+      "url": "http://ftp.njstar.com/sw/njjwp610sw15918.exe",
+      "sha256": "7f36138c3d19539cb73d757cd42a6f7afebdaf9cfed0cf9bc483c33e519e2a26"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/NJStar Japanese WP6/NJStarJ.exe"
+}

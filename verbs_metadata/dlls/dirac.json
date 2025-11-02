@@ -1,0 +1,16 @@
+{
+  "name": "dirac",
+  "category": "dlls",
+  "title": "The Dirac directshow filter v1.0.2",
+  "publisher": "Dirac",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "DiracDirectShowFilter-1.0.2.exe",
+      "url": "https://downloads.sourceforge.net/dirac/DiracDirectShowFilter-1.0.2.exe",
+      "sha256": "7257de4be940405637bb5d11c1179f7db86f165f21fc0ba24f42a9ecbc55fe20"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Dirac/DiracDecoder.dll"
+}

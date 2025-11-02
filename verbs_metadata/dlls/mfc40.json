@@ -1,0 +1,14 @@
+{
+  "name": "mfc40",
+  "category": "dlls",
+  "title": "MS mfc40 (Microsoft Foundation Classes from win7sp1)",
+  "publisher": "Microsoft",
+  "year": "1999",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win7sp1/windows6.1-KB976932-X86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc40.dll"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "dxdiagn",
+  "category": "dlls",
+  "title": "DirectX Diagnostic Library",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win7sp1/windows6.1-KB976932-X86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dxdiagn.dll",
+  "conflicts": [
+    "dxdiagn_feb2010"
+  ]
+}

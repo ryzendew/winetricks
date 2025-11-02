@@ -1,0 +1,20 @@
+{
+  "name": "dotnet35sp1",
+  "category": "dlls",
+  "title": "MS .NET 3.5 SP1",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnetfx35.exe",
+      "url": "https://download.microsoft.com/download/2/0/e/20e90413-712f-438c-988e-fdaa79a8ac3d/dotnetfx35.exe",
+      "sha256": "0582515bde321e072f8673e829e175ed2e7a53e803127c50253af76528e66bc1"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Microsoft.NET/Framework/v3.5/msbuild.exe.config",
+  "conflicts": [
+    "dotnet11",
+    "dotnet20sp1"
+  ]
+}

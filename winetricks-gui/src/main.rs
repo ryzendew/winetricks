@@ -7,7 +7,7 @@ mod cosmic_app;
 
 #[cfg(feature = "iced")]
 use iced::widget::{
-    button, checkbox, column, container, pick_list, row, scrollable, text, text_input,
+    button, checkbox, column, container, pick_list, progress_bar, row, scrollable, text, text_input,
 };
 #[cfg(feature = "iced")]
 use iced::{Alignment, Color, Element, Length, Pixels, Sandbox, Settings, Theme};
@@ -85,6 +85,14 @@ struct WinetricksApp {
     winearch_selection: Option<WineArch>,
     renderer_selection: Option<Renderer>,
     wayland_selection: Option<WaylandDisplay>,
+    // Operation status
+    operation_status: Option<OperationStatus>,
+}
+
+#[derive(Debug, Clone)]
+enum OperationStatus {
+    Uninstalling { verb_name: String },
+    Installing { verb_name: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -186,6 +194,8 @@ enum Message {
     IsolateToggled(bool),
     NoCleanToggled(bool),
     VerbosityChanged(u8),
+    // Operation status updates
+    OperationStatusUpdate(Option<OperationStatus>),
 }
 
 // Modern dark theme colors
@@ -261,6 +271,7 @@ impl Sandbox for WinetricksApp {
             winearch_selection,
             renderer_selection,
             wayland_selection,
+            operation_status: None,
         }
     }
 
@@ -284,8 +295,64 @@ impl Sandbox for WinetricksApp {
                 // TODO: Implement async installation
             }
             Message::UninstallVerb(verb_name) => {
-                eprintln!("Uninstall verb: {}", verb_name);
-                // TODO: Implement async uninstallation
+                eprintln!("Uninstalling verb: {}", verb_name);
+                // Show progress dialog
+                self.operation_status = Some(OperationStatus::Uninstalling { 
+                    verb_name: verb_name.clone() 
+                });
+                
+                // Spawn async task to uninstall
+                let config = self.config.clone();
+                let verb_name_clone = verb_name.clone();
+                let config_for_reload = self.config.clone();
+                std::thread::spawn(move || {
+                    let rt = tokio::runtime::Runtime::new().unwrap();
+                    rt.block_on(async {
+                        match winetricks_lib::Executor::new(config.clone()).await {
+                            Ok(mut executor) => {
+                                match executor.uninstall_verb(&verb_name_clone).await {
+                                    Ok(_) => {
+                                        eprintln!("Successfully uninstalled: {}", verb_name_clone);
+                                        // Reload installed verbs list after successful uninstall
+                                        let updated_verbs = load_installed_verbs(&config_for_reload);
+                                        eprintln!("Remaining installed verbs: {:?}", updated_verbs);
+                                    }
+                                    Err(e) => {
+                                        eprintln!("Error uninstalling {}: {}", verb_name_clone, e);
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Error creating executor: {}", e);
+                            }
+                        }
+                    });
+                });
+                
+                // Optimistically remove from UI immediately for instant feedback
+                self.installed_verbs.retain(|v| v != &verb_name);
+                
+                // Auto-close dialog after a delay (simulate completion check)
+                // In a real implementation, we'd poll for completion or use a timer
+                let verb_name_for_close = verb_name.clone();
+                let config_for_check = self.config.clone();
+                std::thread::spawn(move || {
+                    // Wait a moment for uninstall to complete
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    // Check if verb is actually removed from log
+                    let updated = load_installed_verbs(&config_for_check);
+                    if !updated.contains(&verb_name_for_close) {
+                        eprintln!("Uninstall completed successfully");
+                    }
+                });
+            }
+            Message::OperationStatusUpdate(status) => {
+                let completed = status.is_none();
+                self.operation_status = status;
+                // Reload installed verbs when operation completes
+                if completed {
+                    self.installed_verbs = load_installed_verbs(&self.config);
+                }
             }
             Message::RunWineTool(tool) => {
                 eprintln!("Running Wine tool: {}", tool);
@@ -581,13 +648,36 @@ impl Sandbox for WinetricksApp {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        container(row![self.sidebar(), self.content()].spacing(0))
+        let main_content = container(row![self.sidebar(), self.content()].spacing(0))
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Container::Custom(Box::new(
                 BackgroundContainerStyle,
-            )))
+            )));
+        
+        // Show operation status overlay if there's an ongoing operation
+        if let Some(ref status) = self.operation_status {
+            container(
+                column![
+                    main_content,
+                    // Overlay that covers the entire screen with semi-transparent background
+                    container(
+                        self.operation_status_overlay(status)
+                    )
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .align_x(iced::alignment::Horizontal::Center)
+                    .align_y(iced::alignment::Vertical::Center)
+                    .style(iced::theme::Container::Custom(Box::new(OverlayStyle)))
+                ]
+                .spacing(0)
+            )
+            .width(Length::Fill)
+            .height(Length::Fill)
             .into()
+        } else {
+            main_content.into()
+        }
     }
 
     fn theme(&self) -> Theme {
@@ -597,6 +687,44 @@ impl Sandbox for WinetricksApp {
 
 #[cfg(feature = "iced")]
 impl WinetricksApp {
+    fn operation_status_overlay(&self, status: &OperationStatus) -> Element<'_, Message> {
+        let (title, message) = match status {
+            OperationStatus::Uninstalling { verb_name } => {
+                (
+                    format!("Uninstalling {}", verb_name),
+                    "Removing verb from wineprefix...".to_string()
+                )
+            }
+            OperationStatus::Installing { verb_name } => {
+                (
+                    format!("Installing {}", verb_name),
+                    "Installing verb to wineprefix...".to_string()
+                )
+            }
+        };
+        
+        // Progress dialog content
+        container(
+            column![
+                text(&title)
+                    .size(18)
+                    .style(iced::theme::Text::Color(colors::TEXT_PRIMARY)),
+                text(&message)
+                    .size(14)
+                    .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
+                progress_bar(0.0..=100.0, 100.0) // Indeterminate progress
+                    .width(Length::Fixed(300.0))
+                    .height(Length::Fixed(6.0)),
+            ]
+            .spacing(12)
+            .padding(24)
+            .align_items(Alignment::Center)
+        )
+        .style(iced::theme::Container::Custom(Box::new(OperationStatusStyle)))
+        .width(Length::Fixed(400.0))
+        .into()
+    }
+    
     fn sidebar(&self) -> Element<'_, Message> {
         let is_browse = self.current_view == View::Browse;
         let is_installed = self.current_view == View::Installed;
@@ -1287,6 +1415,42 @@ impl container::StyleSheet for CardContainerStyle {
         container::Appearance {
             background: Some(colors::SURFACE.into()),
             border: iced::Border::with_radius(12.0),
+            ..Default::default()
+        }
+    }
+}
+
+#[cfg(feature = "iced")]
+struct OverlayStyle;
+
+#[cfg(feature = "iced")]
+impl container::StyleSheet for OverlayStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(iced::Background::Color(iced::Color {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 0.7, // Semi-transparent black overlay
+            })),
+            ..Default::default()
+        }
+    }
+}
+
+#[cfg(feature = "iced")]
+struct OperationStatusStyle;
+
+#[cfg(feature = "iced")]
+impl container::StyleSheet for OperationStatusStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(colors::SURFACE.into()),
+            border: iced::Border::with_radius(16.0),
             ..Default::default()
         }
     }

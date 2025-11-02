@@ -1,0 +1,16 @@
+{
+  "name": "cinepak",
+  "category": "dlls",
+  "title": "Cinepak Codec",
+  "publisher": "Radius",
+  "year": "1995",
+  "media": "download",
+  "files": [
+    {
+      "filename": "cvid32.zip",
+      "url": "\"http://www.probo.com/pub/cinepak/cvid32.zip\"",
+      "sha256": "a41984a954fe77557f228fa8a95cdc05db22bf9ff5429fe4307fd6fc51e11969"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/iccvid.dll"
+}

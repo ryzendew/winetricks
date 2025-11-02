@@ -1,0 +1,9 @@
+{
+  "name": "vkd3d",
+  "category": "dlls",
+  "title": "Vulkan-based D3D12 implementation for Linux / Wine (latest)",
+  "publisher": "Hans-Kristian Arntzen ",
+  "year": "2020",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d12.dll"
+}

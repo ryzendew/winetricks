@@ -1,0 +1,16 @@
+{
+  "name": "controlpad",
+  "category": "apps",
+  "title": "MS ActiveX Control Pad",
+  "publisher": "Microsoft",
+  "year": "1997",
+  "media": "download",
+  "files": [
+    {
+      "filename": "setuppad.exe",
+      "url": "https://download.microsoft.com/download/activexcontrolpad/install/4.0.0.950/win98mexp/en-us/setuppad.exe",
+      "sha256": "eab94091ac391f9bbc8e355a1d231e6a08b8dbbb0f6539245b7f0c58d94f420c"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/ActiveX Control Pad/PED.EXE"
+}

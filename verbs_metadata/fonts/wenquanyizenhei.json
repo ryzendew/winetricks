@@ -1,0 +1,16 @@
+{
+  "name": "wenquanyizenhei",
+  "category": "fonts",
+  "title": "WenQuanYi ZenHei font",
+  "publisher": "wenq.org",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "wqy-zenhei-0.8.38-1.tar.gz",
+      "url": "\"http://downloads.sourceforge.net/wqy/wqy-zenhei-0.8.38-1.tar.gz\"",
+      "sha256": "6018eb54243eddc41e9cbe0b71feefa5cb2570ecbaccd39daa025961235dea22"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/wqy-zenhei.ttc"
+}

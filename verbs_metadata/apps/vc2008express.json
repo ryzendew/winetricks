@@ -1,0 +1,16 @@
+{
+  "name": "vc2008express",
+  "category": "apps",
+  "title": "MS Visual C++ 2008 Express",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VS2008ExpressENUX1397868.iso",
+      "url": "https://download.microsoft.com/download/8/B/5/8B5804AD-4990-40D0-A6AA-CE894CBBB3DC/VS2008ExpressENUX1397868.iso",
+      "sha256": "632318ef0df5bad58fcb99852bd251243610e7a4d84213c45b4f693605a13ead"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Microsoft Visual Studio 9.0/Common7/IDE/VCExpress.exe"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "dotnet472",
+  "category": "dlls",
+  "title": "MS .NET 4.7.2",
+  "publisher": "Microsoft",
+  "year": "2018",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP472-KB4054530-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/1f5af042-d0e4-4002-9c59-9ba66bcf15f6/089f837de42708daacaae7c04b7494db/NDP472-KB4054530-x86-x64-AllOS-ENU.exe",
+      "sha256": "5cb624b97f9fd6d3895644c52231c9471cd88aacb57d6e198d3024a1839139f6"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet472.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

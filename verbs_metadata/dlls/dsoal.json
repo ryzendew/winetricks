@@ -1,0 +1,17 @@
+{
+  "name": "dsoal",
+  "category": "dlls",
+  "title": "A DirectSound DLL replacer that enables surround sound, HRTF, and EAX support via OpenAL Soft",
+  "publisher": "kcat",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "DSOAL.7z"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dsoal-aldrv.dll",
+  "conflicts": [
+    "dsound"
+  ]
+}

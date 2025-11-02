@@ -1,0 +1,16 @@
+{
+  "name": "msxml6",
+  "category": "dlls",
+  "title": "MS XML Core Services 6.0 sp2",
+  "publisher": "Microsoft",
+  "year": "2014",
+  "media": "download",
+  "files": [
+    {
+      "filename": "msxml6-KB2957482-enu-amd64.exe",
+      "url": "https://download.microsoft.com/download/2/7/7/277681BE-4048-4A58-ABBA-259C465B1699/msxml6-KB2957482-enu-amd64.exe",
+      "sha256": "260cd870851ffc3c6d10b71691f134e20d8d03ac26073bb36951eacb7aa85897"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msxml6.dll"
+}

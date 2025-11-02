@@ -1,0 +1,16 @@
+{
+  "name": "dotnet11sp1",
+  "category": "dlls",
+  "title": "MS .NET 1.1 SP1",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP1.1sp1-KB867460-X86.exe",
+      "url": "https://web.archive.org/web/20240910105856/https://msassist.com/files/dotNETframework/NDP1.1sp1-KB867460-X86.exe",
+      "sha256": "2c0a35409ff0873cfa28b70b8224e9aca2362241c1f0ed6f622fef8d4722fd9a"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Microsoft.NET/Framework/v1.1.4322/CONFIG/web_hightrust.config.default"
+}

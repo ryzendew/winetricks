@@ -1,0 +1,14 @@
+{
+  "name": "mt4",
+  "category": "apps",
+  "title": "Meta Trader 4",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "mt4setup.exe",
+      "url": "https://web.archive.org/web/20160112133258/https://download.mql5.com/cdn/web/metaquotes.software.corp/mt4/mt4setup.exe?utm_campaign=www.metatrader4.com",
+      "sha256": "96c82266e18cc4ada1bbc0cd0ada74c3a31d18914fb1a36626f4596c8bacb6f0"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "fontxplorer",
+  "category": "apps",
+  "title": "Font Xplorer 1.2.2",
+  "publisher": "Moon Software",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "Font_Xplorer_122_Free.exe",
+      "url": "https://web.archive.org/web/20190217101943/http://www.moonsoftware.com/files/legacy/Font_Xplorer_122_Free.exe",
+      "sha256": "e3a53841c133e2ecfeb75c7ea277e23011317bb031f8caf423b7e9b7f92d85e0"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Font Xplorer/FXplorer.exe"
+}

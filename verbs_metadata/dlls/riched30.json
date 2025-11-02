@@ -1,0 +1,16 @@
+{
+  "name": "riched30",
+  "category": "dlls",
+  "title": "MS RichEdit Control 3.0 (riched20.dll, msls31.dll)",
+  "publisher": "Microsoft",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "InstMsiA.exe",
+      "url": "https://web.archive.org/web/20060720160141/https://download.microsoft.com/download/WindowsInstaller/Install/2.0/W9XMe/EN-US/InstMsiA.exe",
+      "sha256": "536e4c8385d7d250fd5702a6868d1ed004692136eefad22252d0dac15f02563a"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/riched20.dll"
+}

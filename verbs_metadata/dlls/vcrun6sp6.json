@@ -1,0 +1,16 @@
+{
+  "name": "vcrun6sp6",
+  "category": "dlls",
+  "title": "Visual C++ 6 SP6 libraries (with fixes in ATL and MFC)",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VS6SP6.EXE",
+      "url": "https://www.ddsystem.com.br/update/setup/vb6+sp6/VS6SP6.EXE",
+      "sha256": "7fa1d1778824b55a5fceb02f45c399b5d4e4dce7403661e67e587b5f455edbf3"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc42.dll"
+}

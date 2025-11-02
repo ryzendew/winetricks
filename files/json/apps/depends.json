@@ -1,0 +1,15 @@
+{
+  "name": "depends",
+  "category": "apps",
+  "title": "Dependency Walker",
+  "publisher": "Steve P. Miller",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "depends22_x86.zip",
+      "url": "https://www.dependencywalker.com/depends22_x86.zip",
+      "sha256": "03d73abba0e856c81ba994505373fdb94a13b84eb29e6c268be1bf21b7417ca3"
+    }
+  ]
+}

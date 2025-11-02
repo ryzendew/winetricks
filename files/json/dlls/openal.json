@@ -1,0 +1,16 @@
+{
+  "name": "openal",
+  "category": "dlls",
+  "title": "OpenAL Runtime",
+  "publisher": "Creative",
+  "year": "2023",
+  "media": "download",
+  "files": [
+    {
+      "filename": "oalinst.zip",
+      "url": "https://www.openal.org/downloads/oalinst.zip",
+      "sha256": "d165bcb7628fd950d14847585468cc11943b2a1da92a59a839d397c68f9d4b06"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/OpenAL32.dll"
+}

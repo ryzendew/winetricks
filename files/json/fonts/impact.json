@@ -1,0 +1,14 @@
+{
+  "name": "impact",
+  "category": "fonts",
+  "title": "MS Impact fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "impact32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/impact.ttf"
+}

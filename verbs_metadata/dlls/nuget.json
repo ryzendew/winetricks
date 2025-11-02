@@ -1,0 +1,14 @@
+{
+  "name": "nuget",
+  "category": "dlls",
+  "title": "NuGet Package manager",
+  "publisher": "Outercurve Foundation",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "nuget.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/nuget.exe"
+}

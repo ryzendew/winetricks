@@ -1,0 +1,14 @@
+{
+  "name": "ubisoftconnect",
+  "category": "apps",
+  "title": "Ubisoft Connect",
+  "publisher": "Ubisoft",
+  "year": "2020",
+  "media": "download",
+  "files": [
+    {
+      "filename": "UbisoftConnectInstaller.exe"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Ubisoft/Ubisoft Game Launcher/UbisoftConnect.exe"
+}

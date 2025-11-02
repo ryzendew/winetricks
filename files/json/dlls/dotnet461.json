@@ -1,0 +1,19 @@
+{
+  "name": "dotnet461",
+  "category": "dlls",
+  "title": "MS .NET 4.6.1",
+  "publisher": "Microsoft",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP461-KB3102436-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.microsoft.com/download/E/4/1/E4173890-A24A-4936-9FC9-AF930FE3FA40/NDP461-KB3102436-x86-x64-AllOS-ENU.exe",
+      "sha256": "beaa901e07347d056efe04e8961d5546c7518fab9246892178505a7ba631c301"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet461.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

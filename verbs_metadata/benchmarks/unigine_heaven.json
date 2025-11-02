@@ -1,0 +1,13 @@
+{
+  "name": "unigine_heaven",
+  "category": "benchmarks",
+  "title": "Unigen Heaven 2.1 Benchmark",
+  "publisher": "Unigen",
+  "year": "2010",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "Unigine_Heaven-2.1.msi"
+    }
+  ]
+}

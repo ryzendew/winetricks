@@ -1,0 +1,16 @@
+{
+  "name": "psdkwin71",
+  "category": "apps",
+  "title": "MS Windows 7.1 SDK",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "winsdk_web.exe",
+      "url": "https://download.microsoft.com/download/A/6/A/A6AC035D-DA3F-4F0C-ADA4-37C8E5D34E3D/winsdk_web.exe",
+      "sha256": "9ea8d82a66a33946e8673df92d784971b35b8f65ade3e0325855be8490e3d51d"
+    }
+  ],
+  "installed_exe": "C:/Program Files/Microsoft SDKs/Windows/v7.1/Bin/SetEnv.Cmd"
+}

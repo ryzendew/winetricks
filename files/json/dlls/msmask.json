@@ -1,0 +1,14 @@
+{
+  "name": "msmask",
+  "category": "dlls",
+  "title": "MS Masked Edit Control",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vb6sp6/VB60SP6-KB2708437-x86-ENU.msi"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msmask32.ocx"
+}

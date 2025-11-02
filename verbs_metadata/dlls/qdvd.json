@@ -1,0 +1,14 @@
+{
+  "name": "qdvd",
+  "category": "dlls",
+  "title": "qdvd.dll",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win7sp1/windows6.1-KB976932-X86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/qdvd.dll"
+}

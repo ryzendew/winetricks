@@ -1,0 +1,16 @@
+{
+  "name": "3m_library",
+  "category": "apps",
+  "title": "3M Cloud Library",
+  "publisher": "3M Company",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "cloudLibrary-2.1.1702011951-Setup.exe",
+      "url": "https://usestrwebaccess.blob.core.windows.net/apps/pc/cloudLibrary-2.1.1702011951-Setup.exe",
+      "sha256": "bb3d854cc525c065e7298423bf0019309f4b65497c1d8bc6af09460cd6fcb57f"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/cloudLibrary/cloudLibrary.exe"
+}

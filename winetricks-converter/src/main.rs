@@ -3,6 +3,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -17,7 +18,7 @@ struct Cli {
     input: PathBuf,
 
     /// Output directory for JSON metadata files
-    #[arg(short, long, default_value = "verbs")]
+    #[arg(short, long, default_value = "files/json")]
     output: PathBuf,
 }
 
@@ -27,6 +28,11 @@ fn main() -> Result<()> {
     println!("Reading winetricks script: {:?}", cli.input);
     let content = fs::read_to_string(&cli.input)
         .with_context(|| format!("Failed to read {:?}", cli.input))?;
+
+    // First, parse all load_* functions to extract download URLs and SHA256 hashes
+    println!("Extracting download URLs and SHA256 hashes from load_* functions...");
+    let downloads = extract_downloads(&content)?;
+    println!("Found {} download entries", downloads.len());
 
     // Create output directories for each category
     let categories = [
@@ -57,7 +63,9 @@ fn main() -> Result<()> {
         if let Some(caps) = metadata_re.captures(line) {
             // Save previous verb if exists
             if !verb_name.is_empty() {
-                if let Ok(verb) = parse_metadata(&verb_name, &category, &metadata_lines) {
+                if let Ok(mut verb) = parse_metadata(&verb_name, &category, &metadata_lines) {
+                    // Enrich with download URLs from load_* functions
+                    enrich_with_downloads(&mut verb, &downloads);
                     verbs.push(verb);
                 }
             }
@@ -85,7 +93,9 @@ fn main() -> Result<()> {
 
     // Save last verb
     if !verb_name.is_empty() {
-        if let Ok(verb) = parse_metadata(&verb_name, &category, &metadata_lines) {
+        if let Ok(mut verb) = parse_metadata(&verb_name, &category, &metadata_lines) {
+            // Enrich with download URLs from load_* functions
+            enrich_with_downloads(&mut verb, &downloads);
             verbs.push(verb);
         }
     }
@@ -143,17 +153,24 @@ fn parse_metadata(name: &str, cat: &str, lines: &[String]) -> Result<VerbMetadat
                 "manual_download" => MediaType::ManualDownload,
                 _ => MediaType::Download,
             };
-        } else if line.starts_with("file1=") {
+        } else if line.starts_with("file") && line.contains("=") {
+            // Handle file1=, file2=, file3=, etc.
             let filename = extract_value(line);
             files.push(VerbFile {
                 filename,
                 url: None,    // Will be extracted from load function
                 sha256: None, // Will be extracted from load function
             });
-        } else if line.starts_with("installed_file1=") {
-            installed_file = Some(extract_value(line));
-        } else if line.starts_with("installed_exe1=") {
-            installed_exe = Some(extract_value(line));
+        } else if line.starts_with("installed_file") && line.contains("=") {
+            // Handle installed_file1=, installed_file2=, etc. (use first one)
+            if installed_file.is_none() {
+                installed_file = Some(extract_value(line));
+            }
+        } else if line.starts_with("installed_exe") && line.contains("=") {
+            // Handle installed_exe1=, installed_exe2=, etc. (use first one)
+            if installed_exe.is_none() {
+                installed_exe = Some(extract_value(line));
+            }
         } else if line.starts_with("conflicts=") {
             let conflicts_str = extract_value(line);
             conflicts = conflicts_str
@@ -185,5 +202,124 @@ fn extract_value(line: &str) -> String {
         value.trim_matches('"').trim_matches('\'').to_string()
     } else {
         String::new()
+    }
+}
+
+/// Extract download URLs and SHA256 hashes from load_* functions
+/// Returns a map of verb name to (filename, url, sha256)
+fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, String, String)>>> {
+    let mut downloads: HashMap<String, Vec<(String, String, String)>> = HashMap::new();
+    
+    // Pattern to match load_<verb_name>() function
+    let load_func_re = Regex::new(r"^load_(\w+)\(\)")?;
+    // Pattern to match w_download calls: w_download <url> <sha256>
+    let w_download_re = Regex::new(r"^\s+w_download\s+(\S+)\s+(\S+)")?;
+    
+    let lines: Vec<&str> = content.lines().collect();
+    let mut current_verb: Option<String> = None;
+    let mut in_function = false;
+    let mut brace_depth = 0;
+    
+    for line in lines.iter() {
+        // Check if this is a load_* function definition
+        if let Some(caps) = load_func_re.captures(line) {
+            current_verb = Some(caps[1].to_string());
+            in_function = true;
+            brace_depth = 0;
+            
+            // Count opening braces on this line
+            brace_depth += line.matches('{').count();
+            brace_depth -= line.matches('}').count();
+            continue;
+        }
+        
+        if let Some(ref verb_name) = current_verb {
+            if in_function {
+                // Count braces to track function scope
+                brace_depth += line.matches('{').count();
+                brace_depth -= line.matches('}').count();
+                
+                // Check for w_download calls
+                if let Some(caps) = w_download_re.captures(line) {
+                    let url = caps.get(1).unwrap().as_str().to_string();
+                    let sha256 = caps.get(2).unwrap().as_str().to_string();
+                    
+                    // Try to extract filename from URL or previous file1= assignment
+                    // For now, we'll extract from URL or match with file1 from metadata
+                    let filename = extract_filename_from_url(&url);
+                    
+                    downloads
+                        .entry(verb_name.clone())
+                        .or_insert_with(Vec::new)
+                        .push((filename, url, sha256));
+                }
+                
+                // Function ended
+                if brace_depth <= 0 {
+                    in_function = false;
+                    current_verb = None;
+                }
+            }
+        }
+    }
+    
+    Ok(downloads)
+}
+
+/// Extract filename from URL or guess based on URL structure
+fn extract_filename_from_url(url: &str) -> String {
+    // Try to get filename from URL
+    if let Some(last_slash) = url.rfind('/') {
+        let filename_part = &url[last_slash + 1..];
+        // Remove query parameters
+        if let Some(qmark) = filename_part.find('?') {
+            return filename_part[..qmark].to_string();
+        }
+        return filename_part.to_string();
+    }
+    // Fallback: use a placeholder that will be matched later
+    "unknown".to_string()
+}
+
+/// Enrich verb metadata with download URLs and SHA256 hashes
+fn enrich_with_downloads(verb: &mut VerbMetadata, downloads: &HashMap<String, Vec<(String, String, String)>>) {
+    if let Some(download_list) = downloads.get(&verb.name) {
+        // Match downloads to files based on filename
+        for file in &mut verb.files {
+            if file.url.is_none() {
+                // Try to find matching download by filename
+                for (filename, url, sha256) in download_list {
+                    if filename == &file.filename || 
+                       file.filename.contains(filename) || 
+                       filename.contains(&file.filename) ||
+                       filename == "unknown" {
+                        file.url = Some(url.clone());
+                        file.sha256 = Some(sha256.clone());
+                        break;
+                    }
+                }
+                
+                // If still no match and we have downloads, use the first one
+                if file.url.is_none() && !download_list.is_empty() {
+                    let (filename, url, sha256) = &download_list[0];
+                    if file.filename.is_empty() || file.filename == "unknown" {
+                        file.filename = filename.clone();
+                    }
+                    file.url = Some(url.clone());
+                    file.sha256 = Some(sha256.clone());
+                }
+            }
+        }
+        
+        // If verb has no files defined but we have downloads, add them
+        if verb.files.is_empty() {
+            for (filename, url, sha256) in download_list {
+                verb.files.push(VerbFile {
+                    filename: filename.clone(),
+                    url: Some(url.clone()),
+                    sha256: Some(sha256.clone()),
+                });
+            }
+        }
     }
 }

@@ -1,0 +1,6 @@
+{
+  "name": "heapcheck",
+  "category": "settings",
+  "title": "Enable heap checking with GlobalFlag",
+  "media": "download"
+}

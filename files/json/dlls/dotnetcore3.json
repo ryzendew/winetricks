@@ -1,0 +1,16 @@
+{
+  "name": "dotnetcore3",
+  "category": "dlls",
+  "title": "MS .NET Core Runtime 3.1 LTS",
+  "publisher": "Microsoft",
+  "year": "2020",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnet-runtime-3.1.10-win-x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/abb3fb5d-4e82-4ca8-bc03-ac13e988e608/b34036773a72b30c5dc5520ee6a2768f/dotnet-runtime-3.1.10-win-x86.exe",
+      "sha256": "6ae8d2fb7a23ac4770fa815bc27614b2db0e89f5c078eb2744771bf5541cdba3"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "set_mididevice",
+  "category": "settings",
+  "title": "Set MIDImap device to the value specified in the MIDI_DEVICE environment variable",
+  "media": "download"
+}

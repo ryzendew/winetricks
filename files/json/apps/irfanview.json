@@ -1,0 +1,16 @@
+{
+  "name": "irfanview",
+  "category": "apps",
+  "title": "Irfanview",
+  "publisher": "Irfan Skiljan",
+  "year": "2016",
+  "media": "download",
+  "files": [
+    {
+      "filename": "iview444_setup.exe",
+      "url": "http://download.betanews.com/download/967963863-1/iview444_setup.exe",
+      "sha256": "71b44cd3d14376bbb619b2fe8a632d29200385738dd186680e988ce32662b3d6"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/IrfanView/i_view32.exe"
+}

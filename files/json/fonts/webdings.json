@@ -1,0 +1,14 @@
+{
+  "name": "webdings",
+  "category": "fonts",
+  "title": "MS Webdings fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "webdin32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/webdings.ttf"
+}

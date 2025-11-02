@@ -1,0 +1,16 @@
+{
+  "name": "glidewrapper",
+  "category": "dlls",
+  "title": "GlideWrapper",
+  "publisher": "Rolf Neuberger",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "GlideWrapper084c.exe",
+      "url": "http://www.vogonsdrivers.com/wrappers/files/Glide/OpenGL/Zeckensack/GlideWrapper084c.exe",
+      "sha256": "3c4185bd7eac9bd50e0727a7b5165ec8273230455480cf94358e1bbd35921b69"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/glide3x.dll"
+}

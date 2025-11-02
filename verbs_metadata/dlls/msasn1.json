@@ -1,0 +1,14 @@
+{
+  "name": "msasn1",
+  "category": "dlls",
+  "title": "MS ASN1",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msasn1.dll"
+}

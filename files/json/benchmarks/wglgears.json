@@ -1,0 +1,16 @@
+{
+  "name": "wglgears",
+  "category": "benchmarks",
+  "title": "wglgears",
+  "publisher": "Clinton L. Jeffery",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "wglgears.exe",
+      "url": "https://web.archive.org/web/20091001002702/http://www2.cs.uidaho.edu/~jeffery/win32/wglgears.exe",
+      "sha256": "858ba95ea3c9af4ded1f4100e59b6e8e57024f3efef56304dbd48106e8f2f6f7"
+    }
+  ],
+  "installed_exe": "${W_SYSTEM32_DLLS_WIN}/wglgears.exe"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "galliumnine",
+  "category": "dlls",
+  "title": "Gallium Nine Standalone (latest)",
+  "publisher": "Gallium Nine Team",
+  "year": "2024",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d9-nine.dll"
+}

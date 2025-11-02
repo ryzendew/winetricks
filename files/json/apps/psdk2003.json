@@ -1,0 +1,16 @@
+{
+  "name": "psdk2003",
+  "category": "apps",
+  "title": "MS Platform SDK 2003",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "5.2.3790.1830.15.PlatformSDK_Svr2003SP1_rtm.img",
+      "url": "https://download.microsoft.com/download/7/5/e/75ec7f04-4c8c-4f38-b582-966e76602643/5.2.3790.1830.15.PlatformSDK_Svr2003SP1_rtm.img",
+      "sha256": "7ef138b07a8ed2e008371d8602900eb68e86ac2a832d16b53f462a9e64f24d53"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Microsoft Platform SDK/SetEnv.Cmd"
+}

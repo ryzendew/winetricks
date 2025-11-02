@@ -1,0 +1,16 @@
+{
+  "name": "python27",
+  "category": "dlls",
+  "title": "Python interpreter 2.7.16",
+  "publisher": "Python Software Foundaton",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "python-2.7.16.msi",
+      "url": "https://www.python.org/ftp/python/2.7.16/python-2.7.16.msi",
+      "sha256": "d57dc3e1ba490aee856c28b4915d09e3f49442461e46e481bc6b2d18207831d7"
+    }
+  ],
+  "installed_exe": "c:/Python27/python.exe"
+}

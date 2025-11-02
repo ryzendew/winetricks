@@ -1,0 +1,16 @@
+{
+  "name": "wmp10",
+  "category": "dlls",
+  "title": "Windows Media Player 10",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MP10Setup.exe",
+      "url": "https://web.archive.org/web/20200803205216/https://download.microsoft.com/download/1/2/a/12a31f29-2fa9-4f50-b95d-e45ef7013f87/MP10Setup.exe",
+      "sha256": "c1e71784c530035916aad5b09fa002abfbb7569b75208dd79351f29c6d197e03"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/l3codecp.acm"
+}

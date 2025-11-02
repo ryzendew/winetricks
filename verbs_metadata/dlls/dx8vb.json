@@ -1,0 +1,16 @@
+{
+  "name": "dx8vb",
+  "category": "dlls",
+  "title": "MS dx8vb.dll from DirectX 8.1 runtime",
+  "publisher": "Microsoft",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "DX81NTger.exe",
+      "url": "https://download.microsoft.com/download/win2000pro/dx/8.1/NT5/DE/DX81NTger.exe",
+      "sha256": "31513966a29dc100165072891d21b5c5e0dd2632abf3409a843cefb3a9886f13"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dx8vb.dll"
+}

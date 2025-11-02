@@ -1,0 +1,14 @@
+{
+  "name": "georgia",
+  "category": "fonts",
+  "title": "MS Georgia fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "georgi32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/georgia.ttf"
+}

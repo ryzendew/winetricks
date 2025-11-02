@@ -1,0 +1,16 @@
+{
+  "name": "mdac27",
+  "category": "dlls",
+  "title": "Microsoft Data Access Components 2.7 sp1",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MDAC_TYP.EXE",
+      "url": "https://web.archive.org/web/20060718123742/http://ftp.gunadarma.ac.id/pub/driver/itegno/USB%20Software/MDAC/MDAC_TYP.EXE",
+      "sha256": "36d2a3099e6286ae3fab181a502a95fbd825fa5ddb30bf09b345abc7f1f620b4"
+    }
+  ],
+  "installed_file": "${W_COMMONFILES_X86_WIN}/System/ADO/msado26.tlb"
+}

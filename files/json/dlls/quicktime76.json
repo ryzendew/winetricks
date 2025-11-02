@@ -1,0 +1,16 @@
+{
+  "name": "quicktime76",
+  "category": "dlls",
+  "title": "Apple QuickTime 7.6",
+  "publisher": "Apple",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "QuickTimeInstaller.exe",
+      "url": "http://appldnld.apple.com/QuickTime/041-0025.20101207.Ptrqt/QuickTimeInstaller.exe",
+      "sha256": "c2dcda76ed55428e406ad7e6acdc84e804d30752a1380c313394c09bb3e27f56"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Installer/{57752979-A1C9-4C02-856B-FBB27AC4E02C}/QTPlayer.ico"
+}

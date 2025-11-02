@@ -1,0 +1,16 @@
+{
+  "name": "msls31",
+  "category": "dlls",
+  "title": "MS Line Services",
+  "publisher": "Microsoft",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "InstMsiW.exe",
+      "url": "https://web.archive.org/web/20160710055851if_/http://download.microsoft.com/download/WindowsInstaller/Install/2.0/NT45/EN-US/InstMsiW.exe",
+      "sha256": "4c3516c0b5c2b76b88209b22e3bf1cb82d8e2de7116125e97e128952372eed6b"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msls31.dll"
+}

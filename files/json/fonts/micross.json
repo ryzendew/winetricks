@@ -1,0 +1,14 @@
+{
+  "name": "micross",
+  "category": "fonts",
+  "title": "MS Sans Serif font",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../winxpsp3/WindowsXP-KB936929-SP3-x86-ENU.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/micross.ttf"
+}

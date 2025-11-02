@@ -1,0 +1,15 @@
+{
+  "name": "vstools2019",
+  "category": "apps",
+  "title": "MS Visual Studio Build Tools 2019",
+  "publisher": "Microsoft",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "installer",
+      "url": "https://aka.ms/vs/16/release/installer",
+      "sha256": "0f0cc11f000593a064d419462a8467b529fed8075b21a605a40785baa3d2f611"
+    }
+  ]
+}

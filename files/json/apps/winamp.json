@@ -1,0 +1,16 @@
+{
+  "name": "winamp",
+  "category": "apps",
+  "title": "Winamp",
+  "publisher": "Radionomy (AOL (Nullsoft))",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "winamp5666_full_all_redux.exe",
+      "url": "http://www.meggamusic.co.uk/winamp/winamp5666_full_all_redux.exe",
+      "sha256": "ea9a6ba81475d49876d0b8b300d93f28f7959b8e99ce4372dbde746567e14002"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Winamp/winamp.exe"
+}

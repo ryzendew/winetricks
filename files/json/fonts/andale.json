@@ -1,0 +1,14 @@
+{
+  "name": "andale",
+  "category": "fonts",
+  "title": "MS Andale Mono font",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "andale32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/andalemo.ttf"
+}

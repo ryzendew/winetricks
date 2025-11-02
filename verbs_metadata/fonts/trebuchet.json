@@ -1,0 +1,14 @@
+{
+  "name": "trebuchet",
+  "category": "fonts",
+  "title": "MS Trebuchet fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "trebuchet32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/trebuc.ttf"
+}

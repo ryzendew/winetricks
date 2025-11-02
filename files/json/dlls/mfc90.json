@@ -1,0 +1,14 @@
+{
+  "name": "mfc90",
+  "category": "dlls",
+  "title": "Visual C++ 2008 mfc90 library; part of vcrun2008",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2008/vcredist_x86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc90.dll"
+}

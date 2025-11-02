@@ -1,0 +1,16 @@
+{
+  "name": "protectionid",
+  "category": "apps",
+  "title": "Protection ID",
+  "publisher": "CDKiLLER & TippeX",
+  "year": "2016",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "ProtectionId.685.December.2016.rar",
+      "url": "\"https://web.archive.org/web/20181209123344/https://pid.wiretarget.com/?f=ProtectionId.685.December.2016.rar\"",
+      "sha256": "27a84d740c9fb96cc866438a2b5cd4afc350affc8b7a0122c28c651af3559aea"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/protection_id.exe"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "safari",
+  "category": "apps",
+  "title": "Safari",
+  "publisher": "Apple",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "SafariSetup.exe",
+      "url": "http://appldnld.apple.com.edgesuite.net/content.info.apple.com/Safari5/061-7138.20100607.Y7U87/SafariSetup.exe",
+      "sha256": "a5b44032fe9cd0ede8571023912c91b1dcca106ad6a65a822be9ebd405510939"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Safari/Safari.exe"
+}

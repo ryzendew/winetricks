@@ -1,0 +1,16 @@
+{
+  "name": "wmi",
+  "category": "dlls",
+  "title": "Windows Management Instrumentation (aka WBEM) Core 1.5",
+  "publisher": "Microsoft",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "wmi9x.exe",
+      "url": "https://web.archive.org/web/20051221074940/https://download.microsoft.com/download/platformsdk/wmi9x/1.5/W9X/EN-US/wmi9x.exe",
+      "sha256": "1d5d94050354b164c6a19531df151e0703d5eb39cebf4357ee2cfc340c2509d0"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/wbem/wbemcore.dll"
+}

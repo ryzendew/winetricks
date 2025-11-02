@@ -1,0 +1,16 @@
+{
+  "name": "emu8086",
+  "category": "apps",
+  "title": "emu8086",
+  "publisher": "emu8086.com",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "emu8086v408r11.zip",
+      "url": "https://web.archive.org/web/20160206003914if_/http://emu8086.com/files/emu8086v408r11.zip",
+      "sha256": "d56d6e42fe170c52df5abd6002b1e8fef0b840eb8d8807d77819fe1fc2e17afd"
+    }
+  ],
+  "installed_exe": "c:/emu8086/emu8086.exe"
+}

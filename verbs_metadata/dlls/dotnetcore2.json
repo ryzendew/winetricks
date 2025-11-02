@@ -1,0 +1,16 @@
+{
+  "name": "dotnetcore2",
+  "category": "dlls",
+  "title": "MS .NET Core Runtime 2.1 LTS",
+  "publisher": "Microsoft",
+  "year": "2020",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnet-runtime-2.1.17-win-x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/73a0ea97-57d6-4263-ac36-ea3a9b373bcf/cd5f7e08e749c1d3468cdae89e4518de/dotnet-runtime-2.1.17-win-x86.exe",
+      "sha256": "706a7f0ad998c3c1b321e89e4bcd6304bef31c95c83eda119e8d4adccccbc915"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

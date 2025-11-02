@@ -1,0 +1,14 @@
+{
+  "name": "dswave",
+  "category": "dlls",
+  "title": "MS dswave.dll from DirectX user redistributable",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_feb2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dswave.dll"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "shockwave",
+  "category": "dlls",
+  "title": "Shockwave",
+  "publisher": "Adobe",
+  "year": "2018",
+  "media": "download",
+  "files": [
+    {
+      "filename": "sw_lic_full_installer.msi",
+      "url": "https://fpdownload.macromedia.com/get/shockwave/default/english/win95nt/latest/sw_lic_full_installer.msi",
+      "sha256": "8e414c1a218157d2b83877fb0b6a5002c2e9bff4dc2a3095bae774a13e3e9dbf"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/Adobe/Shockwave 12/shockwave_Projector_Loader.dcr"
+}

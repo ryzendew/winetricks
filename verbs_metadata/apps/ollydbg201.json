@@ -1,0 +1,16 @@
+{
+  "name": "ollydbg201",
+  "category": "apps",
+  "title": "OllyDbg",
+  "publisher": "ollydbg.de",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "odbg201.zip",
+      "url": "http://www.ollydbg.de/odbg201.zip",
+      "sha256": "29244e551be31f347db00503c512058086f55b43c93c1ae93729b15ce6e087a5"
+    }
+  ],
+  "installed_file": "c:/ollydbg201/ollydbg.exe"
+}

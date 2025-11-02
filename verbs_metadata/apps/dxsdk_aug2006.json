@@ -1,0 +1,16 @@
+{
+  "name": "dxsdk_aug2006",
+  "category": "apps",
+  "title": "MS DirectX SDK, August 2006 (developers only)",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dxsdk_aug2006.exe",
+      "url": "https://archive.org/download/dxsdk_aug2006/dxsdk_aug2006.exe",
+      "sha256": "ab8d7d895089a88108d4148ef0f7e214b7a23c1ee9ba720feca78c7d4ca16c00"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Microsoft DirectX SDK (August 2006)/Lib/x86/d3d10.lib"
+}

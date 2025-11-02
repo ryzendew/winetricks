@@ -1,0 +1,14 @@
+{
+  "name": "3dmark06",
+  "category": "benchmarks",
+  "title": "3D Mark 06",
+  "publisher": "Futuremark",
+  "year": "2006",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "3DMark06_v121_installer.exe"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Futuremark/3DMark06/3DMark06.exe"
+}

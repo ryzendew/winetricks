@@ -1,0 +1,20 @@
+{
+  "name": "ie8",
+  "category": "dlls",
+  "title": "Internet Explorer 8",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "IE8-WindowsXP-x86-ENU.exe",
+      "url": "https://download.microsoft.com/download/C/C/0/CC0BD555-33DD-411E-936B-73AC6F95AE11/IE8-WindowsXP-x86-ENU.exe",
+      "sha256": "5a2c6c82774bfe99b175f50a05b05bcd1fac7e9d0e54db2534049209f50cd6ef"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/ie8_main.log",
+  "conflicts": [
+    "ie6",
+    "ie7"
+  ]
+}

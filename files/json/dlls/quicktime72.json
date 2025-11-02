@@ -1,0 +1,16 @@
+{
+  "name": "quicktime72",
+  "category": "dlls",
+  "title": "Apple QuickTime 7.2",
+  "publisher": "Apple",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "QuickTimeInstaller.exe",
+      "url": "http://appldnld.apple.com.edgesuite.net/content.info.apple.com/QuickTime/061-2915.20070710.pO94c/QuickTimeInstaller.exe",
+      "sha256": "a42b93531910bdf1539cc5ae3199ade5a1ca63fd4ac971df74c345d8e1ee6593"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Installer/{95A890AA-B3B1-44B6-9C18-A8F7AB3EE7FC}/QTPlayer.ico"
+}

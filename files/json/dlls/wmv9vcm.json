@@ -1,0 +1,16 @@
+{
+  "name": "wmv9vcm",
+  "category": "dlls",
+  "title": "MS Windows Media Video 9 Video Compression Manager",
+  "publisher": "Microsoft",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "WindowsServer2003-WindowsMedia-KB2845142-x86-ENU.exe",
+      "url": "https://download.microsoft.com/download/2/8/D/28DA9C3E-6DA2-456F-BD33-1F937EB6E0FF/WindowsServer2003-WindowsMedia-KB2845142-x86-ENU.exe",
+      "sha256": "51e11691339c1c817b12f92e613145ffcd7b6f7e869d994cc8dbc4591b24f155"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/wmv9vcm.dll"
+}

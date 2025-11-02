@@ -1,0 +1,6 @@
+{
+  "name": "hosts",
+  "category": "settings",
+  "title": "Add empty C:\\\\windows\\\\system32\\\\drivers\\\\etc\\\\{hosts,services} files",
+  "media": "download"
+}

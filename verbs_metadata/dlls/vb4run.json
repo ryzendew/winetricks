@@ -1,0 +1,16 @@
+{
+  "name": "vb4run",
+  "category": "dlls",
+  "title": "MS Visual Basic 4 runtime",
+  "publisher": "Microsoft",
+  "year": "1998",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vb4run.exe",
+      "url": "https://download.microsoft.com/download/vb40ent/sample27/1/w9xnt4/en-us/vb4run.exe",
+      "sha256": "40931308b5a137f9ce3e9da9b43f4ca6688e18b523687cfea8be6cdffa3153fb"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/Vb40032.dll"
+}

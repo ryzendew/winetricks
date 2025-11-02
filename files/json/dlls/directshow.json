@@ -1,0 +1,13 @@
+{
+  "name": "directshow",
+  "category": "dlls",
+  "title": "DirectShow runtime DLLs (amstream, qasf, qcap, qdvd, qedit, quartz)",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win7sp1/windows6.1-KB976932-X86.exe"
+    }
+  ]
+}

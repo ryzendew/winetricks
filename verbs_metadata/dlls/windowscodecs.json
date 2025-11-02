@@ -1,0 +1,16 @@
+{
+  "name": "windowscodecs",
+  "category": "dlls",
+  "title": "MS Windows Imaging Component",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "wic_x86_enu.exe",
+      "url": "https://web.archive.org/web/20200810071051if_/https://download.microsoft.com/download/f/f/1/ff178bb1-da91-48ed-89e5-478a99387d4f/wic_x86_enu.exe",
+      "sha256": "196868b09d87ae04e4ab42b4a3e0abbb160500e8ff13deb38e2956ee854868b1"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/WindowsCodecs.dll"
+}

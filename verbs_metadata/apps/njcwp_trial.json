@@ -1,0 +1,16 @@
+{
+  "name": "njcwp_trial",
+  "category": "apps",
+  "title": "NJStar Chinese Word Processor trial",
+  "publisher": "NJStar",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "njcwp610sw15918.exe",
+      "url": "http://ftp.njstar.com/sw/njcwp610sw15918.exe",
+      "sha256": "7afa6dfc431f058d1397ac7100d5650b97347e1f37f81a2e2d2ee5dfdff4660b"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/NJStar Chinese WP6/NJStar.exe"
+}

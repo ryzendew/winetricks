@@ -1,0 +1,20 @@
+{
+  "name": "ie6",
+  "category": "dlls",
+  "title": "Internet Explorer 6",
+  "publisher": "Microsoft",
+  "year": "2002",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ie60.exe",
+      "url": "https://web.archive.org/web/20150411022055if_/http://download.oldapps.com/Internet_Explorer/ie60.exe",
+      "sha256": "e34e0557d939e7e83185f5354403df99c92a3f3ff80f5ee0c75f6843eaa6efb2"
+    }
+  ],
+  "installed_file": "c:/Program Files/Internet Explorer/iedetect.dll",
+  "conflicts": [
+    "ie7",
+    "ie8"
+  ]
+}

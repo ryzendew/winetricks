@@ -1,0 +1,16 @@
+{
+  "name": "colorprofile",
+  "category": "apps",
+  "title": "Standard RGB color profile",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ColorProfile.exe",
+      "url": "https://download.microsoft.com/download/whistler/hwdev1/1.0/wxp/en-us/ColorProfile.exe",
+      "sha256": "d04ac910acdd97abd663f559bebc6440d8d68664bf977ec586035247d7b0f728"
+    }
+  ],
+  "installed_exe": "${W_WINDIR_WIN}/system32/spool/drivers/color/sRGB Color Space Profile.icm"
+}

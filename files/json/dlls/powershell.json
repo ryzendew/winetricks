@@ -1,0 +1,19 @@
+{
+  "name": "powershell",
+  "category": "dlls",
+  "title": "PowerShell Wrapper For Wine",
+  "publisher": "ProjectSynchro",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "powershell32.exe"
+    },
+    {
+      "filename": "powershell64.exe"
+    },
+    {
+      "filename": "profile.ps1"
+    }
+  ]
+}

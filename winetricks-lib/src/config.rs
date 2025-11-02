@@ -2,7 +2,8 @@
 
 use crate::error::{Result, WinetricksError};
 use dirs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use tracing::info;
 
 /// Winetricks configuration
 #[derive(Debug, Clone)]
@@ -87,9 +88,212 @@ impl Config {
             .unwrap_or_else(|| dirs::home_dir().unwrap().join(".wine"))
     }
 
-    /// Get metadata directory
+    /// Get source JSON directory (files/json/ in project, or empty if not found)
+    pub fn source_json_dir(&self) -> Option<PathBuf> {
+        if let Ok(current_exe) = std::env::current_exe() {
+            let mut exe_path = current_exe.clone();
+            while exe_path.parent().is_some() {
+                exe_path = exe_path.parent().unwrap().to_path_buf();
+                let json_dir = exe_path.join("files").join("json");
+                if json_dir.exists() && json_dir.is_dir() {
+                    return Some(json_dir);
+                }
+            }
+        }
+        None
+    }
+
+    /// Get cached verbs directory (~/.config/winetricks/)
+    /// This serves as the roadmap - all JSON files are stored here with category subdirectories
+    pub fn cached_verbs_dir(&self) -> PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| dirs::home_dir().unwrap().join(".config"))
+            .join("winetricks")
+    }
+
+    /// Initialize cache from source JSON files if needed
+    pub fn ensure_cache_initialized(&self) -> Result<()> {
+        let cached_dir = self.cached_verbs_dir();
+        let source_dir = match self.source_json_dir() {
+            Some(dir) => {
+                info!("Found source JSON directory: {:?}", dir);
+                dir
+            }
+            None => {
+                info!("No source JSON directory found, skipping cache initialization");
+                return Ok(()); // No source directory, skip cache initialization
+            }
+        };
+
+        // Check if cache needs updating
+        let needs_update = if !cached_dir.exists() {
+            true
+        } else {
+            // Check if any source file is newer than cache
+            self.is_cache_stale(&source_dir, &cached_dir)?
+        };
+
+        if needs_update {
+            info!("Initializing/updating verb cache from source files...");
+            self.copy_json_to_cache(&source_dir, &cached_dir)?;
+            info!("Verb cache initialized at: {:?}", cached_dir);
+        }
+
+        Ok(())
+    }
+
+    /// Check if cache is stale (source files are newer)
+    fn is_cache_stale(&self, source_dir: &Path, cached_dir: &Path) -> Result<bool> {
+        use std::fs;
+
+        // Get most recent modification time from source
+        let mut source_mtime = None;
+        for entry in fs::read_dir(source_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                // Check subdirectories recursively
+                if let Ok(mtime) = self.get_dir_mtime(&path) {
+                    source_mtime = source_mtime.max(Some(mtime));
+                }
+            }
+        }
+
+        // Get most recent modification time from cache (check category subdirectories)
+        let cache_mtime = if cached_dir.exists() {
+            // Check all category subdirectories for modification times
+            let mut latest_cache_mtime = None;
+            if let Ok(entries) = fs::read_dir(cached_dir) {
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            // This is a category directory (dlls/, apps/, etc.)
+                            if let Ok(mtime) = self.get_dir_mtime(&path) {
+                                latest_cache_mtime = latest_cache_mtime.max(Some(mtime));
+                            }
+                        }
+                    }
+                }
+            }
+            latest_cache_mtime
+        } else {
+            None
+        };
+
+        Ok(source_mtime > cache_mtime || cache_mtime.is_none())
+    }
+
+    /// Get most recent modification time of files in a directory (recursive)
+    fn get_dir_mtime(&self, dir: &Path) -> Result<std::time::SystemTime> {
+        use std::fs;
+        let mut latest = None;
+
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            
+            let mtime = if path.is_dir() {
+                self.get_dir_mtime(&path)?
+            } else {
+                fs::metadata(&path)?.modified()?
+            };
+
+            latest = latest.max(Some(mtime));
+        }
+
+        latest.ok_or_else(|| WinetricksError::Config("Directory has no files".into()))
+    }
+
+    /// Copy JSON files from source to cache directory
+    /// Preserves the directory structure (dlls/, apps/, fonts/, etc.) in ~/.config/winetricks/
+    fn copy_json_to_cache(&self, source_dir: &Path, cached_dir: &Path) -> Result<()> {
+        use std::fs;
+
+        // Ensure cache directory exists (don't remove it - we want to keep other files)
+        fs::create_dir_all(&cached_dir)?;
+
+        // Copy all JSON files preserving directory structure
+        for entry in fs::read_dir(source_dir)? {
+            let entry = entry?;
+            let source_path = entry.path();
+            
+            if source_path.is_dir() {
+                let category_name = source_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .ok_or_else(|| WinetricksError::Config("Invalid category directory".into()))?;
+                
+                let cached_category_dir = cached_dir.join(category_name);
+                fs::create_dir_all(&cached_category_dir)?;
+
+                // Copy all JSON files in this category
+                for json_entry in fs::read_dir(&source_path)? {
+                    let json_entry = json_entry?;
+                    let json_path = json_entry.path();
+                    
+                    if json_path.extension().and_then(|s| s.to_str()) == Some("json") {
+                        let filename = json_path
+                            .file_name()
+                            .ok_or_else(|| WinetricksError::Config("Invalid filename".into()))?;
+                        
+                        let dest_path = cached_category_dir.join(filename);
+                        fs::copy(&json_path, &dest_path)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Get metadata directory (uses cached location, falls back to source)
+    /// The cached location is ~/.config/winetricks/ which contains category subdirectories (dlls/, apps/, etc.)
     pub fn metadata_dir(&self) -> PathBuf {
-        self.data_dir.join("verbs")
+        // If data_dir is already verbs_metadata (development mode), return it directly
+        if self.data_dir.ends_with("verbs_metadata") {
+            self.data_dir.clone()
+        } else {
+            // Use cached directory (~/.config/winetricks/) - it contains category subdirectories
+            let cached_dir = self.cached_verbs_dir();
+            // Check if any category directories exist in cache
+            if cached_dir.exists() {
+                // Check if it has category subdirectories (dlls/, apps/, etc.)
+                let has_categories = std::fs::read_dir(&cached_dir)
+                    .ok()
+                    .map(|entries| {
+                        entries
+                            .filter_map(|e| e.ok())
+                            .any(|e| e.path().is_dir())
+                    })
+                    .unwrap_or(false);
+                
+                if has_categories {
+                    cached_dir
+                } else if self.data_dir.ends_with("files") {
+                    // Fallback to files/json if cache doesn't have categories yet
+                    self.data_dir.join("json")
+                } else {
+                    cached_dir // Return it anyway, will be empty but that's okay
+                }
+            } else if self.data_dir.ends_with("files") {
+                // Fallback to files/json if cache doesn't exist yet
+                self.data_dir.join("json")
+            } else {
+                // System data directory fallback
+                let verbs_dir = self.data_dir.join("verbs");
+                if verbs_dir.exists() {
+                    verbs_dir
+                } else {
+                    let verbs_meta = self.data_dir.join("verbs_metadata");
+                    if verbs_meta.exists() {
+                        verbs_meta
+                    } else {
+                        verbs_dir
+                    }
+                }
+            }
+        }
     }
 
     /// Ensure directories exist

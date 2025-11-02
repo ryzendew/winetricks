@@ -1,0 +1,16 @@
+{
+  "name": "mspaint",
+  "category": "apps",
+  "title": "MS Paint",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "windowsxp-kb978706-x86-enu_f4e076b3867c2f08b6d258316aa0e11d6822b8d7.exe",
+      "url": "http://download.windowsupdate.com/msdownload/update/software/secu/2010/01/windowsxp-kb978706-x86-enu_f4e076b3867c2f08b6d258316aa0e11d6822b8d7.exe",
+      "sha256": "93ed34ab6c0d01a323ce10992d1c1ca27d1996fef82f0864d83e7f5ac6f9b24b"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/mspaint.exe"
+}

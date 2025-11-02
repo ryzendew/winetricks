@@ -1,0 +1,16 @@
+{
+  "name": "dxvk2041",
+  "category": "dlls",
+  "title": "Vulkan-based D3D8/D3D9/D3D10/D3D11 implementation for Linux / Wine (2.4.1)",
+  "publisher": "Philip Rebohle",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dxvk-2.4.1.tar.gz",
+      "url": "\"https://github.com/doitsujin/dxvk/releases/download/v2.4.1/dxvk-2.4.1.tar.gz\"",
+      "sha256": "7b23db4e1386b5d9a3ec0d83daa8b06096b758639185c11a673373a5ae478d54"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d8.dll"
+}

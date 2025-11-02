@@ -1,0 +1,15 @@
+{
+  "name": "physx",
+  "category": "dlls",
+  "title": "PhysX",
+  "publisher": "Nvidia",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "PhysX_9.23.1019_SystemSoftware.exe",
+      "url": "https://us.download.nvidia.com/Windows/9.23.1019/PhysX_9.23.1019_SystemSoftware.exe",
+      "sha256": "9b42b84e881769d681e09f62a1b51532616b2e6a2d5d99d0ccae6eb5fbbc208c"
+    }
+  ]
+}

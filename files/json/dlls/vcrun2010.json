@@ -1,0 +1,16 @@
+{
+  "name": "vcrun2010",
+  "category": "dlls",
+  "title": "Visual C++ 2010 libraries (mfc100,msvcp100,msvcr100)",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vcredist_x86.exe",
+      "url": "https://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe",
+      "sha256": "31d32fa39d52cac9a765a43660431f7a127eee784b54b2f5e2af3e2b763a1af8"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc100.dll"
+}

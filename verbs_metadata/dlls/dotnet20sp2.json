@@ -1,0 +1,19 @@
+{
+  "name": "dotnet20sp2",
+  "category": "dlls",
+  "title": "MS .NET 2.0 SP2",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NetFx20SP2_x86.exe",
+      "url": "https://web.archive.org/web/20210329003118/http://download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe",
+      "sha256": "6e3f363366e7d0219b7cb269625a75d410a5c80d763cc3d73cf20841084e851f"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/winsxs/manifests/x86_Microsoft.VC80.CRT_1fc8b3b9a1e18e3b_8.0.50727.3053_x-ww_b80fa8ca.cat",
+  "conflicts": [
+    "dotnet11"
+  ]
+}

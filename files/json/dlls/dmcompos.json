@@ -1,0 +1,14 @@
+{
+  "name": "dmcompos",
+  "category": "dlls",
+  "title": "MS dmcompos.dll from DirectX user redistributable",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_feb2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dmcompos.dll"
+}

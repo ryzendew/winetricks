@@ -1,0 +1,14 @@
+{
+  "name": "courier",
+  "category": "fonts",
+  "title": "MS Courier fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "courie32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/cour.ttf"
+}

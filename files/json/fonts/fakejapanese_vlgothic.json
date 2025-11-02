@@ -1,0 +1,11 @@
+{
+  "name": "fakejapanese_vlgothic",
+  "category": "fonts",
+  "title": "Creates aliases for Japanese Meiryo fonts using VLGothic fonts",
+  "publisher": "Project Vine / Daisuke Suzuki",
+  "year": "2014",
+  "media": "download",
+  "conflicts": [
+    "meiryo"
+  ]
+}

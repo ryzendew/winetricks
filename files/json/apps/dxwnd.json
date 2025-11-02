@@ -1,0 +1,16 @@
+{
+  "name": "dxwnd",
+  "category": "apps",
+  "title": "Window hooker to run fullscreen programs in window and much more...",
+  "publisher": "ghotik",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "v2_05_88_build.rar",
+      "url": "https://versaweb.dl.sourceforge.net/project/dxwnd/Latest%20build/v2_05_88_build.rar",
+      "sha256": "a80ad1246493b3b34fba2131494052423ac298a39592d4e06a685568b829922e"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/dxwnd/dxwnd.exe"
+}

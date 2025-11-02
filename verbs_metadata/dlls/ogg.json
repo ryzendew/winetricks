@@ -1,0 +1,16 @@
+{
+  "name": "ogg",
+  "category": "dlls",
+  "title": "OpenCodecs 0.85: FLAC, Speex, Theora, Vorbis, WebM",
+  "publisher": "Xiph.Org Foundation",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "opencodecs_0.85.17777.exe",
+      "url": "https://downloads.xiph.org/releases/oggdsf/opencodecs_0.85.17777.exe",
+      "sha256": "fcec3cea637e806501aff447d902de3b5bfef226b629e43ab67e46dbb23f13e7"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Xiph.Org/Open Codecs/AxPlayer.dll"
+}

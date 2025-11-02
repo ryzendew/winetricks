@@ -1,0 +1,16 @@
+{
+  "name": "eufonts",
+  "category": "fonts",
+  "title": "Updated fonts for Romanian and Bulgarian",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "EUupdate.EXE",
+      "url": "\"https://sourceforge.net/projects/mscorefonts2/files/cabs/EUupdate.EXE\"",
+      "sha256": "464dd2cd5f09f489f9ac86ea7790b7b8548fc4e46d9f889b68d2cdce47e09ea8"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/trebucbd.ttf"
+}

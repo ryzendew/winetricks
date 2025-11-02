@@ -1,0 +1,14 @@
+{
+  "name": "richtx32",
+  "category": "dlls",
+  "title": "MS Rich TextBox Control 6.0",
+  "publisher": "Microsoft",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vb6sp6/VB60SP6-KB2708437-x86-ENU.msi"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/richtx32.ocx"
+}

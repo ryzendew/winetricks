@@ -1,0 +1,16 @@
+{
+  "name": "dotnet9",
+  "category": "dlls",
+  "title": "MS .NET Runtime 9.0 LTS",
+  "publisher": "Microsoft",
+  "year": "2024",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnet-runtime-9.0.7-win-x86.exe",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0.7/dotnet-runtime-9.0.7-win-x86.exe",
+      "sha256": "a4d077890c9820d9968a3c310973dceeae6ce949f4af3dae50611c0457196c82"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

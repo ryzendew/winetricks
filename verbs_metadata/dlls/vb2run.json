@@ -1,0 +1,16 @@
+{
+  "name": "vb2run",
+  "category": "dlls",
+  "title": "MS Visual Basic 2 runtime",
+  "publisher": "Microsoft",
+  "year": "1993",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VBRUN200.EXE",
+      "url": "https://www.quaddicted.com/files/mirrors/ftp.planetquake.com/aoe/downloads/VBRUN200.EXE",
+      "sha256": "4b0811d8fdcac1fd9411786c9119dc8d98d0540948211bdbc1ac682fbe5c0228"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/VBRUN200.DLL"
+}

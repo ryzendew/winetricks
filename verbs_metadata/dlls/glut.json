@@ -1,0 +1,16 @@
+{
+  "name": "glut",
+  "category": "dlls",
+  "title": "The glut utility library for OpenGL",
+  "publisher": "Mark J. Kilgard",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "glut-3.7.6-bin.zip",
+      "url": "https://downloads.sourceforge.net/colladaloader/glut-3.7.6-bin.zip",
+      "sha256": "788e97653bfd527afbdc69e1b7c6bcf9cb45f33d13ddf9d676dc070da92f80d4"
+    }
+  ],
+  "installed_file": "c:/glut-3.7.6-bin/glut32.lib"
+}

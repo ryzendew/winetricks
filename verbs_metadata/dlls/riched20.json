@@ -1,0 +1,14 @@
+{
+  "name": "riched20",
+  "category": "dlls",
+  "title": "MS RichEdit Control 2.0 (riched20.dll)",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/riched20.dll"
+}

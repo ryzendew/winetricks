@@ -1,0 +1,16 @@
+{
+  "name": "vc2010express",
+  "category": "apps",
+  "title": "MS Visual C++ 2010 Express",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "VS2010Express1.iso",
+      "url": "https://master.dl.sourceforge.net/project/beyond-the-sword-sdk/VS2010Express1.iso",
+      "sha256": "a9d5dcdf55e539a06547a8ebbc63d55dc167113e09ee9e42096ab9098313039b"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Microsoft Visual Studio 10.0/Common7/IDE/VCExpress.exe"
+}

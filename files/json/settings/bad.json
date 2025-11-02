@@ -1,0 +1,6 @@
+{
+  "name": "bad",
+  "category": "settings",
+  "title": "Fake verb that always returns false",
+  "media": "download"
+}

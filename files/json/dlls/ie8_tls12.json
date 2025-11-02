@@ -1,0 +1,21 @@
+{
+  "name": "ie8_tls12",
+  "category": "dlls",
+  "title": "TLS 1.1 and 1.2 for Internet Explorer 8",
+  "publisher": "Microsoft",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "windowsxp-kb4019276-x86-embedded-enu_3822fc1692076429a7dc051b00213d5e1240ce3d.exe",
+      "url": "http://download.windowsupdate.com/c/msdownload/update/software/updt/2017/10/windowsxp-kb4019276-x86-embedded-enu_3822fc1692076429a7dc051b00213d5e1240ce3d.exe",
+      "sha256": "381abded5dd70a02bd54d4e8926e519ca6b306e26cbf10c45bbf1533bf57a026"
+    },
+    {
+      "filename": "ie8-windowsxp-kb4230450-x86-embedded-enu_d8b388624d07b6804485d347be4f74a985d50be7.exe",
+      "url": "http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/06/ie8-windowsxp-kb4230450-x86-embedded-enu_d8b388624d07b6804485d347be4f74a985d50be7.exe",
+      "sha256": "ec1183d4bfd0a92286678554f20a2d0f58c70ee9cb8ad90a5084812545b80068"
+    }
+  ],
+  "installed_file": "c:/windows/KB4230450-IE8.log"
+}

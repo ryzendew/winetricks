@@ -1,0 +1,16 @@
+{
+  "name": "winrar",
+  "category": "apps",
+  "title": "WinRAR 6.11",
+  "publisher": "RARLAB",
+  "year": "1993",
+  "media": "download",
+  "files": [
+    {
+      "filename": "winrar-x32-611.exe",
+      "url": "\"${_W_winrar_url}/${_W_winrar_exe}\"",
+      "sha256": "91fd68051f6adb05f8fc92621b7ddd42c8a0d32b0db7ee4c1a35262442ccd96c"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_WIN}/WinRAR/WinRAR.exe"
+}

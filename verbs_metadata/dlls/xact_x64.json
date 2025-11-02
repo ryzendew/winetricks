@@ -1,0 +1,14 @@
+{
+  "name": "xact_x64",
+  "category": "dlls",
+  "title": "MS XACT Engine (64-bit only)",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_Jun2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM64_DLLS_WIN64:-does_not_exist}/xactengine2_0.dll"
+}

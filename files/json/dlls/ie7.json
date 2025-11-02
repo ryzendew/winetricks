@@ -1,0 +1,20 @@
+{
+  "name": "ie7",
+  "category": "dlls",
+  "title": "Internet Explorer 7",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "IE7-WindowsXP-x86-enu.exe",
+      "url": "https://web.archive.org/web/20200617171343/https://download.microsoft.com/download/3/8/8/38889DC1-848C-4BF2-8335-86C573AD86D9/IE7-WindowsXP-x86-enu.exe",
+      "sha256": "bf5c325bbe3f4174869b2a8ff75f92833e7f7debe64777ed0faf293c7725cbef"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/ie7.log",
+  "conflicts": [
+    "ie6",
+    "ie8"
+  ]
+}

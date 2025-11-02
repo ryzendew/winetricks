@@ -1,0 +1,16 @@
+{
+  "name": "vb6run",
+  "category": "dlls",
+  "title": "MS Visual Basic 6 runtime sp6",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vbrun60sp6.exe",
+      "url": "https://web.archive.org/web/20070204154430/https://download.microsoft.com/download/5/a/d/5ad868a0-8ecd-4bb0-a882-fe53eb7ef348/VB6.0-KB290887-X86.exe",
+      "sha256": "467b5a10c369865f2021d379fc0933cb382146b702bbca4bcb703fc86f4322bb"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msvbvm60.dll"
+}

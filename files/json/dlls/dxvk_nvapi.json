@@ -1,0 +1,9 @@
+{
+  "name": "dxvk_nvapi",
+  "category": "dlls",
+  "title": "Alternative NVAPI Vulkan implementation on top of DXVK for Linux / Wine (latest)",
+  "publisher": "Jens Peters",
+  "year": "2025",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/nvapi.dll"
+}

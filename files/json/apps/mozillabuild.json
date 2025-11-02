@@ -1,0 +1,16 @@
+{
+  "name": "mozillabuild",
+  "category": "apps",
+  "title": "Mozilla build environment",
+  "publisher": "Mozilla Foundation",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MozillaBuildSetup-2.0.0.exe",
+      "url": "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.0.0.exe",
+      "sha256": "d5ffe52fe634fb7ed02e61041cc183c3af92039ee74e794f7ae83a408e4cf3f5"
+    }
+  ],
+  "installed_file": "c:/mozilla-build/moztools/bin/nsinstall.exe"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "origin",
+  "category": "apps",
+  "title": "EA Origin",
+  "publisher": "EA",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "OriginSetup.exe"
+    },
+    {
+      "filename": "version_v3.dll"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Origin/Origin.exe"
+}

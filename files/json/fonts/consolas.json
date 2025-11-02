@@ -1,0 +1,14 @@
+{
+  "name": "consolas",
+  "category": "fonts",
+  "title": "MS Consolas console font",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "PowerPointViewer.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/consola.ttf"
+}

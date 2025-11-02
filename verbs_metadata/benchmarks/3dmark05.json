@@ -1,0 +1,16 @@
+{
+  "name": "3dmark05",
+  "category": "benchmarks",
+  "title": "3D Mark 05",
+  "publisher": "Futuremark",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "3dmark05_v130_1901.exe",
+      "url": "http://www.ocinside.de/download/3dmark05_v130_1901.exe",
+      "sha256": "af97f20665090985ee8a4ba83d137e796bfe12e0dfb7fe285712fae198b34334"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Futuremark/3DMark05/3DMark05.exe"
+}

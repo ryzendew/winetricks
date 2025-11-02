@@ -1,0 +1,14 @@
+{
+  "name": "mshflxgd",
+  "category": "dlls",
+  "title": "MS Hierarchical FlexGrid Control (mshflxgd.ocx)",
+  "publisher": "Microsoft",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vb6sp6/VB60SP6-KB2708437-x86-ENU.msi"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mshflxgd.ocx"
+}

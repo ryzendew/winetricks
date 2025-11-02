@@ -1,0 +1,16 @@
+{
+  "name": "sdl",
+  "category": "dlls",
+  "title": "Simple DirectMedia Layer",
+  "publisher": "Sam Lantinga",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "SDL-1.2.15-win32.zip",
+      "url": "https://www.libsdl.org/release/SDL-1.2.15-win32.zip",
+      "sha256": "a28bbe38714ef7817b1c1e8082a48f391f15e4043402444b783952fca939edc1"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/SDL.dll"
+}

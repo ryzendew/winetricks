@@ -1,0 +1,19 @@
+{
+  "name": "lavfilters",
+  "category": "dlls",
+  "title": "LAV Filters",
+  "publisher": "Hendrik Leppkes",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "LAVFilters-0.74.1-Installer.exe",
+      "url": "https://github.com/Nevcairiel/LAVFilters/releases/download/0.74.1/LAVFilters-0.74.1-Installer.exe",
+      "sha256": "181e24428eaa34d0121cd53ec829c18e52d028689e12a7326f952989daa44ddb"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/LAV Filters/x86/avfilter-lav-7.dll",
+  "conflicts": [
+    "lavfilters702"
+  ]
+}

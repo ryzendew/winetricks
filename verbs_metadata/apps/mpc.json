@@ -1,0 +1,16 @@
+{
+  "name": "mpc",
+  "category": "apps",
+  "title": "Media Player Classic - Home Cinema",
+  "publisher": "doom9 folks",
+  "year": "2014",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MPC-HC.1.7.5.x86.exe",
+      "url": "https://downloads.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.5_x86/MPC-HC.1.7.5.x86.exe",
+      "sha256": "1d690da5b330f723aea4a294d478828395d321b59fc680f2b971e8b16b8bd33d"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/MPC-HC/mpc-hc.exe"
+}

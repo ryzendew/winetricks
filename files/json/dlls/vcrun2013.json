@@ -1,0 +1,16 @@
+{
+  "name": "vcrun2013",
+  "category": "dlls",
+  "title": "Visual C++ 2013 libraries (mfc120,mfc120u,msvcp120,msvcr120,vcomp120)",
+  "publisher": "Microsoft",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vcredist_x86.exe",
+      "url": "https://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x86.exe",
+      "sha256": "89f4e593ea5541d1c53f983923124f9fd061a1c0c967339109e375c661573c17"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc120.dll"
+}

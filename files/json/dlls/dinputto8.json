@@ -1,0 +1,19 @@
+{
+  "name": "dinputto8",
+  "category": "dlls",
+  "title": "A dll module that is designed to improve compatibility in games using DirectInput 1-7 by converting all API calls to their equivalent DirectInput 8 (1.0.78.0)",
+  "publisher": "Elisha Riedlinger",
+  "year": "2018",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dinput.dll",
+      "url": "https://github.com/elishacloud/dinputto8/releases/download/v1.0.78.0/dinput.dll",
+      "sha256": "467f50cac676635ed68658b8be32e1a2cacece37a22bb13e8ec8330706a32ca7"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dinput.dll",
+  "conflicts": [
+    "dinput"
+  ]
+}

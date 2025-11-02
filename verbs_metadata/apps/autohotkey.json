@@ -1,0 +1,16 @@
+{
+  "name": "autohotkey",
+  "category": "apps",
+  "title": "AutoHotKey",
+  "publisher": "autohotkey.org",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "AutoHotkey_1.1.36.01_setup.exe",
+      "url": "https://github.com/AutoHotkey/AutoHotkey/releases/download/v1.1.36.01/AutoHotkey_1.1.36.01_setup.exe",
+      "sha256": "62734d219f14a942986e62d6c0fef0c2315bc84acd963430aed788c36e67e1ff"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/AutoHotkey/AutoHotkey.exe"
+}

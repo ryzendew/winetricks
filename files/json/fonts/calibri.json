@@ -1,0 +1,14 @@
+{
+  "name": "calibri",
+  "category": "fonts",
+  "title": "MS Calibri font",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "PowerPointViewer.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/calibri.ttf"
+}

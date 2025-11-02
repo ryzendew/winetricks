@@ -1,0 +1,19 @@
+{
+  "name": "dotnet48",
+  "category": "dlls",
+  "title": "MS .NET 4.8",
+  "publisher": "Microsoft",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ndp48-x86-x64-allos-enu.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/7afca223-55d2-470a-8edc-6a1739ae3252/abd170b4b0ec15ad0222a809b761a036/ndp48-x86-x64-allos-enu.exe",
+      "sha256": "95889d6de3f2070c07790ad6cf2000d33d9a1bdfc6a381725ab82ab1c314fd53"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet48.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

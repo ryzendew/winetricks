@@ -1,0 +1,16 @@
+{
+  "name": "msxml3",
+  "category": "dlls",
+  "title": "MS XML Core Services 3.0",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "msxml3.msi",
+      "url": "https://media.codeweavers.com/pub/other/msxml3.msi",
+      "sha256": "f9c678f8217e9d4f9647e8a1f6d89a7c26a57b9e9e00d39f7487493dd7b4e36c"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msxml3.dll"
+}

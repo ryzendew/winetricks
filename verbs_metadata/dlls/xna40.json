@@ -1,0 +1,16 @@
+{
+  "name": "xna40",
+  "category": "dlls",
+  "title": "MS XNA Framework Redistributable 4.0",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "xnafx40_redist.msi",
+      "url": "https://web.archive.org/web/20120325002813/https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi",
+      "sha256": "e6c41d692ebcba854dad4b1c52bb7ddd05926bad3105595d6596b8bab01c25e7"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Common Files/Microsoft Shared/XNA/Framework/v4.0/XnaNative.dll"
+}

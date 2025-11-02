@@ -1,0 +1,14 @@
+{
+  "name": "gmdls",
+  "category": "dlls",
+  "title": "General MIDI DLS Collection",
+  "publisher": "Microsoft / Roland",
+  "year": "1999",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_apr2006_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/drivers/gm.dls"
+}

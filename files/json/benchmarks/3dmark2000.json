@@ -1,0 +1,16 @@
+{
+  "name": "3dmark2000",
+  "category": "benchmarks",
+  "title": "3DMark2000",
+  "publisher": "MadOnion.com",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "3dmark2000_v11_100308.exe",
+      "url": "http://www.ocinside.de/download/3dmark2000_v11_100308.exe",
+      "sha256": "1b392776fd377de8cc6db7c1d8b1565485e20816d1b053de3f16a743e629048d"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/MadOnion.com/3DMark2000/3DMark2000.exe"
+}

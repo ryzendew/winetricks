@@ -1,0 +1,16 @@
+{
+  "name": "3dmark2001",
+  "category": "benchmarks",
+  "title": "3DMark2001",
+  "publisher": "MadOnion.com",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "3dmark2001se_330_100308.exe",
+      "url": "http://www.ocinside.de/download/3dmark2001se_330_100308.exe",
+      "sha256": "e34dfd32ef8fe8018a6f41f33fc3ab6dba45f2e90881688ac75a18b97dcd8813"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/MadOnion.com/3DMark2001 SE/3DMark2001SE.exe"
+}

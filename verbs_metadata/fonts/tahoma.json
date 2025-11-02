@@ -1,0 +1,16 @@
+{
+  "name": "tahoma",
+  "category": "fonts",
+  "title": "MS Tahoma font (not part of corefonts)",
+  "publisher": "Microsoft",
+  "year": "1999",
+  "media": "download",
+  "files": [
+    {
+      "filename": "IELPKTH.CAB",
+      "url": "https://downloads.sourceforge.net/corefonts/OldFiles/IELPKTH.CAB",
+      "sha256": "c1be3fb8f0042570be76ec6daa03a99142c88367c1bc810240b85827c715961a"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/tahoma.ttf"
+}

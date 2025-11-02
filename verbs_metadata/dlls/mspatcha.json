@@ -1,0 +1,14 @@
+{
+  "name": "mspatcha",
+  "category": "dlls",
+  "title": "MS mspatcha",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_exe": "${W_SYSTEM32_DLLS_WIN}/mspatcha.dll"
+}

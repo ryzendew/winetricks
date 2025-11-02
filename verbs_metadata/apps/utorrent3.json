@@ -1,0 +1,16 @@
+{
+  "name": "utorrent3",
+  "category": "apps",
+  "title": "µTorrent 3.4",
+  "publisher": "BitTorrent",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "uTorrent.exe",
+      "url": "https://download-new.utorrent.com/endpoint/utorrent/os/windows/track/stable/",
+      "sha256": "bf4ee47d0df1870104f4fada8a68c2fb29e94fea9284c7bb6a6b385a718d8a18"
+    }
+  ],
+  "installed_exe": "c:/users/${LOGNAME}/Application Data/uTorrent/uTorrent.exe"
+}

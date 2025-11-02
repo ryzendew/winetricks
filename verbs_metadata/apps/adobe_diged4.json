@@ -1,0 +1,16 @@
+{
+  "name": "adobe_diged4",
+  "category": "apps",
+  "title": "Adobe Digital Editions 4.5",
+  "publisher": "Adobe",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ADE_4.5_Installer.exe",
+      "url": "https://download.adobe.com/pub/adobe/digitaleditions/ADE_4.5_Installer.exe",
+      "sha256": "db40676c6925f64ab79c3d8b7a24be0973b07ef1c14eec6ec8c44f47cfe665b8"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Adobe/Adobe Digital Editions 4.5/DigitalEditions.exe"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "dotnet7",
+  "category": "dlls",
+  "title": "MS .NET Runtime 7.0 LTS",
+  "publisher": "Microsoft",
+  "year": "2023",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnet-runtime-7.0.20-win-x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/b2e820bd-b591-43df-ab10-1eeb7998cc18/661ca79db4934c6247f5c7a809a62238/dotnet-runtime-7.0.20-win-x86.exe",
+      "sha256": "9bf79c94ab014b555167e61f3ce653fdf54c70bda6d6c74ab9f6f44652947a89"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

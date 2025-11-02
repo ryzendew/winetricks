@@ -1,0 +1,16 @@
+{
+  "name": "ffdshow",
+  "category": "dlls",
+  "title": "ffdshow video codecs",
+  "publisher": "doom9 folks",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ffdshow_beta7_rev3154_20091209.exe",
+      "url": "https://downloads.sourceforge.net/ffdshow-tryout/ffdshow_beta7_rev3154_20091209.exe",
+      "sha256": "86fb22e9a79a1c83340a99fd5722974a4d03948109d404a383c4334fab8f8860"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/ffdshow/ff_liba52.dll"
+}

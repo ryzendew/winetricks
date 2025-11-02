@@ -1,0 +1,16 @@
+{
+  "name": "galliumnine06",
+  "category": "dlls",
+  "title": "Gallium Nine Standalone (v0.6)",
+  "publisher": "Gallium Nine Team",
+  "year": "2020",
+  "media": "download",
+  "files": [
+    {
+      "filename": "gallium-nine-standalone-v0.6.tar.gz",
+      "url": "\"https://github.com/iXit/wine-nine-standalone/releases/download/v0.6/gallium-nine-standalone-v0.6.tar.gz\"",
+      "sha256": "1a085b5175791414fdd513b5adb5682985917fef81e84f0116ef2b4d5295ad1c"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d9-nine.dll"
+}

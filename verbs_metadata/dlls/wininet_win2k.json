@@ -1,0 +1,14 @@
+{
+  "name": "wininet_win2k",
+  "category": "dlls",
+  "title": "MS Windows Internet API",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/wininet.dll"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "wme9",
+  "category": "apps",
+  "title": "MS Windows Media Encoder 9 (broken in Wine)",
+  "publisher": "Microsoft",
+  "year": "2002",
+  "media": "download",
+  "files": [
+    {
+      "filename": "WMEncoder.exe",
+      "url": "http://galinet13.free.fr/codec/WMEncoder.exe",
+      "sha256": "19d1610d12b51c969f64703c4d3a76aae30dee526bae715381b5f3369f717d76"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Windows Media Components/Encoder/wmenc.exe"
+}

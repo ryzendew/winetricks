@@ -1,0 +1,16 @@
+{
+  "name": "openwatcom",
+  "category": "apps",
+  "title": "Open Watcom C/C++ compiler (can compile win16 code!)",
+  "publisher": "Watcom",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "open-watcom-c-win32-1.9.exe",
+      "url": "https://sourceforge.net/projects/openwatcom/files/open-watcom-1.9/open-watcom-c-win32-1.9.exe",
+      "sha256": "040c910aba304fdb5f39b8fe508cd3c772b1da1f91a58179fa0895e0b2bf190b"
+    }
+  ],
+  "installed_file": "c:/WATCOM/owsetenv.bat"
+}

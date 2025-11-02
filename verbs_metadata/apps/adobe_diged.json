@@ -1,0 +1,16 @@
+{
+  "name": "adobe_diged",
+  "category": "apps",
+  "title": "Adobe Digital Editions 1.7",
+  "publisher": "Adobe",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "setup.exe",
+      "url": "https://kb2.adobe.com/cps/403/kb403051/attachments/setup.exe",
+      "sha256": "4ebe0fcefbe68900ca6bf499432030c9f8eb8828f8cb5a7e1fd1a16c0eba918e"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Adobe/Adobe Digital Editions/digitaleditions.exe"
+}

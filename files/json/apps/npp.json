@@ -1,0 +1,16 @@
+{
+  "name": "npp",
+  "category": "apps",
+  "title": "Notepad++",
+  "publisher": "Don Ho",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "npp.7.7.1.Installer.exe",
+      "url": "https://notepad-plus-plus.org/repository/7.x/7.7.1/npp.7.7.1.Installer.exe",
+      "sha256": "6787c524b0ac30a698237ffb035f932d7132343671b8fe8f0388ed380d19a51c"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Notepad++/notepad++.exe"
+}

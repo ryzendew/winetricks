@@ -1,0 +1,14 @@
+{
+  "name": "times",
+  "category": "fonts",
+  "title": "MS Times fonts",
+  "publisher": "Microsoft",
+  "year": "2008",
+  "media": "download",
+  "files": [
+    {
+      "filename": "times32.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/times.ttf"
+}

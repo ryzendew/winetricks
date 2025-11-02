@@ -1,0 +1,16 @@
+{
+  "name": "kindle",
+  "category": "apps",
+  "title": "Amazon Kindle",
+  "publisher": "Amazon",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "KindleForPC-installer-1.16.44025.exe",
+      "url": "https://web.archive.org/web/20160817182927/https://s3.amazonaws.com/kindleforpc/44025/KindleForPC-installer-1.16.44025.exe",
+      "sha256": "2655fa8be7b8f4659276c46ef9f3fede847135bf6e5c1de136c9de7af6cac1e2"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_WIN}/Amazon/Kindle/Kindle.exe"
+}

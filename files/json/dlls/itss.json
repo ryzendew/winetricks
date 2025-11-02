@@ -1,0 +1,14 @@
+{
+  "name": "itss",
+  "category": "dlls",
+  "title": "MS itss.dll",
+  "publisher": "Microsoft",
+  "year": "1999",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../hhw/htmlhelp.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/itss.dll"
+}

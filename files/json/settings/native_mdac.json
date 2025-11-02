@@ -1,0 +1,6 @@
+{
+  "name": "native_mdac",
+  "category": "settings",
+  "title": "Override odbc32, odbccp32 and oledb32",
+  "media": "download"
+}

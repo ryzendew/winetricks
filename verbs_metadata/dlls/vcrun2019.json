@@ -1,0 +1,21 @@
+{
+  "name": "vcrun2019",
+  "category": "dlls",
+  "title": "Visual C++ 2015-2019 libraries (concrt140.dll,mfc140.dll,mfc140u.dll,mfcm140.dll,mfcm140u.dll,msvcp140.dll,msvcp140_1.dll,msvcp140_2.dll,msvcp140_atomic_wait.dll,msvcp140_codecvt_ids.dll,vcamp140.dll,vccorlib140.dll,vcomp140.dll,vcruntime140.dll,vcruntime140_1.dll",
+  "publisher": "Microsoft",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vc_redist.x86.exe",
+      "url": "https://aka.ms/vs/16/release/vc_redist.x86.exe",
+      "sha256": "49545cb0f6499c4a65e1e8d5033441eeeb4edfae465a68489a70832c6a4f6399"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc140.dll",
+  "conflicts": [
+    "vcrun2015",
+    "vcrun2017",
+    "vcrun2022"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "dotnet30",
+  "category": "dlls",
+  "title": "MS .NET 3.0",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotnetfx3.exe",
+      "url": "https://web.archive.org/web/20061130220825/http://download.microsoft.com/download/3/F/0/3F0A922C-F239-4B9B-9CB0-DF53621C57D9/dotnetfx3.exe",
+      "sha256": "6cf8921e00f52bbd888aa7a520a7bac47e818e2a850bcc44494c64d6cbfafdac"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Microsoft.NET/Framework/v3.0/Microsoft .NET Framework 3.0/logo.bmp",
+  "conflicts": [
+    "dotnet11",
+    "dotnet30sp1",
+    "dotnet35",
+    "dotnet35sp1"
+  ]
+}

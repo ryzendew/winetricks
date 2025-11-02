@@ -1,0 +1,16 @@
+{
+  "name": "ie8_kb2936068",
+  "category": "dlls",
+  "title": "Cumulative Security Update for Internet Explorer 8",
+  "publisher": "Microsoft",
+  "year": "2014",
+  "media": "download",
+  "files": [
+    {
+      "filename": "IE8-WindowsXP-KB2936068-x86-ENU.exe",
+      "url": "https://download.microsoft.com/download/3/8/C/38CE0ABB-01FD-4C0A-A569-BC5E82C34A17/IE8-WindowsXP-KB2936068-x86-ENU.exe",
+      "sha256": "8bda23c78cdcd9d01c364a01c6d639dfb2d11550a5521b8a81c808c1a2b1824e"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/KB2936068-IE8.log"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "dotnet462",
+  "category": "dlls",
+  "title": "MS .NET 4.6.2",
+  "publisher": "Microsoft",
+  "year": "2016",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP462-KB3151800-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/8e396c75-4d0d-41d3-aea8-848babc2736a/80b431456d8866ebe053eb8b81a168b3/NDP462-KB3151800-x86-x64-AllOS-ENU.exe",
+      "sha256": "b4cbb4bc9a3983ec3be9f80447e0d619d15256a9ce66ff414ae6e3856705e237"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet462.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

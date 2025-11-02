@@ -1,0 +1,17 @@
+{
+  "name": "meiryo",
+  "category": "fonts",
+  "title": "MS Meiryo font",
+  "publisher": "Microsoft",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "PowerPointViewer.exe"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/meiryo.ttc",
+  "conflicts": [
+    "fakejapanese_vlgothic"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "takao",
+  "category": "fonts",
+  "title": "Takao Japanese fonts",
+  "publisher": "Jun Kobayashi",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "takao-fonts-ttf-003.02.01.zip",
+      "url": "\"https://launchpad.net/takao-fonts/trunk/003.02.01/+download/takao-fonts-ttf-003.02.01.zip\"",
+      "sha256": "2f526a16c7931958f560697d494d8304949b3ce0aef246fb0c727fbbcc39089e"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/takaogothic.ttf"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "msdxmocx",
+  "category": "dlls",
+  "title": "MS Windows Media Player 2 ActiveX control for VB6",
+  "publisher": "Microsoft",
+  "year": "1999",
+  "media": "download",
+  "files": [
+    {
+      "filename": "mpfull.exe",
+      "url": "http://hell.pl/agnus/windows95/mpfull.exe",
+      "sha256": "a39b2b9735cedd513fcb78f8634695d35073e9d7e865e536a0da6db38c7225e4"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msdxm.ocx"
+}

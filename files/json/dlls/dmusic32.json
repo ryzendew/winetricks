@@ -1,0 +1,14 @@
+{
+  "name": "dmusic32",
+  "category": "dlls",
+  "title": "MS dmusic32.dll from DirectX user redistributable",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_apr2006_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dmusic32.dll"
+}

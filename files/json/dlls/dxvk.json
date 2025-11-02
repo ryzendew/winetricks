@@ -1,0 +1,9 @@
+{
+  "name": "dxvk",
+  "category": "dlls",
+  "title": "Vulkan-based D3D8/D3D9/D3D10/D3D11 implementation for Linux / Wine (latest)",
+  "publisher": "Philip Rebohle",
+  "year": "2024",
+  "media": "download",
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d8.dll"
+}

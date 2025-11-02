@@ -1,0 +1,6 @@
+{
+  "name": "isolate_home",
+  "category": "settings",
+  "title": "Remove wineprefix links to \\$HOME",
+  "media": "download"
+}

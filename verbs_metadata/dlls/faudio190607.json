@@ -1,0 +1,16 @@
+{
+  "name": "faudio190607",
+  "category": "dlls",
+  "title": "FAudio (xaudio reimplementation, with xna support) builds for win32 (19.06.07)",
+  "publisher": "Kron4ek",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "faudio-19.06.07.tar.xz",
+      "url": "https://github.com/Kron4ek/FAudio-Builds/releases/download/19.06.07/faudio-19.06.07.tar.xz",
+      "sha256": "e17e3a9dadeb1017dc369fe0d46c3d1945ebceadb7ad2f94a3a1448435ab3f6c"
+    }
+  ],
+  "installed_file": "${W_SYSTEM64_DLLS_WIN64}/FAudio.dll"
+}

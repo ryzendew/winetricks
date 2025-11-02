@@ -1,0 +1,16 @@
+{
+  "name": "sketchup",
+  "category": "apps",
+  "title": "SketchUp 8",
+  "publisher": "Google",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "GoogleSketchUpWEN.exe",
+      "url": "https://web.archive.org/web/20160324215618/https://dl.google.com/sketchup/GoogleSketchUpWEN.exe",
+      "sha256": "e50c1b36131d72437eb32a124a5208fad22dc22b843683cfb520e1ef172b8352"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Google/Google SketchUp 8/SketchUp.exe"
+}

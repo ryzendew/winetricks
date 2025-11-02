@@ -1,0 +1,14 @@
+{
+  "name": "droid",
+  "category": "fonts",
+  "title": "Droid fonts",
+  "publisher": "Ascender Corporation",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "DroidSans-Bold.ttf"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/droidsans-bold.ttf"
+}

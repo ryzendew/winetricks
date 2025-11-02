@@ -1,0 +1,16 @@
+{
+  "name": "ollydbg110",
+  "category": "apps",
+  "title": "OllyDbg",
+  "publisher": "ollydbg.de",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "odbg110.zip",
+      "url": "http://www.ollydbg.de/odbg110.zip",
+      "sha256": "73b1770f28893dab22196eb58d45ede8ddf5444009960ccc0107d09881a7cd1e"
+    }
+  ],
+  "installed_file": "c:/ollydbg110/OLLYDBG.EXE"
+}

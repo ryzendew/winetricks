@@ -1,0 +1,16 @@
+{
+  "name": "vjrun20",
+  "category": "dlls",
+  "title": "MS Visual J# 2.0 SE libraries (requires dotnet20)",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vjredist.exe",
+      "url": "https://web.archive.org/web/20200803205240/https://download.microsoft.com/download/9/2/3/92338cd0-759f-4815-8981-24b437be74ef/vjredist.exe",
+      "sha256": "cf8f3dd4ad41453a302870b74de1c6489e7ed255ad3f652ce4af0b424a933b41"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Microsoft.NET/Framework/VJSharp/VJSharpSxS10.dll"
+}

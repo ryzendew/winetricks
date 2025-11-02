@@ -1,0 +1,14 @@
+{
+  "name": "mfc80",
+  "category": "dlls",
+  "title": "Visual C++ 2005 mfc80 library; part of vcrun2005",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2005/vcredist_x86.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc80.dll"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "foobar2000",
+  "category": "apps",
+  "title": "foobar2000 v1.4",
+  "publisher": "Peter Pawlowski",
+  "year": "2018",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "foobar2000_v1.4.exe"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/foobar2000/foobar2000.exe"
+}

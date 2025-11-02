@@ -1,0 +1,16 @@
+{
+  "name": "dxvk2000",
+  "category": "dlls",
+  "title": "Vulkan-based D3D9/D3D10/D3D11 implementation for Linux / Wine (2.0)",
+  "publisher": "Philip Rebohle",
+  "year": "2022",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dxvk-2.0.tar.gz",
+      "url": "\"https://github.com/doitsujin/dxvk/releases/download/v2.0/dxvk-2.0.tar.gz\"",
+      "sha256": "3852f8b4a0c23fd723c9ce06ba8c36d8f84d891755a5d00bec1cd7f609a62477"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d9.dll"
+}

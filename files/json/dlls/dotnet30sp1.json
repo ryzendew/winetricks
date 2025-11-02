@@ -1,0 +1,20 @@
+{
+  "name": "dotnet30sp1",
+  "category": "dlls",
+  "title": "MS .NET 3.0 SP1",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NetFx30SP1_x86.exe",
+      "url": "https://download.microsoft.com/download/8/F/E/8FEEE89D-9E4F-4BA3-993E-0FFEA8E21E1B/NetFx30SP1_x86.exe",
+      "sha256": "3100df4d4db3965ead9520c887a534115cf6fc7ba100abde45226958b865695b"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet30sp1.installed.workaround",
+  "conflicts": [
+    "dotnet11",
+    "dotnet20sdk"
+  ]
+}

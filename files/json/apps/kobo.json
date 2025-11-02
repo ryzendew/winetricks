@@ -1,0 +1,16 @@
+{
+  "name": "kobo",
+  "category": "apps",
+  "title": "Kobo e-book reader",
+  "publisher": "Kobo",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "KoboSetup.exe",
+      "url": "http://download.kobobooks.com/desktop/1/KoboSetup.exe",
+      "sha256": "721e76c06820058422f06420400a0b1286662196d6178d70c4592fd8034704c4"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Kobo/Kobo.exe"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "xaudio29",
+  "category": "dlls",
+  "title": "MS XAudio Redistributable 2.9",
+  "publisher": "Microsoft",
+  "year": "2023",
+  "media": "download",
+  "files": [
+    {
+      "filename": "microsoft.xaudio2.redist.1.2.11.nupkg",
+      "url": "https://globalcdn.nuget.org/packages/microsoft.xaudio2.redist.1.2.11.nupkg",
+      "sha256": "4552e0b5b59de0cdbc6c217261c45f5968f7bbf1e8ab5f208e4bca6fd8fc5780"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/xaudio2_9.dll"
+}

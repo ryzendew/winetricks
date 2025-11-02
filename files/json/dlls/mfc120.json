@@ -1,0 +1,14 @@
+{
+  "name": "mfc120",
+  "category": "dlls",
+  "title": "Visual C++ 2013 mfc120 library; part of vcrun2013",
+  "publisher": "Microsoft",
+  "year": "2013",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun2013/vcredist_x86.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc120u.dll"
+}

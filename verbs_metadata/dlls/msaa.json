@@ -1,0 +1,16 @@
+{
+  "name": "msaa",
+  "category": "dlls",
+  "title": "MS Active Accessibility (oleacc.dll, oleaccrc.dll, msaatext.dll)",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MSAA20_RDK.exe",
+      "url": "https://download.microsoft.com/download/c/1/c/c1cf13a6-4d7f-4b7d-9f67-51ef3a421fc7/MSAA20_RDK.exe",
+      "sha256": "081e382f7e5b874ab143f0b073246fd31f84ae181df1838813b02935a951c9da"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/oleacc.dll"
+}

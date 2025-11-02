@@ -1,0 +1,16 @@
+{
+  "name": "uff",
+  "category": "fonts",
+  "title": "Ubuntu Font Family",
+  "publisher": "Ubuntu",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ubuntu-font-family-0.83.zip",
+      "url": "\"https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip\"",
+      "sha256": "456d7d42797febd0d7d4cf1b782a2e03680bb4a5ee43cc9d06bda172bac05b42"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/ubuntu-r.ttf"
+}

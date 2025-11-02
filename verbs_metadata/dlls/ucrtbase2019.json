@@ -1,0 +1,20 @@
+{
+  "name": "ucrtbase2019",
+  "category": "dlls",
+  "title": "Visual C++ 2019 library (ucrtbase.dll)",
+  "publisher": "Microsoft",
+  "year": "2019",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vc_redist.x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/85d47aa9-69ae-4162-8300-e6b7e4bf3cf3/14563755AC24A874241935EF2C22C5FCE973ACB001F99E524145113B2DC638C1/VC_redist.x86.exe",
+      "sha256": "14563755ac24a874241935ef2c22c5fce973acb001f99e524145113b2dc638c1"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/ucrtbase.dll",
+  "conflicts": [
+    "vcrun2015",
+    "vcrun2017"
+  ]
+}

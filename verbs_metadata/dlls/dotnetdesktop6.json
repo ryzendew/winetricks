@@ -1,0 +1,16 @@
+{
+  "name": "dotnetdesktop6",
+  "category": "dlls",
+  "title": "MS .NET Desktop Runtime 6.0 LTS",
+  "publisher": "Microsoft",
+  "year": "2023",
+  "media": "download",
+  "files": [
+    {
+      "filename": "windowsdesktop-runtime-6.0.36-win-x86.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/cdc314df-4a4c-4709-868d-b974f336f77f/acd5ab7637e456c8a3aa667661324f6d/windowsdesktop-runtime-6.0.36-win-x86.exe",
+      "sha256": "4e77bd970df0a06528ee88d33e4a8c9fb85beedbdd7219b017083acf0c3aa39e"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_WIN}/dotnet/dotnet.exe"
+}

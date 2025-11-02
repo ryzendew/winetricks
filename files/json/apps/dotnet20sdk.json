@@ -1,0 +1,23 @@
+{
+  "name": "dotnet20sdk",
+  "category": "apps",
+  "title": "MS .NET 2.0 SDK",
+  "publisher": "Microsoft",
+  "year": "2006",
+  "media": "download",
+  "files": [
+    {
+      "filename": "setup.exe",
+      "url": "https://web.archive.org/web/20111102051348/https://download.microsoft.com/download/c/4/b/c4b15d7d-6f37-4d5a-b9c6-8f07e7d46635/setup.exe",
+      "sha256": "1d7337bfbb2c65f43c82d188688ce152af403bcb67a2cc2a3cc68a580ecd8200"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/Microsoft.NET/SDK/v2.0/Bin/cordbg.exe",
+  "conflicts": [
+    "dotnet11",
+    "dotnet20sp1",
+    "dotnet20sp2",
+    "dotnet30",
+    "dotnet40"
+  ]
+}

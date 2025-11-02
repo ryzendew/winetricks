@@ -1,0 +1,16 @@
+{
+  "name": "vc2005trial",
+  "category": "apps",
+  "title": "MS Visual C++ 2005 Trial",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "En_vs_2005_vsts_180_Trial.img",
+      "url": "https://download.microsoft.com/download/6/f/5/6f5f7a01-50bb-422d-8742-c099c8896969/En_vs_2005_vsts_180_Trial.img",
+      "sha256": "3ae9f611c60c64d82e1fa9c94714aa6b6c10f6c2c05446e14b5afb5a257f86dc"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Microsoft Visual Studio 8/Common7/IDE/devenv.exe"
+}

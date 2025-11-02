@@ -1,0 +1,16 @@
+{
+  "name": "dxvk1040",
+  "category": "dlls",
+  "title": "Vulkan-based D3D10/D3D11 implementation for Linux / Wine (1.4)",
+  "publisher": "Philip Rebohle",
+  "year": "2017",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dxvk-1.4.tar.gz",
+      "url": "\"https://github.com/doitsujin/dxvk/releases/download/v1.4/dxvk-1.4.tar.gz\"",
+      "sha256": "bf22785de1ce728bbdcfb4615035924112b4718049ca2cade5861b03735181de"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3d10core.dll"
+}

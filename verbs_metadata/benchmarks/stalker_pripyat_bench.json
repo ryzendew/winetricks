@@ -1,0 +1,14 @@
+{
+  "name": "stalker_pripyat_bench",
+  "category": "benchmarks",
+  "title": "S.T.A.L.K.E.R.: Call of Pripyat benchmark",
+  "publisher": "GSC Game World",
+  "year": "2009",
+  "media": "manual_download",
+  "files": [
+    {
+      "filename": "stkcop-bench-setup.exe"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Call Of Pripyat Benchmark/Benchmark.exe"
+}

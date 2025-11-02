@@ -1,0 +1,16 @@
+{
+  "name": "webview2",
+  "category": "dlls",
+  "title": "Microsoft Edge WebView2 Runtime",
+  "publisher": "Microsoft",
+  "year": "2020",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MicrosoftEdgeWebview2Setup.exe",
+      "url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+      "sha256": "f7c406bdc0f61d10ac18661073bbf394d1cafcfcb6b53648408698dd09da9b7a"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/edgewebview2.dll"
+}

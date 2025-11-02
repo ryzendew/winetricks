@@ -1,0 +1,16 @@
+{
+  "name": "vb5run",
+  "category": "dlls",
+  "title": "MS Visual Basic 5 runtime",
+  "publisher": "Microsoft",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "msvbvm50.exe",
+      "url": "https://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe",
+      "sha256": "b5f8ea5b9d8b30822a2be2cdcb89cda99ec0149832659ad81f45360daa6e6965"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msvbvm50.dll"
+}

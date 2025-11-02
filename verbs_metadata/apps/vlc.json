@@ -1,0 +1,16 @@
+{
+  "name": "vlc",
+  "category": "apps",
+  "title": "VLC media player 2.2.1",
+  "publisher": "VideoLAN",
+  "year": "2015",
+  "media": "download",
+  "files": [
+    {
+      "filename": "vlc-2.2.1-win32.exe",
+      "url": "https://get.videolan.org/vlc/2.2.1/win32/vlc-2.2.1-win32.exe",
+      "sha256": "2eaa3881b01a2464d2a155ad49cc78162571dececcef555400666c719a60794d"
+    }
+  ],
+  "installed_file": "${W_PROGRAMS_X86_WIN}/VideoLAN/VLC/vlc.exe"
+}

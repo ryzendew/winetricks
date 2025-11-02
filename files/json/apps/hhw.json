@@ -1,0 +1,16 @@
+{
+  "name": "hhw",
+  "category": "apps",
+  "title": "HTML Help Workshop",
+  "publisher": "Microsoft",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "htmlhelp.exe",
+      "url": "https://web.archive.org/web/20160423015142if_/http://download.microsoft.com/download/0/a/9/0a939ef6-e31c-430f-a3df-dfae7960d564/htmlhelp.exe",
+      "sha256": "b2b3140d42a818870c1ab13c1c7b8d4536f22bd994fa90aade89729a6009a3ae"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/HTML Help Workshop/hhw.exe"
+}

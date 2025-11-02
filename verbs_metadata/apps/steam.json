@@ -1,0 +1,16 @@
+{
+  "name": "steam",
+  "category": "apps",
+  "title": "Steam",
+  "publisher": "Valve",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "SteamSetup.exe",
+      "url": "http://media.steampowered.com/client/installer/SteamSetup.exe",
+      "sha256": "7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Steam/Steam.exe"
+}

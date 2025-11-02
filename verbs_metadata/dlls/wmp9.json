@@ -1,0 +1,16 @@
+{
+  "name": "wmp9",
+  "category": "dlls",
+  "title": "Windows Media Player 9",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MPSetup.exe",
+      "url": "https://web.archive.org/web/20180404022333if_/download.microsoft.com/download/1/b/c/1bc0b1a3-c839-4b36-8f3c-19847ba09299/MPSetup.exe",
+      "sha256": "678c102847c18a92abf13c3fae404c3473a0770c871a046b45efe623c9938fc0"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}\"/l3codeca.acm"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "dotnet40",
+  "category": "dlls",
+  "title": "MS .NET 4.0",
+  "publisher": "Microsoft",
+  "year": "2011",
+  "media": "download",
+  "files": [
+    {
+      "filename": "dotNetFx40_Full_x86_x64.exe",
+      "url": "https://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe",
+      "sha256": "65e064258f2e418816b304f646ff9e87af101e4c9552ab064bb74d281c38659f"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/Microsoft.NET/Framework/v4.0.30319/ngen.exe",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

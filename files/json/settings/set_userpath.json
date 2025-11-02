@@ -1,0 +1,6 @@
+{
+  "name": "set_userpath",
+  "category": "settings",
+  "title": "set user PATH variable in wine prefix specified by native and/or wine paths in WINEPATH environment variable with ';' as path separator",
+  "media": "download"
+}

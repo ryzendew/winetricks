@@ -1,0 +1,14 @@
+{
+  "name": "mfc42",
+  "category": "dlls",
+  "title": "Visual C++ 6 SP4 mfc42 library; part of vcrun6",
+  "publisher": "Microsoft",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vcrun6/VC6RedistSetup_deu.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc42u.dll"
+}

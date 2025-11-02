@@ -124,6 +124,13 @@ pub mod cosmic_impl {
         IsolateToggled(bool),
         NoCleanToggled(bool),
         VerbosityChanged(u8),
+        OperationStatusUpdate(Option<OperationStatus>),
+    }
+    
+    #[derive(Debug, Clone)]
+    enum OperationStatus {
+        Uninstalling { verb_name: String },
+        Installing { verb_name: String },
     }
 
     pub struct WinetricksCosmicApp {
@@ -139,6 +146,7 @@ pub mod cosmic_impl {
         winearch_selection: Option<WineArch>,
         renderer_selection: Option<Renderer>,
         wayland_selection: Option<WaylandDisplay>,
+        operation_status: Option<OperationStatus>,
     }
 
     impl cosmic::Application for WinetricksCosmicApp {
@@ -207,6 +215,7 @@ pub mod cosmic_impl {
                     winearch_selection,
                     renderer_selection,
                     wayland_selection,
+                    operation_status: None,
                 },
                 Command::none(),
             )
@@ -228,8 +237,65 @@ pub mod cosmic_impl {
                     // TODO: Implement async installation
                 }
                 Message::UninstallVerb(verb_name) => {
-                    eprintln!("Uninstall verb: {}", verb_name);
-                    // TODO: Implement async uninstallation
+                    eprintln!("Uninstalling verb: {}", verb_name);
+                    // Show progress dialog
+                    self.operation_status = Some(OperationStatus::Uninstalling { 
+                        verb_name: verb_name.clone() 
+                    });
+                    
+                    // Spawn async task to uninstall
+                    let config = self.config.clone();
+                    let verb_name_clone = verb_name.clone();
+                    let config_for_reload = self.config.clone();
+                    std::thread::spawn(move || {
+                        let rt = tokio::runtime::Runtime::new().unwrap();
+                        rt.block_on(async {
+                            match winetricks_lib::Executor::new(config.clone()).await {
+                                Ok(mut executor) => {
+                                    match executor.uninstall_verb(&verb_name_clone).await {
+                                        Ok(_) => {
+                                            eprintln!("Successfully uninstalled: {}", verb_name_clone);
+                                            // Reload installed verbs list after successful uninstall
+                                            let updated_verbs = load_installed_verbs(&config_for_reload);
+                                            eprintln!("Remaining installed verbs: {:?}", updated_verbs);
+                                        }
+                                        Err(e) => {
+                                            eprintln!("Error uninstalling {}: {}", verb_name_clone, e);
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    eprintln!("Error creating executor: {}", e);
+                                }
+                            }
+                        });
+                    });
+                    // Optimistically remove from UI list immediately for instant feedback
+                    self.installed_verbs.retain(|v| v != &verb_name);
+                    
+                    // Auto-close dialog after operation completes
+                    let verb_name_for_close = verb_name.clone();
+                    let config_for_check = self.config.clone();
+                    std::thread::spawn(move || {
+                        // Poll every 200ms for up to 10 seconds
+                        for i in 0..50 {
+                            std::thread::sleep(std::time::Duration::from_millis(200));
+                            let updated = load_installed_verbs(&config_for_check);
+                            if !updated.contains(&verb_name_for_close) {
+                                eprintln!("Uninstall completed - closing dialog (after {}ms)", i * 200);
+                                break;
+                            }
+                        }
+                    });
+                    return Command::none();
+                }
+                Message::OperationStatusUpdate(status) => {
+                    let completed = status.is_none();
+                    self.operation_status = status;
+                    if completed {
+                        self.installed_verbs = load_installed_verbs(&self.config);
+                    }
+                    return Command::none();
                 }
                 Message::RunWineTool(tool) => {
                     eprintln!("Running Wine tool: {}", tool);

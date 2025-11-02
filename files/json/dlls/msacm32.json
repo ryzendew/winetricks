@@ -1,0 +1,14 @@
+{
+  "name": "msacm32",
+  "category": "dlls",
+  "title": "MS ACM32",
+  "publisher": "Microsoft",
+  "year": "2003",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../winxpsp3/WindowsXP-KB936929-SP3-x86-ENU.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/msacm32.dll"
+}

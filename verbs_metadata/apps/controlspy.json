@@ -1,0 +1,14 @@
+{
+  "name": "controlspy",
+  "category": "apps",
+  "title": "Control Spy 6 ",
+  "publisher": "Microsoft",
+  "year": "2005",
+  "media": "download",
+  "files": [
+    {
+      "filename": "ControlSpyV6.exe"
+    }
+  ],
+  "installed_exe": "${W_PROGRAMS_X86_WIN}/Microsoft/ControlSpy/ControlSpyV6.exe"
+}

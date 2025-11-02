@@ -1,0 +1,16 @@
+{
+  "name": "lucida",
+  "category": "fonts",
+  "title": "MS Lucida Console font",
+  "publisher": "Microsoft",
+  "year": "1998",
+  "media": "download",
+  "files": [
+    {
+      "filename": "eurofixi.exe",
+      "url": "\"http://ftpmirror.your.org/pub/misc/ftp.microsoft.com/bussys/winnt/winnt-public/fixes/usa/NT40TSE/hotfixes-postSP3/Euro-fix/eurofixi.exe\"",
+      "sha256": "41f272a33521f6e15f2cce9ff1e049f2badd5ff0dc327fc81b60825766d5b6c7"
+    }
+  ],
+  "installed_file": "${W_FONTSDIR_WIN}/lucon.ttf"
+}

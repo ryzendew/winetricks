@@ -1,0 +1,6 @@
+{
+  "name": "forcemono",
+  "category": "settings",
+  "title": "Force using Mono instead of .NET (for debugging)",
+  "media": "download"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "dpvoice",
+  "category": "dlls",
+  "title": "Microsoft dpvoice dpvvox dpvacm Audio dlls",
+  "publisher": "Microsoft",
+  "year": "2002",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_feb2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/dpvoice.dll"
+}
