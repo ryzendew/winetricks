@@ -1,18 +1,17 @@
 //! Winetricks Library
-//! 
+//!
 //! Core library for managing Wine packages and DLLs.
 //! Provides fast, modern implementation of winetricks functionality.
 
 pub mod config;
-pub mod wine;
-pub mod verb;
 pub mod download;
 pub mod error;
 pub mod executor;
+pub mod verb;
+pub mod wine;
 
 pub use config::Config;
-pub use wine::Wine;
-pub use verb::{Verb, VerbMetadata, VerbCategory, VerbRegistry, MediaType, VerbFile};
-pub use error::{WinetricksError, Result};
+pub use error::{Result, WinetricksError};
 pub use executor::Executor;
-
+pub use verb::{MediaType, Verb, VerbCategory, VerbFile, VerbMetadata, VerbRegistry};
+pub use wine::Wine;

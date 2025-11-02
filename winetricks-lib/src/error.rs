@@ -50,4 +50,3 @@ pub enum WinetricksError {
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
 }
-

@@ -1,12 +1,11 @@
 //! Winetricks CLI
 
 use clap::Parser;
-use winetricks_lib::{Config, Result, VerbRegistry, VerbCategory, Executor, WinetricksError};
-use tracing::info;
-use tracing_subscriber;
 use std::io::{self, Write};
 use std::process;
-use which::which;
+use std::str::FromStr;
+use tracing::info;
+use winetricks_lib::{Config, Executor, Result, VerbCategory, VerbRegistry, WinetricksError};
 
 async fn install_verb(config: &Config, verb_name: &str) -> Result<()> {
     let mut executor = Executor::new(config.clone()).await?;
@@ -19,7 +18,8 @@ async fn uninstall_verb(config: &Config, verb_name: &str) -> Result<()> {
 }
 
 fn print_help() {
-    println!(r#"Winetricks - Package manager for Wine
+    println!(
+        r#"Winetricks - Package manager for Wine
 A fast, modern rewrite of winetricks in Rust
 
 Usage: winetricks [OPTIONS] [COMMAND|VERB] ...
@@ -94,15 +94,15 @@ NOTE: This is a Rust rewrite. Verb installation uses hybrid mode:
       - Tries Rust implementation first
       - Falls back to original winetricks script when needed
       - All 466+ verbs from original winetricks are supported
-"#);
+"#
+    );
 }
 
 #[derive(Parser)]
 #[command(name = "winetricks")]
 #[command(about = "A fast, modern package manager for Wine")]
 #[command(version)]
-#[command(
-    long_about = r#"Winetricks - Package manager for Wine
+#[command(long_about = r#"Winetricks - Package manager for Wine
 
 Executes verbs to install applications, DLLs, fonts, or change Wine settings.
 
@@ -147,81 +147,80 @@ EXAMPLES:
     winetricks uninstall dotnet48            # Uninstall a verb
     winetricks help                          # Open wiki in browser
     winetricks annihilate                    # Delete WINEPREFIX (with confirmation)
-    winetricks prefix=myprefix dotnet48      # Install to custom prefix"#
-)]
+    winetricks prefix=myprefix dotnet48      # Install to custom prefix"#)]
 struct Cli {
     /// Commands or verbs to execute
     #[arg(trailing_var_arg = true, help = "Command or verb name(s) to execute")]
     commands: Vec<String>,
-    
+
     /// Set country code to CC and don't detect your IP address
     #[arg(long)]
     country: Option<String>,
-    
+
     /// Don't check whether packages were already installed
     #[arg(short = 'f', long)]
     force: bool,
-    
+
     /// Show gui diagnostics even when driven by commandline
     #[arg(long)]
     gui: bool,
-    
+
     /// Set GUI engine (kdialog or zenity) to override
     #[arg(long)]
     gui_opt: Option<String>,
-    
+
     /// Install each app or game in its own bottle (WINEPREFIX)
     #[arg(long)]
     isolate: bool,
-    
+
     /// Don't delete temp directories (useful during debugging)
     #[arg(long)]
     no_clean: bool,
-    
+
     /// Don't isolate apps (use shared prefix)
     #[arg(long)]
     no_isolate: bool,
-    
+
     /// Opt in to reporting which verbs you use to the Winetricks maintainers
     #[arg(long)]
     optin: bool,
-    
+
     /// Opt out of reporting which verbs you use to the Winetricks maintainers
     #[arg(long)]
     optout: bool,
-    
+
     /// Don't ask any questions, just install automatically
     #[arg(short = 'q', long)]
     unattended: bool,
-    
+
     /// Update this application to the last version
     #[arg(long)]
     self_update: bool,
-    
+
     /// Rollback the last self update
     #[arg(long)]
     update_rollback: bool,
-    
+
     /// Run downloads under torify, if available
     #[arg(short = 't', long)]
     torify: bool,
-    
+
     /// Run (automated) GUI tests for verbs, if available
     #[arg(long)]
     verify: bool,
-    
+
     /// Echo all commands as they are executed
     #[arg(short = 'v', long)]
     verbose: bool,
-    
+
     /// Really verbose (set -x equivalent)
     #[arg(short = 'v', long = "really-verbose", action = clap::ArgAction::Count)]
     really_verbose: u8,
-    
+
     /// Display this message and exit
     #[arg(short = 'h', long)]
     help: bool,
-    
+
     /// Display version and exit
     #[arg(short = 'V', long)]
     version: bool,
@@ -237,60 +236,60 @@ struct Cli {
 async fn main() -> Result<()> {
     // Check arguments - if no arguments or only program name, launch GUI
     let args: Vec<String> = std::env::args().collect();
-    
+
     // If no arguments provided (just program name), launch GUI
     if args.len() == 1 {
         // Launch GUI
         let gui_paths = [
             // Try same directory as winetricks binary
-            std::env::current_exe()
-                .ok()
-                .and_then(|mut path| {
-                    path.set_file_name("winetricks-gui");
-                    if path.exists() { Some(path) } else { None }
-                }),
+            std::env::current_exe().ok().and_then(|mut path| {
+                path.set_file_name("winetricks-gui");
+                if path.exists() {
+                    Some(path)
+                } else {
+                    None
+                }
+            }),
             // Try /usr/bin/winetricks-gui
             Some(std::path::PathBuf::from("/usr/bin/winetricks-gui")),
             // Try /usr/local/bin/winetricks-gui
             Some(std::path::PathBuf::from("/usr/local/bin/winetricks-gui")),
         ];
-        
-        for gui_path_opt in gui_paths.iter() {
-            if let Some(gui_path) = gui_path_opt {
-                if gui_path.exists() {
-                    if let Err(e) = std::process::Command::new(gui_path).spawn() {
-                        eprintln!("Failed to launch GUI: {}", e);
-                        eprintln!("Falling back to CLI help...");
-                        break;
-                    } else {
-                        return Ok(());
-                    }
+
+        for gui_path in gui_paths.iter().flatten() {
+            if gui_path.exists() {
+                if let Err(e) = std::process::Command::new(gui_path).spawn() {
+                    eprintln!("Failed to launch GUI: {}", e);
+                    eprintln!("Falling back to CLI help...");
+                    break;
+                } else {
+                    return Ok(());
                 }
             }
         }
-        
+
         // GUI not found, show help
         eprintln!("Winetricks GUI not found. Use 'winetricks --help' for CLI usage.");
         eprintln!("To use GUI: install winetricks-gui alongside winetricks.");
         print_help();
         return Ok(());
     }
-    
+
     // Arguments provided - use CLI
     let cli = Cli::parse();
-    
+
     // Handle version and help early (before logging)
     if cli.version {
         println!("winetricks 0.1.0 (Rust rewrite)");
         return Ok(());
     }
-    
+
     // Handle help manually since clap's auto-help might not work with trailing_var_arg
     if cli.help {
         print_help();
         return Ok(());
     }
-    
+
     // Determine verbosity level
     // If unattended (-q), suppress all logging unless verbose is explicitly set
     let verbosity = if cli.really_verbose > 0 {
@@ -300,7 +299,7 @@ async fn main() -> Result<()> {
     } else {
         0
     };
-    
+
     // Setup logging (only if not showing help/version)
     // Unattended mode still shows progress, just suppresses GUI and prompts
     let log_level = match verbosity {
@@ -308,11 +307,11 @@ async fn main() -> Result<()> {
         1 => "debug",
         _ => "trace",
     };
-    
+
     tracing_subscriber::fmt()
         .with_env_filter(format!("winetricks={}", log_level))
         .init();
-    
+
     // Load configuration
     let mut config = Config::new()?;
     config.verbosity = verbosity;
@@ -321,69 +320,74 @@ async fn main() -> Result<()> {
     config.torify = cli.torify;
     config.isolate = cli.isolate;
     config.no_clean = cli.no_clean;
-    
+
     // --no-isolate overrides --isolate if both are set
     if cli.no_isolate {
         config.isolate = false;
     }
-    
+
     // Handle WINEPREFIX from environment or prefix= command
     if let Ok(prefix) = std::env::var("WINEPREFIX") {
         config.wineprefix = Some(prefix.into());
     }
-    
+
     // Set WINEARCH from config if specified
     if let Some(ref arch) = config.winearch {
         std::env::set_var("WINEARCH", arch);
     }
-    
+
     config.ensure_dirs()?;
-    
+
     // Show startup message
     info!("Winetricks starting...");
-    
+
     // Parse commands
     if cli.commands.is_empty() {
         // No arguments - could show GUI or help
         println!("No commands specified. Use --help for usage.");
         return Ok(());
     }
-    
+
     // Process commands in order - handle arch= and prefix= first
     let mut i = 0;
     while i < cli.commands.len() {
         let cmd = &cli.commands[i];
-        
+
         // Process arch= BEFORE prefix= (arch must be set before prefix creation)
-        if cmd.starts_with("arch=") {
-            let arch = &cmd[5..];
+        if let Some(arch) = cmd.strip_prefix("arch=") {
             // Set wine architecture (must be before prefix= command)
             let winearch = match arch {
                 "32" | "win32" => "win32",
                 "64" | "win64" => "win64",
                 _ => {
-                    eprintln!("Error: Invalid architecture '{}'. Use 32, 64, win32, or win64", arch);
+                    eprintln!(
+                        "Error: Invalid architecture '{}'. Use 32, 64, win32, or win64",
+                        arch
+                    );
                     std::process::exit(1);
                 }
             };
-            
+
             config.winearch = Some(winearch.to_string());
             std::env::set_var("WINEARCH", winearch);
             info!("Set WINEARCH={}", winearch);
             i += 1;
             continue;
         }
-        
-        if cmd.starts_with("prefix=") {
-            let prefix_name = &cmd[7..];
+
+        if let Some(prefix_name) = cmd.strip_prefix("prefix=") {
             let prefix_path = config.prefixes_root.join(prefix_name);
             config.wineprefix = Some(prefix_path.clone());
             std::env::set_var("WINEPREFIX", prefix_path.to_str().unwrap());
-            
+
             // If WINEARCH is set and prefix doesn't exist, initialize it
             if let Some(ref arch) = config.winearch {
                 if !prefix_path.exists() {
-                    info!("Creating WINEPREFIX \"{}\" with WINEARCH={}", prefix_path.display(), arch);
+                    info!(
+                        "Creating WINEPREFIX \"{}\" with WINEARCH={}",
+                        prefix_path.display(),
+                        arch
+                    );
                     // Initialize prefix with wineboot
                     let wine = winetricks_lib::Wine::detect()?;
                     std::process::Command::new(&wine.wine_bin)
@@ -401,7 +405,7 @@ async fn main() -> Result<()> {
             i += 1;
             continue;
         }
-        
+
         // Handle special commands (check these BEFORE treating as verb)
         match cmd.as_str() {
             "reinstall" => {
@@ -411,10 +415,10 @@ async fn main() -> Result<()> {
                     eprintln!("Usage: winetricks reinstall <verb-name>");
                     std::process::exit(1);
                 }
-                
+
                 let verb_name = &cli.commands[i + 1];
                 config.force = true; // Enable force for reinstall
-                
+
                 match install_verb(&config, verb_name).await {
                     Ok(_) => {
                         println!("Successfully reinstalled {}", verb_name);
@@ -453,13 +457,16 @@ async fn main() -> Result<()> {
             "list-cached" => {
                 let metadata_dir = config.metadata_dir();
                 if !metadata_dir.exists() {
-                    eprintln!("Error: metadata directory not found: {}", metadata_dir.display());
+                    eprintln!(
+                        "Error: metadata directory not found: {}",
+                        metadata_dir.display()
+                    );
                     return Ok(());
                 }
-                
+
                 let registry = VerbRegistry::load_from_dir(metadata_dir)?;
                 let mut cached_verbs = Vec::new();
-                
+
                 // Check each verb to see if its files are cached
                 for category in [
                     VerbCategory::Apps,
@@ -475,9 +482,12 @@ async fn main() -> Result<()> {
                             for file in &verb_metadata.files {
                                 // Check if file is cached - original winetricks uses verb_name/filename structure
                                 // For now, check both verb_name/filename and just filename
-                                let cache_file = config.cache_dir.join(&verb_metadata.name).join(&file.filename);
+                                let cache_file = config
+                                    .cache_dir
+                                    .join(&verb_metadata.name)
+                                    .join(&file.filename);
                                 let cache_file_alt = config.cache_dir.join(&file.filename);
-                                
+
                                 if !cache_file.exists() && !cache_file_alt.exists() {
                                     all_cached = false;
                                     break;
@@ -487,13 +497,13 @@ async fn main() -> Result<()> {
                             // Verb has no files to download, skip it
                             all_cached = false;
                         }
-                        
+
                         if all_cached {
                             cached_verbs.push(verb_metadata.name.clone());
                         }
                     }
                 }
-                
+
                 cached_verbs.sort();
                 for verb_name in cached_verbs {
                     println!("{}", verb_name);
@@ -502,13 +512,16 @@ async fn main() -> Result<()> {
             "list-download" => {
                 let metadata_dir = config.metadata_dir();
                 if !metadata_dir.exists() {
-                    eprintln!("Error: metadata directory not found: {}", metadata_dir.display());
+                    eprintln!(
+                        "Error: metadata directory not found: {}",
+                        metadata_dir.display()
+                    );
                     return Ok(());
                 }
-                
+
                 let registry = VerbRegistry::load_from_dir(metadata_dir)?;
                 let mut download_verbs = Vec::new();
-                
+
                 // List verbs with media=download
                 for category in [
                     VerbCategory::Apps,
@@ -523,7 +536,7 @@ async fn main() -> Result<()> {
                         }
                     }
                 }
-                
+
                 download_verbs.sort();
                 for verb_name in download_verbs {
                     println!("{}", verb_name);
@@ -532,13 +545,16 @@ async fn main() -> Result<()> {
             "list-manual-download" => {
                 let metadata_dir = config.metadata_dir();
                 if !metadata_dir.exists() {
-                    eprintln!("Error: metadata directory not found: {}", metadata_dir.display());
+                    eprintln!(
+                        "Error: metadata directory not found: {}",
+                        metadata_dir.display()
+                    );
                     return Ok(());
                 }
-                
+
                 let registry = VerbRegistry::load_from_dir(metadata_dir)?;
                 let mut manual_download_verbs = Vec::new();
-                
+
                 // List verbs with media=manual_download
                 for category in [
                     VerbCategory::Apps,
@@ -553,7 +569,7 @@ async fn main() -> Result<()> {
                         }
                     }
                 }
-                
+
                 manual_download_verbs.sort();
                 for verb_name in manual_download_verbs {
                     println!("{}", verb_name);
@@ -568,7 +584,7 @@ async fn main() -> Result<()> {
                         .map(|l| l.trim())
                         .filter(|l| {
                             // Filter out empty lines, flags (starting with -), comments, and command keywords
-                            !l.is_empty() 
+                            !l.is_empty()
                             && !l.starts_with('-')  // Flags like -q, --force
                             && !l.starts_with('#')  // Comments
                             && !l.starts_with("//") // Comments
@@ -581,13 +597,13 @@ async fn main() -> Result<()> {
                             && l != &"winecmd" && l != &"help" && l != &"uninstall" && l != &"reinstall"
                         })
                         .collect();
-                    
+
                     if installed.is_empty() {
                         println!("No verbs installed in this wineprefix");
                     } else {
                         println!("Installed verbs ({}):", installed.len());
                         println!("{}", "=".repeat(50));
-                        
+
                         // Try to show metadata if available
                         let metadata_dir = config.metadata_dir();
                         let registry = if metadata_dir.exists() {
@@ -595,12 +611,13 @@ async fn main() -> Result<()> {
                         } else {
                             None
                         };
-                        
+
                         for verb_name in &installed {
                             if let Some(registry) = &registry {
                                 if let Some(metadata) = registry.get(verb_name) {
-                                    println!("  {} - {} ({})", 
-                                        verb_name, 
+                                    println!(
+                                        "  {} - {} ({})",
+                                        verb_name,
                                         metadata.title,
                                         metadata.category.as_str()
                                     );
@@ -622,23 +639,38 @@ async fn main() -> Result<()> {
                 if i + 1 >= cli.commands.len() {
                     eprintln!("Error: uninstall requires a verb name");
                     eprintln!("Usage: winetricks uninstall <verb-name>");
-                    eprintln!("       winetricks uninstall <verb-name> <verb-name> ...  (multiple verbs)");
+                    eprintln!(
+                        "       winetricks uninstall <verb-name> <verb-name> ...  (multiple verbs)"
+                    );
                     std::process::exit(1);
                 }
-                
+
                 // Process all verbs after "uninstall"
                 let mut uninstalled = Vec::new();
                 let mut failed = Vec::new();
-                
+
                 i += 1; // Move past "uninstall"
                 while i < cli.commands.len() && !cli.commands[i].starts_with("-") {
                     let verb_name = &cli.commands[i];
-                    
+
                     // Skip if it's another command
-                    if ["list", "reinstall", "uninstall", "apps", "dlls", "fonts", "settings", "benchmarks", "prefix=", "arch="].contains(&verb_name.as_str()) {
+                    if [
+                        "list",
+                        "reinstall",
+                        "uninstall",
+                        "apps",
+                        "dlls",
+                        "fonts",
+                        "settings",
+                        "benchmarks",
+                        "prefix=",
+                        "arch=",
+                    ]
+                    .contains(&verb_name.as_str())
+                    {
                         break;
                     }
-                    
+
                     match uninstall_verb(&config, verb_name).await {
                         Ok(_) => {
                             uninstalled.push(verb_name.clone());
@@ -650,7 +682,7 @@ async fn main() -> Result<()> {
                     }
                     i += 1;
                 }
-                
+
                 if !uninstalled.is_empty() {
                     println!("\nSuccessfully uninstalled: {}", uninstalled.join(", "));
                 }
@@ -658,13 +690,13 @@ async fn main() -> Result<()> {
                     eprintln!("\nFailed to uninstall: {}", failed.join(", "));
                     std::process::exit(1);
                 }
-                
+
                 continue; // Already incremented i
             }
             "apps" | "benchmarks" | "dlls" | "fonts" | "settings" => {
                 // Check if next command is "list"
                 if i + 1 < cli.commands.len() && cli.commands[i + 1] == "list" {
-                    if let Some(category) = VerbCategory::from_str(cmd) {
+                    if let Ok(category) = VerbCategory::from_str(cmd) {
                         let metadata_dir = config.metadata_dir();
                         if metadata_dir.exists() {
                             let registry = VerbRegistry::load_from_dir(metadata_dir)?;
@@ -683,18 +715,19 @@ async fn main() -> Result<()> {
                 // Open winetricks wiki in browser
                 let url = "https://github.com/Winetricks/winetricks/wiki";
                 let browsers = ["xdg-open", "sdtwebclient", "cygstart", "open", "firefox"];
-                
+
                 let mut opened = false;
                 for browser in &browsers {
                     if std::process::Command::new(browser)
                         .arg(url)
                         .status()
-                        .is_ok() {
+                        .is_ok()
+                    {
                         opened = true;
                         break;
                     }
                 }
-                
+
                 if !opened {
                     eprintln!("Could not open browser. Please visit: {}", url);
                     std::process::exit(1);
@@ -703,7 +736,7 @@ async fn main() -> Result<()> {
             "annihilate" => {
                 // DANGEROUS: Delete entire WINEPREFIX
                 let wineprefix = config.wineprefix();
-                
+
                 // Ask for confirmation unless unattended
                 if !config.unattended {
                     eprintln!("WARNING: This will DELETE ALL DATA AND APPLICATIONS inside:");
@@ -711,28 +744,32 @@ async fn main() -> Result<()> {
                     eprintln!("This action cannot be undone!");
                     print!("Are you sure you want to continue? [y/N] ");
                     io::stdout().flush().unwrap();
-                    
+
                     let mut answer = String::new();
                     io::stdin().read_line(&mut answer).unwrap();
-                    
+
                     if !answer.trim().to_lowercase().starts_with('y') {
                         println!("Cancelled.");
                         return Ok(());
                     }
                 } else {
-                    eprintln!("WARNING: Unattended annihilate will delete: {}", wineprefix.display());
+                    eprintln!(
+                        "WARNING: Unattended annihilate will delete: {}",
+                        wineprefix.display()
+                    );
                 }
-                
+
                 // Delete wineprefix
                 if wineprefix.exists() {
                     info!("Deleting wineprefix: {:?}", wineprefix);
-                    std::fs::remove_dir_all(&wineprefix)
-                        .map_err(|e| WinetricksError::Verb(format!("Failed to delete wineprefix: {}", e)))?;
+                    std::fs::remove_dir_all(&wineprefix).map_err(|e| {
+                        WinetricksError::Verb(format!("Failed to delete wineprefix: {}", e))
+                    })?;
                 } else {
                     eprintln!("Wineprefix does not exist: {}", wineprefix.display());
                     return Ok(());
                 }
-                
+
                 // Clean up .desktop files in XDG_DATA_HOME/applications
                 if let Ok(data_home) = std::env::var("XDG_DATA_HOME") {
                     let apps_dir = std::path::Path::new(&data_home).join("applications");
@@ -753,7 +790,7 @@ async fn main() -> Result<()> {
                         }
                     }
                 }
-                
+
                 // Clean up desktop items
                 // Try XDG_DESKTOP_DIR env var first
                 let desktop_path = if let Ok(desktop_dir) = std::env::var("XDG_DESKTOP_DIR") {
@@ -767,9 +804,11 @@ async fn main() -> Result<()> {
                             if let Ok(content) = std::fs::read_to_string(&user_dirs) {
                                 for line in content.lines() {
                                     if line.starts_with("XDG_DESKTOP_DIR=") {
-                                        let value = line.trim_start_matches("XDG_DESKTOP_DIR=\"").trim_end_matches("\"");
+                                        let value = line
+                                            .trim_start_matches("XDG_DESKTOP_DIR=\"")
+                                            .trim_end_matches("\"");
                                         // Expand $HOME if present
-                                        if let Some(home) = std::env::var("HOME").ok() {
+                                        if let Ok(home) = std::env::var("HOME") {
                                             desktop_dir = Some(value.replace("$HOME", &home));
                                         } else {
                                             desktop_dir = Some(value.to_string());
@@ -781,13 +820,15 @@ async fn main() -> Result<()> {
                         }
                     }
                     // Fall back to ~/Desktop
-                    desktop_dir.unwrap_or_else(|| {
-                        std::env::var("HOME")
-                            .map(|h| format!("{}/Desktop", h))
-                            .unwrap_or_else(|_| "~/Desktop".to_string())
-                    }).into()
+                    desktop_dir
+                        .unwrap_or_else(|| {
+                            std::env::var("HOME")
+                                .map(|h| format!("{}/Desktop", h))
+                                .unwrap_or_else(|_| "~/Desktop".to_string())
+                        })
+                        .into()
                 };
-                
+
                 if desktop_path.exists() {
                     if let Ok(entries) = std::fs::read_dir(&desktop_path) {
                         for entry in entries.flatten() {
@@ -803,7 +844,7 @@ async fn main() -> Result<()> {
                         }
                     }
                 }
-                
+
                 println!("Wineprefix deleted: {}", wineprefix.display());
                 std::process::exit(0);
             }
@@ -811,20 +852,20 @@ async fn main() -> Result<()> {
                 // Open wineprefix folder in file manager
                 let wineprefix = config.wineprefix();
                 let file_managers = ["xdg-open", "open", "cygstart"];
-                
+
                 let mut opened = false;
                 for fm in &file_managers {
-                    if process::Command::new(fm)
-                        .arg(&wineprefix)
-                        .status()
-                        .is_ok() {
+                    if process::Command::new(fm).arg(&wineprefix).status().is_ok() {
                         opened = true;
                         break;
                     }
                 }
-                
+
                 if !opened {
-                    eprintln!("Could not open file manager. Wineprefix location: {}", wineprefix.display());
+                    eprintln!(
+                        "Could not open file manager. Wineprefix location: {}",
+                        wineprefix.display()
+                    );
                     process::exit(1);
                 }
             }
@@ -840,14 +881,13 @@ async fn main() -> Result<()> {
                 // Run Windows registry editor
                 let wine = winetricks_lib::Wine::detect()?;
                 let mut cmd = process::Command::new(&wine.wine_bin);
-                cmd.arg("regedit")
-                    .env("WINEPREFIX", config.wineprefix());
-                
+                cmd.arg("regedit").env("WINEPREFIX", config.wineprefix());
+
                 // Add /S flag for silent mode in unattended mode
                 if config.unattended {
                     cmd.arg("/S");
                 }
-                
+
                 cmd.status()?;
             }
             "taskmgr" => {
@@ -880,9 +920,16 @@ async fn main() -> Result<()> {
                 // Open interactive Wine shell
                 let wine = winetricks_lib::Wine::detect()?;
                 let wineprefix = config.wineprefix();
-                
+
                 // Try to find a terminal emulator
-                let terminals = ["gnome-terminal", "konsole", "Terminal", "xterm", "alacritty", "kitty"];
+                let terminals = [
+                    "gnome-terminal",
+                    "konsole",
+                    "Terminal",
+                    "xterm",
+                    "alacritty",
+                    "kitty",
+                ];
                 let mut found_term = None;
                 for term in &terminals {
                     if which::which(term).is_ok() {
@@ -890,18 +937,18 @@ async fn main() -> Result<()> {
                         break;
                     }
                 }
-                
+
                 if let Some(term) = found_term {
                     // Launch terminal with shell
                     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
                     let wine_path = wine.wine_bin.to_string_lossy().to_string();
                     let prefix_path = wineprefix.to_string_lossy().to_string();
-                    
+
                     let args = match *term {
                         "gnome-terminal" => vec!["--".to_string(), shell],
                         _ => vec!["-e".to_string(), shell],
                     };
-                    
+
                     process::Command::new(*term)
                         .args(&args)
                         .env("WINEPREFIX", &prefix_path)
@@ -923,9 +970,16 @@ async fn main() -> Result<()> {
                 // Open Wine command prompt
                 let wine = winetricks_lib::Wine::detect()?;
                 let wineprefix = config.wineprefix();
-                
+
                 // Try to find a terminal emulator
-                let terminals = ["gnome-terminal", "konsole", "Terminal", "xterm", "alacritty", "kitty"];
+                let terminals = [
+                    "gnome-terminal",
+                    "konsole",
+                    "Terminal",
+                    "xterm",
+                    "alacritty",
+                    "kitty",
+                ];
                 let mut found_term = None;
                 for term in &terminals {
                     if which::which(term).is_ok() {
@@ -933,17 +987,19 @@ async fn main() -> Result<()> {
                         break;
                     }
                 }
-                
+
                 if let Some(term) = found_term {
                     let wine_path = wine.wine_bin.to_string_lossy().to_string();
                     let prefix_path = wineprefix.to_string_lossy().to_string();
                     let cmd_exe = "cmd.exe";
-                    
+
                     let args = match *term {
-                        "gnome-terminal" => vec!["--".to_string(), wine_path.clone(), cmd_exe.to_string()],
+                        "gnome-terminal" => {
+                            vec!["--".to_string(), wine_path.clone(), cmd_exe.to_string()]
+                        }
                         _ => vec!["-e".to_string(), wine_path.clone(), cmd_exe.to_string()],
                     };
-                    
+
                     process::Command::new(*term)
                         .args(&args)
                         .env("WINEPREFIX", &prefix_path)
@@ -963,7 +1019,7 @@ async fn main() -> Result<()> {
                 // Try to parse as category list command (e.g., "apps list")
                 let parts: Vec<&str> = cmd.split_whitespace().collect();
                 if parts.len() == 2 && parts[1] == "list" {
-                    if let Some(category) = VerbCategory::from_str(parts[0]) {
+                    if let Ok(category) = VerbCategory::from_str(parts[0]) {
                         let metadata_dir = config.metadata_dir();
                         if metadata_dir.exists() {
                             let registry = VerbRegistry::load_from_dir(metadata_dir)?;
@@ -977,12 +1033,15 @@ async fn main() -> Result<()> {
                     // Assume it's a verb name - try to install
                     let metadata_dir = config.metadata_dir();
                     if !metadata_dir.exists() {
-                        eprintln!("Error: Verb metadata directory not found at {:?}", metadata_dir);
+                        eprintln!(
+                            "Error: Verb metadata directory not found at {:?}",
+                            metadata_dir
+                        );
                         eprintln!("Winetricks-RS requires verb metadata in JSON format.");
                         eprintln!("You may need to convert verb definitions from the original winetricks script.");
                         std::process::exit(1);
                     }
-                    
+
                     match install_verb(&config, cmd).await {
                         Ok(_) => {
                             // Success - already printed by executor
@@ -1002,57 +1061,63 @@ async fn main() -> Result<()> {
         }
         i += 1;
     }
-    
+
     // Handle self-update and rollback early (before other processing)
     if cli.self_update {
         return handle_self_update().await;
     }
-    
+
     if cli.update_rollback {
         return handle_update_rollback().await;
     }
-    
+
     Ok(())
 }
 
 async fn handle_self_update() -> Result<()> {
     use std::env;
     use std::process;
-    
+
     // Check if we're in a dev environment
-    let current_exe = env::current_exe()
-        .map_err(|e| WinetricksError::Config(format!("Could not determine executable path: {}", e)))?;
-    
+    let current_exe = env::current_exe().map_err(|e| {
+        WinetricksError::Config(format!("Could not determine executable path: {}", e))
+    })?;
+
     // Check if we're in a git repository (dev environment)
-    let exe_dir = current_exe.parent()
-        .ok_or_else(|| WinetricksError::Config("Could not determine executable directory".into()))?;
-    
+    let exe_dir = current_exe.parent().ok_or_else(|| {
+        WinetricksError::Config("Could not determine executable directory".into())
+    })?;
+
     if exe_dir.join("../.git").exists() || exe_dir.join("../../.git").exists() {
         eprintln!("Warning: You're running in a dev environment. Self-update is disabled.");
         eprintln!("Please update manually or build from source.");
         process::exit(1);
     }
-    
+
     // Check permissions
-    let exe_metadata = std::fs::metadata(&current_exe)
-        .map_err(|e| WinetricksError::Config(format!("Could not read executable metadata: {}", e)))?;
-    
+    let exe_metadata = std::fs::metadata(&current_exe).map_err(|e| {
+        WinetricksError::Config(format!("Could not read executable metadata: {}", e))
+    })?;
+
     if exe_metadata.permissions().readonly() {
         eprintln!("Error: Executable is read-only. Cannot update.");
         eprintln!("Try running with sudo or as root.");
         process::exit(1);
     }
-    
+
     // Check if parent directory is writable by trying to create a test file
     let test_file = exe_dir.join(".winetricks_update_test");
     if std::fs::write(&test_file, "test").is_ok() {
         let _ = std::fs::remove_file(&test_file);
     } else {
-        eprintln!("Error: Cannot write to executable directory: {}", exe_dir.display());
+        eprintln!(
+            "Error: Cannot write to executable directory: {}",
+            exe_dir.display()
+        );
         eprintln!("Try running with sudo or as root.");
         process::exit(1);
     }
-    
+
     eprintln!("Self-update for Rust winetricks is not yet fully implemented.");
     eprintln!("For now, please update by:");
     eprintln!("  1. Pulling latest changes: git pull");
@@ -1060,33 +1125,38 @@ async fn handle_self_update() -> Result<()> {
     eprintln!("  3. Reinstalling the binary");
     eprintln!();
     eprintln!("Future versions will support downloading pre-built binaries from GitHub releases.");
-    
+
     Ok(())
 }
 
 async fn handle_update_rollback() -> Result<()> {
     use std::env;
     use std::process;
-    
-    let current_exe = env::current_exe()
-        .map_err(|e| WinetricksError::Config(format!("Could not determine executable path: {}", e)))?;
-    
+
+    let current_exe = env::current_exe().map_err(|e| {
+        WinetricksError::Config(format!("Could not determine executable path: {}", e))
+    })?;
+
     let rollback_file = current_exe.with_extension("bak");
-    
+
     if !rollback_file.exists() {
         eprintln!("No backup found. Nothing to rollback.");
         eprintln!("Backup file would be at: {}", rollback_file.display());
         process::exit(1);
     }
-    
+
     eprintln!("Rollback for Rust winetricks is not yet fully implemented.");
     eprintln!("To rollback manually:");
     eprintln!("  1. Backup file exists at: {}", rollback_file.display());
     eprintln!("  2. Copy it to replace current executable");
     eprintln!();
     eprintln!("Example:");
-    eprintln!("  sudo cp {} {}", rollback_file.display(), current_exe.display());
+    eprintln!(
+        "  sudo cp {} {}",
+        rollback_file.display(),
+        current_exe.display()
+    );
     eprintln!("  sudo chmod +x {}", current_exe.display());
-    
+
     Ok(())
 }

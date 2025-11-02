@@ -1,9 +1,11 @@
 //! Winetricks Iced GUI
-//! 
+//!
 //! Modern, cross-platform GUI built with Iced
 
-use iced::widget::{button, column, container, row, scrollable, text, text_input, checkbox, pick_list};
-use iced::{Alignment, Element, Length, Pixels, Sandbox, Settings, Theme, Color};
+use iced::widget::{
+    button, checkbox, column, container, pick_list, row, scrollable, text, text_input,
+};
+use iced::{Alignment, Color, Element, Length, Pixels, Sandbox, Settings, Theme};
 use winetricks_lib::{Config, VerbCategory, VerbRegistry};
 
 fn main() -> iced::Result {
@@ -90,7 +92,7 @@ enum Message {
 // Modern dark theme colors
 mod colors {
     use iced::Color;
-    
+
     pub const BACKGROUND: Color = Color::from_rgb(0.08, 0.08, 0.1);
     pub const SURFACE: Color = Color::from_rgb(0.12, 0.12, 0.15);
     pub const SURFACE_HOVER: Color = Color::from_rgb(0.16, 0.16, 0.2);
@@ -99,8 +101,6 @@ mod colors {
     pub const TEXT_PRIMARY: Color = Color::from_rgb(1.0, 1.0, 1.0);
     pub const TEXT_SECONDARY: Color = Color::from_rgb(0.7, 0.7, 0.75);
     pub const TEXT_DIM: Color = Color::from_rgb(0.5, 0.5, 0.55);
-    pub const ACCENT: Color = Color::from_rgb(0.2, 0.85, 0.5);
-    pub const BORDER: Color = Color::from_rgb(0.2, 0.2, 0.25);
 }
 
 impl Sandbox for WinetricksApp {
@@ -110,17 +110,17 @@ impl Sandbox for WinetricksApp {
         // Initialize configuration
         let config = Config::new().unwrap_or_else(|_| Config::default());
         let metadata_dir = config.metadata_dir();
-        
+
         // Load verb registry
         let registry = if metadata_dir.exists() {
             VerbRegistry::load_from_dir(metadata_dir).unwrap_or_else(|_| VerbRegistry::new())
         } else {
             VerbRegistry::new()
         };
-        
+
         // Load installed verbs
         let installed_verbs = load_installed_verbs(&config);
-        
+
         // Initialize preference state
         let wineprefix_input = config.wineprefix().to_string_lossy().to_string();
         let winearch_selection = match config.winearch.as_deref() {
@@ -128,7 +128,7 @@ impl Sandbox for WinetricksApp {
             Some("win64") => Some(WineArch::Win64),
             _ => Some(WineArch::Auto),
         };
-        
+
         Self {
             config,
             registry,
@@ -185,35 +185,38 @@ impl Sandbox for WinetricksApp {
             Message::BrowseWineprefix => {
                 // Open native folder picker dialog
                 use std::process;
-                
+
                 let current_prefix = std::path::PathBuf::from(&self.wineprefix_input);
                 let start_dir = if current_prefix.exists() {
                     current_prefix.clone()
                 } else {
-                    current_prefix.parent()
+                    current_prefix
+                        .parent()
                         .map(|p| p.to_path_buf())
                         .unwrap_or_else(|| {
-                            dirs::home_dir()
-                                .unwrap_or_else(|| std::path::PathBuf::from("/"))
+                            dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("/"))
                         })
                 };
-                
+
                 // Try native file pickers: zenity (GNOME), kdialog (KDE), yad (generic)
                 let start_path = start_dir.to_string_lossy().to_string();
-                
+
                 // Try zenity first (GNOME)
                 if let Ok(output) = process::Command::new("zenity")
                     .arg("--file-selection")
                     .arg("--directory")
                     .arg("--title=Select Wineprefix Directory")
                     .arg(format!("--filename={}", start_path))
-                    .output() {
+                    .output()
+                {
                     if output.status.success() {
                         let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
                         if !selected.is_empty() {
                             self.wineprefix_input = selected.clone();
                             // Update config
-                            let new_path = if let Ok(path) = std::path::PathBuf::from(&selected).canonicalize() {
+                            let new_path = if let Ok(path) =
+                                std::path::PathBuf::from(&selected).canonicalize()
+                            {
                                 path
                             } else {
                                 std::path::PathBuf::from(&selected)
@@ -225,20 +228,23 @@ impl Sandbox for WinetricksApp {
                         }
                     }
                 }
-                
+
                 // Try kdialog (KDE)
                 if let Ok(output) = process::Command::new("kdialog")
                     .arg("--getexistingdirectory")
                     .arg(&start_path)
                     .arg("--title")
                     .arg("Select Wineprefix Directory")
-                    .output() {
+                    .output()
+                {
                     if output.status.success() {
                         let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
                         if !selected.is_empty() && !selected.starts_with("Error:") {
                             self.wineprefix_input = selected.clone();
                             // Update config
-                            let new_path = if let Ok(path) = std::path::PathBuf::from(&selected).canonicalize() {
+                            let new_path = if let Ok(path) =
+                                std::path::PathBuf::from(&selected).canonicalize()
+                            {
                                 path
                             } else {
                                 std::path::PathBuf::from(&selected)
@@ -250,20 +256,23 @@ impl Sandbox for WinetricksApp {
                         }
                     }
                 }
-                
+
                 // Try yad (generic, works on many systems)
                 if let Ok(output) = process::Command::new("yad")
                     .arg("--file")
                     .arg("--directory")
                     .arg("--title=Select Wineprefix Directory")
                     .arg(format!("--filename={}", start_path))
-                    .output() {
+                    .output()
+                {
                     if output.status.success() {
                         let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
                         if !selected.is_empty() {
                             self.wineprefix_input = selected.clone();
                             // Update config
-                            let new_path = if let Ok(path) = std::path::PathBuf::from(&selected).canonicalize() {
+                            let new_path = if let Ok(path) =
+                                std::path::PathBuf::from(&selected).canonicalize()
+                            {
                                 path
                             } else {
                                 std::path::PathBuf::from(&selected)
@@ -275,15 +284,14 @@ impl Sandbox for WinetricksApp {
                         }
                     }
                 }
-                
+
                 // Fallback: open file manager and show error
-                eprintln!("No file picker found (zenity/kdialog/yad). Opening file manager instead.");
+                eprintln!(
+                    "No file picker found (zenity/kdialog/yad). Opening file manager instead."
+                );
                 let file_managers = ["xdg-open", "open", "cygstart"];
                 for fm in &file_managers {
-                    if process::Command::new(fm)
-                        .arg(&start_dir)
-                        .spawn()
-                        .is_ok() {
+                    if process::Command::new(fm).arg(&start_dir).spawn().is_ok() {
                         break;
                     }
                 }
@@ -320,18 +328,14 @@ impl Sandbox for WinetricksApp {
         }
     }
 
-    fn view(&self) -> Element<Message> {
-        container(
-            row![
-                self.sidebar(),
-                self.content()
-            ]
-            .spacing(0)
-        )
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .style(iced::theme::Container::Custom(Box::new(BackgroundContainerStyle)))
-        .into()
+    fn view(&self) -> Element<'_, Message> {
+        container(row![self.sidebar(), self.content()].spacing(0))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(iced::theme::Container::Custom(Box::new(
+                BackgroundContainerStyle,
+            )))
+            .into()
     }
 
     fn theme(&self) -> Theme {
@@ -340,17 +344,30 @@ impl Sandbox for WinetricksApp {
 }
 
 impl WinetricksApp {
-    fn sidebar(&self) -> Element<Message> {
+    fn sidebar(&self) -> Element<'_, Message> {
         let is_browse = self.current_view == View::Browse;
         let is_installed = self.current_view == View::Installed;
         let is_prefs = self.current_view == View::Preferences;
         let is_tools = self.current_view == View::WineTools;
 
-        let browse_btn = self.sidebar_button("Browse", is_browse, Message::ViewChanged(View::Browse));
-        let installed_btn = self.sidebar_button("Installed", is_installed, Message::ViewChanged(View::Installed));
-        let prefs_btn = self.sidebar_button("Preferences", is_prefs, Message::ViewChanged(View::Preferences));
-        let tools_btn = self.sidebar_button("Wine Tools", is_tools, Message::ViewChanged(View::WineTools));
-        
+        let browse_btn =
+            self.sidebar_button("Browse", is_browse, Message::ViewChanged(View::Browse));
+        let installed_btn = self.sidebar_button(
+            "Installed",
+            is_installed,
+            Message::ViewChanged(View::Installed),
+        );
+        let prefs_btn = self.sidebar_button(
+            "Preferences",
+            is_prefs,
+            Message::ViewChanged(View::Preferences),
+        );
+        let tools_btn = self.sidebar_button(
+            "Wine Tools",
+            is_tools,
+            Message::ViewChanged(View::WineTools),
+        );
+
         container(
             column![
                 container(
@@ -364,11 +381,13 @@ impl WinetricksApp {
                 prefs_btn,
                 tools_btn,
             ]
-            .spacing(4)
+            .spacing(4),
         )
         .width(Length::Fixed(200.0))
         .height(Length::Fill)
-        .style(iced::theme::Container::Custom(Box::new(SidebarContainerStyle)))
+        .style(iced::theme::Container::Custom(Box::new(
+            SidebarContainerStyle,
+        )))
         .into()
     }
 
@@ -377,33 +396,37 @@ impl WinetricksApp {
             button(
                 text(label)
                     .size(14)
-                    .style(iced::theme::Text::Color(if active { colors::PRIMARY } else { colors::TEXT_SECONDARY }))
+                    .style(iced::theme::Text::Color(if active {
+                        colors::PRIMARY
+                    } else {
+                        colors::TEXT_SECONDARY
+                    })),
             )
             .width(Length::Fill)
             .padding([12, 16])
-            .style(iced::theme::Button::Custom(Box::new(SidebarButtonStyle { active })))
-            .on_press(msg)
+            .style(iced::theme::Button::Custom(Box::new(SidebarButtonStyle {
+                _active: active,
+            })))
+            .on_press(msg),
         )
         .padding([0, 8])
         .into()
     }
 
-    fn content(&self) -> Element<Message> {
-        container(
-            match self.current_view {
-                View::Browse => self.browse_view(),
-                View::Installed => self.installed_view(),
-                View::Preferences => self.preferences_view(),
-                View::WineTools => self.wine_tools_view(),
-            }
-        )
+    fn content(&self) -> Element<'_, Message> {
+        container(match self.current_view {
+            View::Browse => self.browse_view(),
+            View::Installed => self.installed_view(),
+            View::Preferences => self.preferences_view(),
+            View::WineTools => self.wine_tools_view(),
+        })
         .width(Length::Fill)
         .height(Length::Fill)
         .padding(24)
         .into()
     }
 
-    fn browse_view(&self) -> Element<Message> {
+    fn browse_view(&self) -> Element<'_, Message> {
         let search_bar = text_input("Search verbs...", &self.search_query)
             .on_input(Message::SearchChanged)
             .padding(12)
@@ -420,19 +443,22 @@ impl WinetricksApp {
         let apps_btn = self.category_button("Apps", apps_active, Some(VerbCategory::Apps));
         let dlls_btn = self.category_button("DLLs", dlls_active, Some(VerbCategory::Dlls));
         let fonts_btn = self.category_button("Fonts", fonts_active, Some(VerbCategory::Fonts));
-        let settings_btn = self.category_button("Settings", settings_active, Some(VerbCategory::Settings));
-        
-        let category_row = row![all_btn, apps_btn, dlls_btn, fonts_btn, settings_btn]
-            .spacing(8);
+        let settings_btn =
+            self.category_button("Settings", settings_active, Some(VerbCategory::Settings));
+
+        let category_row = row![all_btn, apps_btn, dlls_btn, fonts_btn, settings_btn].spacing(8);
 
         // Verb list
         let verbs: Vec<_> = if let Some(category) = self.selected_category {
-            self.registry.list_by_category(category)
+            self.registry
+                .list_by_category(category)
                 .into_iter()
                 .filter(|v| {
-                    self.search_query.is_empty() || 
-                    v.name.contains(&self.search_query) ||
-                    v.title.to_lowercase().contains(&self.search_query.to_lowercase())
+                    self.search_query.is_empty()
+                        || v.name.contains(&self.search_query)
+                        || v.title
+                            .to_lowercase()
+                            .contains(&self.search_query.to_lowercase())
                 })
                 .collect()
         } else {
@@ -447,9 +473,11 @@ impl WinetricksApp {
             .iter()
             .flat_map(|cat| self.registry.list_by_category(*cat))
             .filter(|v| {
-                self.search_query.is_empty() || 
-                v.name.contains(&self.search_query) ||
-                v.title.to_lowercase().contains(&self.search_query.to_lowercase())
+                self.search_query.is_empty()
+                    || v.name.contains(&self.search_query)
+                    || v.title
+                        .to_lowercase()
+                        .contains(&self.search_query.to_lowercase())
             })
             .take(100)
             .collect()
@@ -464,7 +492,7 @@ impl WinetricksApp {
                 } else {
                     Message::InstallVerb(verb.name.clone())
                 };
-                
+
                 container(
                     row![
                         column![
@@ -491,7 +519,7 @@ impl WinetricksApp {
                     ]
                     .spacing(16)
                     .align_items(Alignment::Center)
-                    .padding(16)
+                    .padding(16),
                 )
                 .style(iced::theme::Container::Custom(Box::new(CardContainerStyle)))
                 .into()
@@ -511,25 +539,38 @@ impl WinetricksApp {
                 column(verb_list).spacing(8),
             ]
             .spacing(20)
-            .width(Length::Fill)
+            .width(Length::Fill),
         )
         .into()
     }
 
-    fn category_button<'a>(&self, label: &str, active: bool, category: Option<VerbCategory>) -> Element<'a, Message> {
+    fn category_button<'a>(
+        &self,
+        label: &str,
+        active: bool,
+        category: Option<VerbCategory>,
+    ) -> Element<'a, Message> {
         let msg = category.map(Message::CategorySelected);
-        
+
         container(
             button(
                 text(label)
                     .size(13)
-                    .style(iced::theme::Text::Color(if active { Color::BLACK } else { colors::TEXT_SECONDARY }))
+                    .style(iced::theme::Text::Color(if active {
+                        Color::BLACK
+                    } else {
+                        colors::TEXT_SECONDARY
+                    })),
             )
             .padding([8, 16])
-            .style(iced::theme::Button::Custom(Box::new(CategoryButtonStyle { active })))
-            .on_press_maybe(msg)
+            .style(iced::theme::Button::Custom(Box::new(CategoryButtonStyle {
+                _active: active,
+            })))
+            .on_press_maybe(msg),
         )
-        .style(iced::theme::Container::Custom(Box::new(CategoryContainerStyle { active })))
+        .style(iced::theme::Container::Custom(Box::new(
+            CategoryContainerStyle { active },
+        )))
         .into()
     }
 
@@ -537,15 +578,21 @@ impl WinetricksApp {
         button(
             text(label)
                 .size(13)
-                .style(iced::theme::Text::Color(if primary { Color::WHITE } else { colors::TEXT_SECONDARY }))
+                .style(iced::theme::Text::Color(if primary {
+                    Color::WHITE
+                } else {
+                    colors::TEXT_SECONDARY
+                })),
         )
         .padding([10, 20])
-        .style(iced::theme::Button::Custom(Box::new(ActionButtonStyle { primary })))
+        .style(iced::theme::Button::Custom(Box::new(ActionButtonStyle {
+            primary,
+        })))
         .on_press(msg)
         .into()
     }
 
-    fn installed_view(&self) -> Element<Message> {
+    fn installed_view(&self) -> Element<'_, Message> {
         let installed_list: Vec<Element<Message>> = self
             .installed_verbs
             .iter()
@@ -564,7 +611,7 @@ impl WinetricksApp {
                     ]
                     .spacing(16)
                     .align_items(Alignment::Center)
-                    .padding(16)
+                    .padding(16),
                 )
                 .style(iced::theme::Container::Custom(Box::new(CardContainerStyle)))
                 .into()
@@ -581,12 +628,12 @@ impl WinetricksApp {
                     .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
                 column(installed_list).spacing(8),
             ]
-            .spacing(20)
-            )
+            .spacing(20),
+        )
         .into()
     }
 
-    fn preferences_view(&self) -> Element<Message> {
+    fn preferences_view(&self) -> Element<'_, Message> {
         scrollable(
             column![
                 text("Preferences")
@@ -595,7 +642,6 @@ impl WinetricksApp {
                 text("Configure Winetricks settings and options")
                     .size(14)
                     .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
-                
                 // Wine Prefix Section
                 self.settings_section(
                     "Wine Prefix",
@@ -615,7 +661,9 @@ impl WinetricksApp {
                                         .style(iced::theme::Text::Color(Color::WHITE))
                                 )
                                 .padding([10, 16])
-                                .style(iced::theme::Button::Custom(Box::new(ActionButtonStyle { primary: true })))
+                                .style(iced::theme::Button::Custom(Box::new(ActionButtonStyle {
+                                    primary: true
+                                })))
                                 .on_press(Message::BrowseWineprefix)
                             ]
                             .spacing(8)
@@ -637,7 +685,6 @@ impl WinetricksApp {
                     ]
                     .into()
                 ),
-                
                 // Installation Options Section
                 self.settings_section(
                     "Installation Options",
@@ -670,7 +717,6 @@ impl WinetricksApp {
                     ]
                     .into()
                 ),
-                
                 // Network Options Section
                 self.settings_section(
                     "Network Options",
@@ -694,7 +740,6 @@ impl WinetricksApp {
                     ]
                     .into()
                 ),
-                
                 // Verbosity Section
                 self.settings_section(
                     "Verbosity",
@@ -715,7 +760,6 @@ impl WinetricksApp {
                     ]
                     .into()
                 ),
-                
                 // Information Section
                 self.settings_section(
                     "Information",
@@ -723,18 +767,26 @@ impl WinetricksApp {
                     column![
                         self.info_row("Cache Directory", &self.config.cache_dir.to_string_lossy()),
                         self.info_row("Data Directory", &self.config.data_dir.to_string_lossy()),
-                        self.info_row("Prefixes Root", &self.config.prefixes_root.to_string_lossy()),
+                        self.info_row(
+                            "Prefixes Root",
+                            &self.config.prefixes_root.to_string_lossy()
+                        ),
                     ]
                     .into()
                 ),
             ]
             .spacing(20)
-            .width(Length::Fill)
+            .width(Length::Fill),
         )
         .into()
     }
 
-    fn settings_section<'a>(&self, title: &str, description: &str, content: Element<'a, Message>) -> Element<'a, Message> {
+    fn settings_section<'a>(
+        &self,
+        title: &str,
+        description: &str,
+        content: Element<'a, Message>,
+    ) -> Element<'a, Message> {
         container(
             column![
                 text(title)
@@ -743,17 +795,21 @@ impl WinetricksApp {
                 text(description)
                     .size(13)
                     .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
-                container(content)
-                    .padding(16)
+                container(content).padding(16)
             ]
             .spacing(12)
-            .padding(20)
+            .padding(20),
         )
         .style(iced::theme::Container::Custom(Box::new(CardContainerStyle)))
         .into()
     }
 
-    fn setting_row<'a>(&self, title: &str, description: &str, control: Element<'a, Message>) -> Element<'a, Message> {
+    fn setting_row<'a>(
+        &self,
+        title: &str,
+        description: &str,
+        control: Element<'a, Message>,
+    ) -> Element<'a, Message> {
         row![
             column![
                 text(title)
@@ -765,8 +821,7 @@ impl WinetricksApp {
             ]
             .spacing(4)
             .width(Length::Fill),
-            container(control)
-                .width(Length::Fixed(300.0))
+            container(control).width(Length::Fixed(300.0))
         ]
         .spacing(16)
         .align_items(Alignment::Center)
@@ -774,7 +829,13 @@ impl WinetricksApp {
         .into()
     }
 
-    fn checkbox_row(&self, title: &str, description: &str, checked: bool, msg_fn: fn(bool) -> Message) -> Element<Message> {
+    fn checkbox_row(
+        &self,
+        title: &str,
+        description: &str,
+        checked: bool,
+        msg_fn: fn(bool) -> Message,
+    ) -> Element<'_, Message> {
         row![
             column![
                 text(title)
@@ -786,9 +847,7 @@ impl WinetricksApp {
             ]
             .spacing(4)
             .width(Length::Fill),
-            checkbox("", checked)
-                .text_size(14)
-                .on_toggle(msg_fn)
+            checkbox("", checked).text_size(14).on_toggle(msg_fn)
         ]
         .spacing(16)
         .align_items(Alignment::Center)
@@ -811,7 +870,7 @@ impl WinetricksApp {
         .into()
     }
 
-    fn wine_tools_view(&self) -> Element<Message> {
+    fn wine_tools_view(&self) -> Element<'_, Message> {
         scrollable(
             column![
                 text("Wine Tools")
@@ -820,7 +879,6 @@ impl WinetricksApp {
                 text("Quick access to Wine utilities")
                     .size(14)
                     .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
-                
                 self.tool_card(
                     "Wine Configuration",
                     "Configure Wine settings, libraries, and applications",
@@ -841,11 +899,7 @@ impl WinetricksApp {
                     "Browse Wine filesystem in Windows explorer",
                     "explorer"
                 ),
-                self.tool_card(
-                    "Uninstaller",
-                    "Manage installed programs",
-                    "uninstaller"
-                ),
+                self.tool_card("Uninstaller", "Manage installed programs", "uninstaller"),
                 self.tool_card(
                     "Wine Shell",
                     "Open interactive shell with Wine environment",
@@ -867,7 +921,7 @@ impl WinetricksApp {
                     "help"
                 ),
             ]
-            .spacing(12)
+            .spacing(12),
         )
         .into()
     }
@@ -884,12 +938,12 @@ impl WinetricksApp {
                         .style(iced::theme::Text::Color(colors::TEXT_SECONDARY)),
                 ]
                 .spacing(4)
-                .align_items(Alignment::Start)
+                .align_items(Alignment::Start),
             )
             .width(Length::Fill)
             .padding(20)
             .style(iced::theme::Button::Custom(Box::new(ToolButtonStyle)))
-            .on_press(Message::RunWineTool(tool.to_string()))
+            .on_press(Message::RunWineTool(tool.to_string())),
         )
         .style(iced::theme::Container::Custom(Box::new(CardContainerStyle)))
         .into()
@@ -937,14 +991,23 @@ impl container::StyleSheet for CardContainerStyle {
     }
 }
 
-struct CategoryContainerStyle { active: bool }
+struct CategoryContainerStyle {
+    active: bool,
+}
 
 impl container::StyleSheet for CategoryContainerStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
-            background: Some(if self.active { colors::PRIMARY } else { colors::SURFACE }.into()),
+            background: Some(
+                if self.active {
+                    colors::PRIMARY
+                } else {
+                    colors::SURFACE
+                }
+                .into(),
+            ),
             border: iced::Border::with_radius(8.0),
             ..Default::default()
         }
@@ -952,7 +1015,10 @@ impl container::StyleSheet for CategoryContainerStyle {
 }
 
 // Custom button styles
-struct SidebarButtonStyle { active: bool }
+#[allow(dead_code)]
+struct SidebarButtonStyle {
+    _active: bool,
+}
 
 impl button::StyleSheet for SidebarButtonStyle {
     type Style = iced::Theme;
@@ -974,7 +1040,10 @@ impl button::StyleSheet for SidebarButtonStyle {
     }
 }
 
-struct CategoryButtonStyle { active: bool }
+#[allow(dead_code)]
+struct CategoryButtonStyle {
+    _active: bool,
+}
 
 impl button::StyleSheet for CategoryButtonStyle {
     type Style = iced::Theme;
@@ -988,14 +1057,23 @@ impl button::StyleSheet for CategoryButtonStyle {
     }
 }
 
-struct ActionButtonStyle { primary: bool }
+struct ActionButtonStyle {
+    primary: bool,
+}
 
 impl button::StyleSheet for ActionButtonStyle {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> button::Appearance {
         button::Appearance {
-            background: Some(if self.primary { colors::PRIMARY } else { colors::SURFACE }.into()),
+            background: Some(
+                if self.primary {
+                    colors::PRIMARY
+                } else {
+                    colors::SURFACE
+                }
+                .into(),
+            ),
             border: iced::Border::with_radius(8.0),
             ..Default::default()
         }
@@ -1003,7 +1081,14 @@ impl button::StyleSheet for ActionButtonStyle {
 
     fn hovered(&self, _style: &Self::Style) -> button::Appearance {
         button::Appearance {
-            background: Some(if self.primary { colors::PRIMARY_HOVER } else { colors::SURFACE_HOVER }.into()),
+            background: Some(
+                if self.primary {
+                    colors::PRIMARY_HOVER
+                } else {
+                    colors::SURFACE_HOVER
+                }
+                .into(),
+            ),
             border: iced::Border::with_radius(8.0),
             ..Default::default()
         }
@@ -1081,7 +1166,7 @@ impl text_input::StyleSheet for SearchInputStyle {
 fn run_wine_tool(config: &Config, tool: &str) {
     use std::process;
     use winetricks_lib::Wine;
-    
+
     let wine = match Wine::detect() {
         Ok(w) => w,
         Err(e) => {
@@ -1089,9 +1174,9 @@ fn run_wine_tool(config: &Config, tool: &str) {
             return;
         }
     };
-    
+
     let wineprefix = config.wineprefix();
-    
+
     match tool {
         "winecfg" => {
             let _ = process::Command::new(&wine.wine_bin)
@@ -1101,13 +1186,12 @@ fn run_wine_tool(config: &Config, tool: &str) {
         }
         "regedit" => {
             let mut cmd = process::Command::new(&wine.wine_bin);
-            cmd.arg("regedit")
-                .env("WINEPREFIX", &wineprefix);
-            
+            cmd.arg("regedit").env("WINEPREFIX", &wineprefix);
+
             if config.unattended {
                 cmd.arg("/S"); // Silent mode
             }
-            
+
             let _ = cmd.spawn();
         }
         "taskmgr" => {
@@ -1132,16 +1216,22 @@ fn run_wine_tool(config: &Config, tool: &str) {
             let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
             let wine_path = wine.wine_bin.to_string_lossy().to_string();
             let prefix_path = wineprefix.to_string_lossy().to_string();
-            
-            let terminals = ["gnome-terminal", "konsole", "xterm", "mate-terminal", "terminator"];
+
+            let terminals = [
+                "gnome-terminal",
+                "konsole",
+                "xterm",
+                "mate-terminal",
+                "terminator",
+            ];
             let term = terminals.iter().find(|t| which::which(*t).is_ok());
-            
+
             if let Some(term) = term {
                 let term_args = match *term {
                     "gnome-terminal" => vec!["--".to_string(), shell.clone()],
                     _ => vec!["-e".to_string(), shell.clone()],
                 };
-                
+
                 let _ = process::Command::new(*term)
                     .args(term_args)
                     .env("WINEPREFIX", &prefix_path)
@@ -1165,24 +1255,21 @@ fn run_wine_tool(config: &Config, tool: &str) {
         "folder" => {
             let file_managers = ["xdg-open", "open", "cygstart"];
             for fm in &file_managers {
-                if process::Command::new(fm)
-                    .arg(&wineprefix)
-                    .spawn()
-                    .is_ok() {
+                if process::Command::new(fm).arg(&wineprefix).spawn().is_ok() {
                     return;
                 }
             }
-            eprintln!("Could not open file manager. Please open: {}", wineprefix.display());
+            eprintln!(
+                "Could not open file manager. Please open: {}",
+                wineprefix.display()
+            );
         }
         "help" => {
             let url = "https://github.com/Winetricks/winetricks/wiki";
             let browsers = ["xdg-open", "sdtwebclient", "cygstart", "open", "firefox"];
-            
+
             for browser in &browsers {
-                if process::Command::new(browser)
-                    .arg(url)
-                    .spawn()
-                    .is_ok() {
+                if process::Command::new(browser).arg(url).spawn().is_ok() {
                     return;
                 }
             }
@@ -1196,11 +1283,11 @@ fn run_wine_tool(config: &Config, tool: &str) {
 
 fn load_installed_verbs(config: &Config) -> Vec<String> {
     let log_file = config.wineprefix().join("winetricks.log");
-    
+
     if !log_file.exists() {
         return Vec::new();
     }
-    
+
     std::fs::read_to_string(&log_file)
         .unwrap_or_default()
         .lines()

@@ -1,12 +1,12 @@
 //! Converter tool to extract verb definitions from original winetricks script
 
 use anyhow::{Context, Result};
+use clap::Parser;
 use regex::Regex;
 use std::fs;
 use std::path::PathBuf;
-use clap::Parser;
-use serde_json;
-use winetricks_lib::{VerbCategory, VerbMetadata, VerbFile, MediaType};
+use std::str::FromStr;
+use winetricks_lib::{MediaType, VerbCategory, VerbFile, VerbMetadata};
 
 #[derive(Parser)]
 #[command(name = "winetricks-converter")]
@@ -15,7 +15,7 @@ struct Cli {
     /// Input winetricks script file
     #[arg(short, long)]
     input: PathBuf,
-    
+
     /// Output directory for JSON metadata files
     #[arg(short, long, default_value = "verbs")]
     output: PathBuf,
@@ -23,27 +23,35 @@ struct Cli {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     println!("Reading winetricks script: {:?}", cli.input);
     let content = fs::read_to_string(&cli.input)
         .with_context(|| format!("Failed to read {:?}", cli.input))?;
-    
+
     // Create output directories for each category
-    let categories = ["apps", "dlls", "fonts", "settings", "benchmarks", "download", "manual-download"];
+    let categories = [
+        "apps",
+        "dlls",
+        "fonts",
+        "settings",
+        "benchmarks",
+        "download",
+        "manual-download",
+    ];
     for cat in &categories {
         fs::create_dir_all(cli.output.join(cat))?;
     }
-    
+
     // Pattern to match w_metadata calls
     let metadata_re = Regex::new(r"(?m)^w_metadata\s+(\w+)\s+(\w+)\s+\\?$")?;
-    
+
     // Find all metadata declarations
     let mut verb_name = String::new();
     let mut category = String::new();
     let mut in_metadata = false;
     let mut metadata_lines = Vec::new();
     let mut verbs = Vec::new();
-    
+
     for line in content.lines() {
         // Check if this is a metadata declaration start
         if let Some(caps) = metadata_re.captures(line) {
@@ -53,12 +61,12 @@ fn main() -> Result<()> {
                     verbs.push(verb);
                 }
             }
-            
+
             verb_name = caps[1].to_string();
             category = caps[2].to_string();
             metadata_lines.clear();
             in_metadata = true;
-            
+
             // Get continuation lines
             let trimmed = line.trim();
             if trimmed.ends_with('\\') {
@@ -74,36 +82,35 @@ fn main() -> Result<()> {
             }
         }
     }
-    
+
     // Save last verb
     if !verb_name.is_empty() {
         if let Ok(verb) = parse_metadata(&verb_name, &category, &metadata_lines) {
             verbs.push(verb);
         }
     }
-    
+
     println!("Found {} verbs", verbs.len());
-    
+
     // Write JSON files
     for verb in verbs {
         let cat_dir = cli.output.join(verb.category.as_str());
         let json_file = cat_dir.join(format!("{}.json", verb.name));
-        
+
         let json = serde_json::to_string_pretty(&verb)?;
-        fs::write(&json_file, json)
-            .with_context(|| format!("Failed to write {:?}", json_file))?;
-        
+        fs::write(&json_file, json).with_context(|| format!("Failed to write {:?}", json_file))?;
+
         println!("Wrote: {:?}", json_file);
     }
-    
+
     println!("Conversion complete!");
     Ok(())
 }
 
 fn parse_metadata(name: &str, cat: &str, lines: &[String]) -> Result<VerbMetadata> {
     let category = VerbCategory::from_str(cat)
-        .ok_or_else(|| anyhow::anyhow!("Unknown category: {}", cat))?;
-    
+        .map_err(|e| anyhow::anyhow!("Unknown category: {} ({})", cat, e))?;
+
     let mut title = name.to_string();
     let mut publisher = None;
     let mut year = None;
@@ -112,17 +119,17 @@ fn parse_metadata(name: &str, cat: &str, lines: &[String]) -> Result<VerbMetadat
     let mut installed_file = None;
     let mut installed_exe = None;
     let mut conflicts = Vec::new();
-    
+
     // Parse metadata lines
     for line in lines {
         let line = line.trim();
         if line.is_empty() || line == "\\" {
             continue;
         }
-        
+
         // Remove trailing backslash
         let line = line.trim_end_matches('\\').trim();
-        
+
         if line.starts_with("title=") {
             title = extract_value(line);
         } else if line.starts_with("publisher=") {
@@ -140,7 +147,7 @@ fn parse_metadata(name: &str, cat: &str, lines: &[String]) -> Result<VerbMetadat
             let filename = extract_value(line);
             files.push(VerbFile {
                 filename,
-                url: None, // Will be extracted from load function
+                url: None,    // Will be extracted from load function
                 sha256: None, // Will be extracted from load function
             });
         } else if line.starts_with("installed_file1=") {
@@ -149,10 +156,13 @@ fn parse_metadata(name: &str, cat: &str, lines: &[String]) -> Result<VerbMetadat
             installed_exe = Some(extract_value(line));
         } else if line.starts_with("conflicts=") {
             let conflicts_str = extract_value(line);
-            conflicts = conflicts_str.split_whitespace().map(|s| s.to_string()).collect();
+            conflicts = conflicts_str
+                .split_whitespace()
+                .map(|s| s.to_string())
+                .collect();
         }
     }
-    
+
     Ok(VerbMetadata {
         name: name.to_string(),
         category,
@@ -177,4 +187,3 @@ fn extract_value(line: &str) -> String {
         String::new()
     }
 }
-
