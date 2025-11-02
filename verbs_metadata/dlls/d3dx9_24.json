@@ -1,0 +1,14 @@
+{
+  "name": "d3dx9_24",
+  "category": "dlls",
+  "title": "MS d3dx9_24.dll",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_feb2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3dx9_24.dll"
+}

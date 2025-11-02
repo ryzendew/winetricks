@@ -1,0 +1,55 @@
+[workspace]
+members = ["winetricks-lib", "winetricks-cli", "winetricks-gui", "winetricks-converter"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Winetricks Contributors"]
+license = "LGPL-2.1-or-later"
+repository = "https://github.com/Winetricks/winetricks"
+
+[workspace.dependencies]
+# Core dependencies
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "color", "help"] }
+
+# File/Path handling
+pathdiff = "0.2"
+walkdir = "2.4"
+glob = "0.3"
+
+# Text processing
+regex = "1.10"
+
+# HTTP/Download
+reqwest = { version = "0.11", features = ["stream", "cookie_store"] }
+sha2 = "0.10"
+
+# Process/Command execution
+which = "6.0"
+command-group = "2.1"
+
+# Configuration
+dirs = "5.0"
+config = "0.14"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+indicatif = "0.17"
+
+# GUI (GTK4) - versions must match libadwaita requirements
+gtk4 = { version = "0.9", package = "gtk4" }
+gdk4 = { version = "0.9", package = "gdk4" }
+glib = "0.19"
+gio = "0.19"
+adw = { version = "0.7", package = "libadwaita" }
+

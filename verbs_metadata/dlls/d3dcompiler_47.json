@@ -1,0 +1,14 @@
+{
+  "name": "d3dcompiler_47",
+  "category": "dlls",
+  "title": "MS d3dcompiler_47.dll",
+  "publisher": "Microsoft",
+  "year": "FIXME",
+  "media": "download",
+  "files": [
+    {
+      "filename": "d3dcompiler_47_32.dll"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3dcompiler_47.dll"
+}

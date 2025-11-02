@@ -1,0 +1,14 @@
+{
+  "name": "art2kmin",
+  "category": "dlls",
+  "title": "MS Access 2000 runtime",
+  "publisher": "Microsoft",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "art2kmin.exe"
+    }
+  ],
+  "installed_file": "${W_COMMONFILES_X86_WIN}/Microsoft Shared/MSDesigners98/MDT2DBNS.DLL"
+}

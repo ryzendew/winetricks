@@ -1,0 +1,14 @@
+{
+  "name": "cnc_ddraw",
+  "category": "dlls",
+  "title": "Reimplentation of ddraw for CnC games",
+  "publisher": "CnCNet",
+  "year": "2021",
+  "media": "download",
+  "files": [
+    {
+      "filename": "cnc-ddraw-v7.0.0.0.zip"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/Shaders/readme.txt"
+}

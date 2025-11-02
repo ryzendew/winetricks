@@ -1,0 +1,14 @@
+{
+  "name": "comctl32",
+  "category": "dlls",
+  "title": "MS common controls 5.80",
+  "publisher": "Microsoft",
+  "year": "2001",
+  "media": "download",
+  "files": [
+    {
+      "filename": "CC32inst.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/comctl32.dll"
+}

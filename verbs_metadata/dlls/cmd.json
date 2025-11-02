@@ -1,0 +1,14 @@
+{
+  "name": "cmd",
+  "category": "dlls",
+  "title": "MS cmd.exe",
+  "publisher": "Microsoft",
+  "year": "2004",
+  "media": "download",
+  "files": [
+    {
+      "filename": "Q811493_W2K_SP4_X86_EN.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/cmd.exe"
+}

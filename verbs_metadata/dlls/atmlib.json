@@ -1,0 +1,14 @@
+{
+  "name": "atmlib",
+  "category": "dlls",
+  "title": "Adobe Type Manager",
+  "publisher": "Adobe",
+  "year": "2009",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../win2ksp4/W2KSP4_EN.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/atmlib.dll"
+}

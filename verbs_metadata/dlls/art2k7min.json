@@ -1,0 +1,14 @@
+{
+  "name": "art2k7min",
+  "category": "dlls",
+  "title": "MS Access 2007 runtime",
+  "publisher": "Microsoft",
+  "year": "2007",
+  "media": "download",
+  "files": [
+    {
+      "filename": "AccessRuntime.exe"
+    }
+  ],
+  "installed_file": "${W_COMMONFILES_X86_WIN}/Microsoft Shared/OFFICE12/ACEES.DLL"
+}

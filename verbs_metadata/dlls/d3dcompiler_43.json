@@ -1,0 +1,14 @@
+{
+  "name": "d3dcompiler_43",
+  "category": "dlls",
+  "title": "MS d3dcompiler_43.dll",
+  "publisher": "Microsoft",
+  "year": "2010",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../directx9/directx_Jun2010_redist.exe"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/d3dcompiler_43.dll"
+}

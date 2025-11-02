@@ -1,0 +1,14 @@
+{
+  "name": "binkw32",
+  "category": "dlls",
+  "title": "RAD Game Tools binkw32.dll",
+  "publisher": "RAD Game Tools, Inc.",
+  "year": "2000",
+  "media": "download",
+  "files": [
+    {
+      "filename": "__32-binkw32.dll3.0.0.0.zip"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/binkw32.dll"
+}

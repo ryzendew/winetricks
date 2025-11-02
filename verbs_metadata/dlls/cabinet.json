@@ -1,0 +1,14 @@
+{
+  "name": "cabinet",
+  "category": "dlls",
+  "title": "Microsoft cabinet.dll",
+  "publisher": "Microsoft",
+  "year": "2002",
+  "media": "download",
+  "files": [
+    {
+      "filename": "MDAC_TYP.EXE"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/cabinet.dll"
+}

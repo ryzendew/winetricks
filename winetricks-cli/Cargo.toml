@@ -1,0 +1,22 @@
+[package]
+name = "winetricks-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI frontend for Winetricks"
+
+[[bin]]
+name = "winetricks"
+path = "src/main.rs"
+
+[dependencies]
+winetricks-lib = { path = "../winetricks-lib" }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+indicatif = { workspace = true }
+which = { workspace = true }
+

@@ -1,0 +1,14 @@
+{
+  "name": "comdlg32ocx",
+  "category": "dlls",
+  "title": "Common Dialog ActiveX Control for VB6",
+  "publisher": "Microsoft",
+  "year": "2012",
+  "media": "download",
+  "files": [
+    {
+      "filename": "../vb6sp6/VB60SP6-KB2708437-x86-ENU.msi"
+    }
+  ],
+  "installed_file": "${W_SYSTEM32_DLLS_WIN}/comdlg32.ocx"
+}

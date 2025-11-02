@@ -1,0 +1,20 @@
+[package]
+name = "winetricks-converter"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Converter tool to extract verb definitions from original winetricks script"
+
+[[bin]]
+name = "winetricks-converter"
+path = "src/main.rs"
+
+[dependencies]
+winetricks-lib = { path = "../winetricks-lib" }
+serde_json = { workspace = true }
+regex = "1.10"
+anyhow = { workspace = true }
+clap = { workspace = true }
+
