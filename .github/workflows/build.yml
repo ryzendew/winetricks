@@ -175,8 +175,11 @@ jobs:
 
       - name: Update PKGBUILD version
         run: |
-          VERSION=$(grep -m1 '^version' winetricks-cli/Cargo.toml | cut -d'"' -f2 || echo "0.1.0")
+          # Get version from workspace Cargo.toml (where version is actually defined)
+          VERSION=$(grep -m1 '^version\s*=' Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]' || echo "0.1.0")
           sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          echo "Updated PKGBUILD pkgver to: ${VERSION}"
+          grep "^pkgver=" PKGBUILD
 
       - name: Create Arch package
         run: |

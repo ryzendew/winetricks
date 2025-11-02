@@ -73,8 +73,9 @@ mkdir -p %{buildroot}/usr/share/doc/winetricks
 - Initial RPM package
 EOF
 
-# Build RPM
-rpmbuild --define "_topdir $(pwd)/rpmbuild" -ba rpmbuild/SPECS/winetricks.spec
+# Build RPM - skip dependency checking since we've already built
+# The dependencies are already installed on the runner, we just need rpmbuild to use them
+rpmbuild --define "_topdir $(pwd)/rpmbuild" --nodeps -ba rpmbuild/SPECS/winetricks.spec
 
 # Copy to target location
 mkdir -p target/release/rpmbuild/RPMS
