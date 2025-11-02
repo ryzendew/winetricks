@@ -46,3 +46,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 indicatif = "0.17"
 
+# Temporary files
+tempfile = "3.10"
+

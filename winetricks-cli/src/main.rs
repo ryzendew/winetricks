@@ -387,10 +387,23 @@ async fn main() -> Result<()> {
 
     // Show startup message
     info!("Winetricks starting...");
+    
+    // Debug: Log what commands were parsed
+    if !cli.commands.is_empty() {
+        info!("Parsed commands: {:?}", cli.commands);
+    }
+    info!("Force flag: {}, Unattended flag: {}", cli.force, cli.unattended);
 
     // Parse commands
+    // If only flags were provided without commands, show help
+    // (GUI should only launch when NO arguments at all, which is handled earlier)
     if cli.commands.is_empty() {
-        // No arguments - could show GUI or help
+        if cli.force || cli.unattended || cli.verbose || cli.torify || cli.isolate || cli.no_clean {
+            eprintln!("Error: Flags provided but no command/verb specified.");
+            eprintln!("Usage: winetricks [FLAGS] <command|verb>");
+            eprintln!("Example: winetricks --force -q dotnet48");
+            return Err(WinetricksError::Config("No command specified".into()));
+        }
         println!("No commands specified. Use --help for usage.");
         return Ok(());
     }

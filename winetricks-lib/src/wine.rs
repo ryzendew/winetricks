@@ -128,8 +128,66 @@ impl Wine {
 
     /// Check if wine version is >= specified version
     pub fn version_ge(&self, version: &str) -> Result<bool> {
-        // Simple comparison - could be enhanced
-        Ok(self.version_stripped.as_str() >= version)
+        self.compare_version(version, |a, b| a >= b)
+    }
+
+    /// Check if wine version is <= specified version
+    pub fn version_le(&self, version: &str) -> Result<bool> {
+        self.compare_version(version, |a, b| a <= b)
+    }
+
+    /// Check if wine version is in a range (e.g., "5.12,6.0" means >= 5.12 && <= 6.0)
+    /// Supports formats: ",max" (<= max), "min," (>= min), "min,max" (>= min && <= max)
+    pub fn version_in_range(&self, range: &str) -> Result<bool> {
+        let parts: Vec<&str> = range.split(',').collect();
+        
+        if parts.len() == 1 {
+            // Single version (exact match or >=)
+            return self.version_ge(parts[0]);
+        }
+        
+        if parts.len() == 2 {
+            let min = parts[0].trim();
+            let max = parts[1].trim();
+            
+            if min.is_empty() {
+                // ",max" format (<= max)
+                return self.version_le(max);
+            } else if max.is_empty() {
+                // "min," format (>= min)
+                return self.version_ge(min);
+            } else {
+                // "min,max" format (>= min && <= max)
+                let ge_min = self.version_ge(min)?;
+                let le_max = self.version_le(max)?;
+                return Ok(ge_min && le_max);
+            }
+        }
+        
+        Ok(false)
+    }
+
+    /// Compare wine version with another version using a custom comparison function
+    fn compare_version<F>(&self, other: &str, cmp: F) -> Result<bool>
+    where
+        F: Fn(&[u32], &[u32]) -> bool,
+    {
+        let self_version = Self::parse_version(&self.version_stripped)?;
+        let other_version = Self::parse_version(other)?;
+        Ok(cmp(&self_version, &other_version))
+    }
+
+    /// Parse version string into a vector of version numbers
+    /// e.g., "8.0" -> [8, 0], "5.12" -> [5, 12]
+    fn parse_version(version: &str) -> Result<Vec<u32>> {
+        version
+            .split('.')
+            .map(|s| {
+                s.trim()
+                    .parse::<u32>()
+                    .map_err(|_| WinetricksError::InvalidWineVersion(version.to_string()))
+            })
+            .collect()
     }
 
     /// Execute a wine command

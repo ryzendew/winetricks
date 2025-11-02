@@ -1,0 +1,19 @@
+{
+  "name": "dotnet48.1",
+  "category": "dlls",
+  "title": "MS .NET 4.8.1",
+  "publisher": "Microsoft",
+  "year": "2022",
+  "media": "download",
+  "files": [
+    {
+      "filename": "NDP48.1-x86-x64-AllOS-ENU.exe",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/015a6c84-9a12-4e51-bf8a-6648d967b3d3/8c0dd09d4cc1ff0cc22af93f88c91f23/NDP48.1-x86-x64-AllOS-ENU.exe",
+      "sha256": "905e6eb9eee7ffc968208b700ce8809ff0dfe73cc4e3757bcf5efde311cc0c43"
+    }
+  ],
+  "installed_file": "${W_WINDIR_WIN}/dotnet48.1.installed.workaround",
+  "conflicts": [
+    "dotnet20sdk"
+  ]
+}

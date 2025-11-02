@@ -7,6 +7,7 @@ pub mod config;
 pub mod download;
 pub mod error;
 pub mod executor;
+pub mod installer;
 pub mod verb;
 pub mod wine;
 
