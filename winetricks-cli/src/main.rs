@@ -235,6 +235,48 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Check arguments - if no arguments or only program name, launch GUI
+    let args: Vec<String> = std::env::args().collect();
+    
+    // If no arguments provided (just program name), launch GUI
+    if args.len() == 1 {
+        // Launch GUI
+        let gui_paths = [
+            // Try same directory as winetricks binary
+            std::env::current_exe()
+                .ok()
+                .and_then(|mut path| {
+                    path.set_file_name("winetricks-gui");
+                    if path.exists() { Some(path) } else { None }
+                }),
+            // Try /usr/bin/winetricks-gui
+            Some(std::path::PathBuf::from("/usr/bin/winetricks-gui")),
+            // Try /usr/local/bin/winetricks-gui
+            Some(std::path::PathBuf::from("/usr/local/bin/winetricks-gui")),
+        ];
+        
+        for gui_path_opt in gui_paths.iter() {
+            if let Some(gui_path) = gui_path_opt {
+                if gui_path.exists() {
+                    if let Err(e) = std::process::Command::new(gui_path).spawn() {
+                        eprintln!("Failed to launch GUI: {}", e);
+                        eprintln!("Falling back to CLI help...");
+                        break;
+                    } else {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        
+        // GUI not found, show help
+        eprintln!("Winetricks GUI not found. Use 'winetricks --help' for CLI usage.");
+        eprintln!("To use GUI: install winetricks-gui alongside winetricks.");
+        print_help();
+        return Ok(());
+    }
+    
+    // Arguments provided - use CLI
     let cli = Cli::parse();
     
     // Handle version and help early (before logging)
@@ -524,7 +566,20 @@ async fn main() -> Result<()> {
                     let content = std::fs::read_to_string(&log_file)?;
                     let installed: Vec<&str> = content.lines()
                         .map(|l| l.trim())
-                        .filter(|l| !l.is_empty())
+                        .filter(|l| {
+                            // Filter out empty lines, flags (starting with -), comments, and command keywords
+                            !l.is_empty() 
+                            && !l.starts_with('-')  // Flags like -q, --force
+                            && !l.starts_with('#')  // Comments
+                            && !l.starts_with("//") // Comments
+                            && !l.contains('=')     // Commands like prefix=, arch=
+                            && l != &"list" && l != &"list-installed" && l != &"list-all" 
+                            && l != &"list-cached" && l != &"list-download" && l != &"list-manual-download"
+                            && l != &"apps" && l != &"dlls" && l != &"fonts" && l != &"settings" && l != &"benchmarks"
+                            && l != &"annihilate" && l != &"folder" && l != &"winecfg" && l != &"regedit"
+                            && l != &"taskmgr" && l != &"explorer" && l != &"uninstaller" && l != &"shell"
+                            && l != &"winecmd" && l != &"help" && l != &"uninstall" && l != &"reinstall"
+                        })
                         .collect();
                     
                     if installed.is_empty() {

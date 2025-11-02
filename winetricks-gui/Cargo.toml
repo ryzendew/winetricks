@@ -1,23 +1,31 @@
 [package]
 name = "winetricks-gui"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "GTK4 GUI frontend for Winetricks"
+version = "0.1.0"
+edition = "2021"
+authors = ["Winetricks Contributors"]
+license = "LGPL-2.1-or-later"
 
 [[bin]]
 name = "winetricks-gui"
 path = "src/main.rs"
 
 [dependencies]
+# Core library
 winetricks-lib = { path = "../winetricks-lib" }
-gtk4 = { workspace = true }
-gdk4 = { workspace = true }
-glib = { workspace = true }
-gio = { workspace = true }
-adw = { workspace = true }
-tokio = { workspace = true }
-tracing-subscriber = { workspace = true }
 
+# Iced GUI framework
+iced = { version = "0.12", features = ["tokio", "image", "svg"] }
+
+# Async runtime (shared with workspace)
+tokio = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Utilities
+which = { workspace = true }
+dirs = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

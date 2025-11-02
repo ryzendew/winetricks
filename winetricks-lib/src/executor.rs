@@ -318,7 +318,14 @@ impl Executor {
         }
         
         let content = std::fs::read_to_string(&log_file)?;
-        Ok(content.lines().any(|line| line.trim() == verb_name))
+        Ok(content.lines().any(|line| {
+            let trimmed = line.trim();
+            // Only match actual verb names, not flags or commands
+            trimmed == verb_name 
+            && !trimmed.starts_with('-')  // Not a flag
+            && !trimmed.starts_with('#')  // Not a comment
+            && !trimmed.contains('=')     // Not a command like prefix=
+        }))
     }
     
     /// Log installation to winetricks.log

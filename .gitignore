@@ -1,11 +1,11 @@
 # Rust
-target/
+/target/
 **/*.rs.bk
 Cargo.lock
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -15,8 +15,18 @@ Cargo.lock
 Thumbs.db
 
 # Build artifacts
-*.bak
-*.update
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.dylib
 
-# Verb metadata cache (generated)
-# Keep verbs_metadata/ in git for now
+# Release archives (these should be in releases)
+*.tar.gz
+*.zip
+*.sha256
+release/
+
+# Generated documentation
+/doc/

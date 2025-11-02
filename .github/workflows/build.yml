@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build CLI (Release)
+        run: cargo build --release --bin winetricks
+
+      - name: Build GUI (Release)
+        run: cargo build --release --bin winetricks-gui
+        continue-on-error: true  # GUI may not build on all platforms yet
+
+      - name: Build Converter (Release)
+        run: cargo build --release --bin winetricks-converter
+
+      - name: Upload CLI artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: winetricks-cli-${{ matrix.os }}
+          path: target/release/winetricks*
+          if-no-files-found: warn
+          
+      - name: Run tests
+        run: cargo test --release
+
