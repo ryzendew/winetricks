@@ -34,7 +34,7 @@ docker run --rm \
     -v "$(pwd)":/build:ro \
     -e PKGEXT=".pkg.tar.zst" \
     archlinux:latest \
-    bash -c "
+    bash -c '
         set +e
         pacman -Syu --noconfirm rust cargo openssl base-devel || true
         useradd -m -s /bin/bash builder || true
@@ -47,54 +47,54 @@ docker run --rm \
         fi
         chown -R builder:builder /home/builder/build
         # Verify binaries exist
-        echo 'Checking for binaries...'
-        ls -la /home/builder/build/target/release/ 2>/dev/null || echo 'No target/release directory found'
+        echo "Checking for binaries..."
+        ls -la /home/builder/build/target/release/ 2>/dev/null || echo "No target/release directory found"
         if [ ! -f /home/builder/build/target/release/winetricks ]; then
-            echo 'ERROR: Binary winetricks not found in target/release/'
-            echo 'Building binaries inside Docker...'
-            su builder -c 'cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui' || echo 'Build failed'
+            echo "ERROR: Binary winetricks not found in target/release/"
+            echo "Building binaries inside Docker..."
+            su builder -c "cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui" || echo "Build failed"
         fi
-        ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo 'Binaries still not found'
+        ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo "Binaries still not found"
         
         # Temporarily modify PKGBUILD to remove wine from depends (runtime dependency, not needed for build)
-        # Also ensure source is empty since we're using pre-built binaries
+        # Also ensure source is empty since we are using pre-built binaries
         # Use safer sed commands to avoid corrupting the file
-        if grep -q "^depends=('wine')" /home/builder/build/PKGBUILD; then
-            sed -i "s/^depends=('wine')/depends=()/" /home/builder/build/PKGBUILD
-        elif grep -q '^depends=("wine")' /home/builder/build/PKGBUILD; then
-            sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD
+        if grep -q "^depends=('\''wine'\'')" /home/builder/build/PKGBUILD; then
+            sed -i "s/^depends=('\''wine'\'')/depends=()/" /home/builder/build/PKGBUILD
+        elif grep -q "^depends=(\"wine\")" /home/builder/build/PKGBUILD; then
+            sed -i "s/^depends=(\"wine\")/depends=()/" /home/builder/build/PKGBUILD
         elif grep -q "^depends=.*wine" /home/builder/build/PKGBUILD; then
-            sed -i "s/'wine'//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
+            sed -i "s/'\''wine'\''//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
         fi
         # Ensure source and sha256sums are empty
-        sed -i 's/^source=.*$/source=()/' /home/builder/build/PKGBUILD || true
-        sed -i 's/^sha256sums=.*$/sha256sums=()/' /home/builder/build/PKGBUILD || true
+        sed -i "s/^source=.*$/source=()/" /home/builder/build/PKGBUILD || true
+        sed -i "s/^sha256sums=.*$/sha256sums=()/" /home/builder/build/PKGBUILD || true
         # Verify PKGBUILD syntax is still valid after modifications
         bash -n /home/builder/build/PKGBUILD || echo "Warning: PKGBUILD syntax check failed after modifications"
         
         # Run makepkg - use --ignorearch and --skipinteg to bypass checks
-        su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch' || {
-            echo 'makepkg failed, trying without skipinteg...'
-            su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch' || true
+        su builder -c "cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch" || {
+            echo "makepkg failed, trying without skipinteg..."
+            su builder -c "cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch" || true
         }
         
         # Find and copy any created packages - search thoroughly
-        echo 'Searching for package files created by makepkg...'
-        find /home/builder/build -type f -name '*.pkg.tar.zst' 2>/dev/null | while read -r pkg; do
+        echo "Searching for package files created by makepkg..."
+        find /home/builder/build -type f -name "*.pkg.tar.zst" 2>/dev/null | while read -r pkg; do
             echo "Found package: $pkg"
             cp "$pkg" /build/ 2>/dev/null && echo "Copied to /build: $(basename "$pkg")" || echo "Failed to copy: $pkg"
         done
         # Also search for any other package extensions
-        find /home/builder/build -type f \( -name '*.pkg.tar.*' -o -name '*winetricks*.tar*' \) 2>/dev/null | head -5
-        echo 'Package search complete'
-        echo 'Packages in /build:'
-        ls -lh /build/*.pkg.tar.* 2>/dev/null || echo 'No packages found in /build'
-    " || {
+        find /home/builder/build -type f \( -name "*.pkg.tar.*" -o -name "*winetricks*.tar*" \) 2>/dev/null | head -5
+        echo "Package search complete"
+        echo "Packages in /build:"
+        ls -lh /build/*.pkg.tar.* 2>/dev/null || echo "No packages found in /build"
+    ' || {
     echo "Docker build failed, trying with podman..."
     podman run --rm \
         -v "$(pwd)":/build:ro \
         archlinux:latest \
-        bash -c "
+        bash -c '
             set +e
             pacman -Syu --noconfirm rust cargo openssl base-devel || true
             useradd -m -s /bin/bash builder || true
@@ -107,48 +107,48 @@ docker run --rm \
             fi
             chown -R builder:builder /home/builder/build
             # Verify binaries exist
-            echo 'Checking for binaries...'
-            ls -la /home/builder/build/target/release/ 2>/dev/null || echo 'No target/release directory found'
+            echo "Checking for binaries..."
+            ls -la /home/builder/build/target/release/ 2>/dev/null || echo "No target/release directory found"
             if [ ! -f /home/builder/build/target/release/winetricks ]; then
-                echo 'ERROR: Binary winetricks not found in target/release/'
-                echo 'Building binaries inside Docker...'
-                su builder -c 'cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui' || echo 'Build failed'
+                echo "ERROR: Binary winetricks not found in target/release/"
+                echo "Building binaries inside Docker..."
+                su builder -c "cd /home/builder/build && cargo build --release --bin winetricks --bin winetricks-gui" || echo "Build failed"
             fi
-            ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo 'Binaries still not found'
+            ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo "Binaries still not found"
             
             # Temporarily modify PKGBUILD to remove wine from depends
             # Use safer sed commands to avoid corrupting the file
-            if grep -q "^depends=('wine')" /home/builder/build/PKGBUILD; then
-                sed -i "s/^depends=('wine')/depends=()/" /home/builder/build/PKGBUILD
-            elif grep -q '^depends=("wine")' /home/builder/build/PKGBUILD; then
-                sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD
+            if grep -q "^depends=('\''wine'\'')" /home/builder/build/PKGBUILD; then
+                sed -i "s/^depends=('\''wine'\'')/depends=()/" /home/builder/build/PKGBUILD
+            elif grep -q "^depends=(\"wine\")" /home/builder/build/PKGBUILD; then
+                sed -i "s/^depends=(\"wine\")/depends=()/" /home/builder/build/PKGBUILD
             elif grep -q "^depends=.*wine" /home/builder/build/PKGBUILD; then
-                sed -i "s/'wine'//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
+                sed -i "s/'\''wine'\''//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
             fi
             # Ensure source and sha256sums are empty
-            sed -i 's/^source=.*$/source=()/' /home/builder/build/PKGBUILD || true
-            sed -i 's/^sha256sums=.*$/sha256sums=()/' /home/builder/build/PKGBUILD || true
+            sed -i "s/^source=.*$/source=()/" /home/builder/build/PKGBUILD || true
+            sed -i "s/^sha256sums=.*$/sha256sums=()/" /home/builder/build/PKGBUILD || true
             # Verify PKGBUILD syntax is still valid after modifications
             bash -n /home/builder/build/PKGBUILD || echo "Warning: PKGBUILD syntax check failed after modifications"
             
             # Run makepkg
-            su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch' || {
-                echo 'makepkg failed, trying without skipinteg...'
-                su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch' || true
+            su builder -c "cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch" || {
+                echo "makepkg failed, trying without skipinteg..."
+                su builder -c "cd /home/builder/build && makepkg --noconfirm --nodeps --ignorearch" || true
             }
             
             # Find and copy any created packages - search thoroughly
-            echo 'Searching for package files created by makepkg...'
-            find /home/builder/build -type f -name '*.pkg.tar.zst' 2>/dev/null | while read -r pkg; do
+            echo "Searching for package files created by makepkg..."
+            find /home/builder/build -type f -name "*.pkg.tar.zst" 2>/dev/null | while read -r pkg; do
                 echo "Found package: $pkg"
                 cp "$pkg" /build/ 2>/dev/null && echo "Copied to /build: $(basename "$pkg")" || echo "Failed to copy: $pkg"
             done
             # Also search for any other package extensions
-            find /home/builder/build -type f \( -name '*.pkg.tar.*' -o -name '*winetricks*.tar*' \) 2>/dev/null | head -5
-            echo 'Package search complete'
-            echo 'Packages in /build:'
-            ls -lh /build/*.pkg.tar.* 2>/dev/null || echo 'No packages found in /build'
-        "
+            find /home/builder/build -type f \( -name "*.pkg.tar.*" -o -name "*winetricks*.tar*" \) 2>/dev/null | head -5
+            echo "Package search complete"
+            echo "Packages in /build:"
+            ls -lh /build/*.pkg.tar.* 2>/dev/null || echo "No packages found in /build"
+        '
 }
 
 # Find and copy the package - search thoroughly instead of guessing
