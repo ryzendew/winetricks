@@ -322,10 +322,10 @@ impl Executor {
                             }
                         } else {
                             // For non-.NET installers, all non-zero codes are failures
-                            return Err(WinetricksError::Verb(format!(
-                                "EXE installer failed with exit code: {:?}",
+                        return Err(WinetricksError::Verb(format!(
+                            "EXE installer failed with exit code: {:?}",
                                 exit_code
-                            )));
+                        )));
                         }
                     }
                 }
@@ -393,7 +393,7 @@ impl Executor {
         Ok(content.lines().any(|line| {
             let trimmed = line.trim();
             // Only match actual verb names, not flags or commands
-            trimmed == verb_name
+            trimmed == verb_name 
             && !trimmed.starts_with('-')  // Not a flag
             && !trimmed.starts_with('#')  // Not a comment
             && !trimmed.contains('=') // Not a command like prefix=

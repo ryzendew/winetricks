@@ -45,20 +45,24 @@ jobs:
 
       - name: Create release archives
         run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF" ]; then
+            VERSION=$(grep -m1 '^version\s*=' Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]' || echo "0.1.0")
+          fi
           mkdir -p release
           cp target/release/winetricks release/
           cp target/release/winetricks-gui release/
           cp target/release/winetricks-converter release/
-          tar czf winetricks-linux-x86_64.tar.gz -C release .
-          sha256sum winetricks-linux-x86_64.tar.gz > winetricks-linux-x86_64.tar.gz.sha256
+          tar czf "Winetricks.rs-${VERSION}.tar.gz" -C release .
+          sha256sum "Winetricks.rs-${VERSION}.tar.gz" > "Winetricks.rs-${VERSION}.tar.gz.sha256"
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: |
-            winetricks-linux-x86_64.tar.gz
-            winetricks-linux-x86_64.tar.gz.sha256
+            Winetricks.rs-*.tar.gz
+            Winetricks.rs-*.tar.gz.sha256
 
   build-deb:
     name: Build Debian Package
@@ -96,11 +100,25 @@ jobs:
           cd winetricks-cli
           cargo deb --no-build --manifest-path Cargo.toml
           
+      - name: Rename Debian package
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF" ]; then
+            VERSION=$(grep -m1 '^version\s*=' Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]' || echo "0.1.0")
+          fi
+          DEB_FILE=$(find winetricks-cli/target/debian -name "*.deb" -type f | head -1)
+          if [ -n "$DEB_FILE" ] && [ -f "$DEB_FILE" ]; then
+            NEW_NAME="Winetricks.rs-${VERSION}.deb"
+            DIR=$(dirname "$DEB_FILE")
+            mv "$DEB_FILE" "$DIR/$NEW_NAME"
+            echo "Renamed DEB to: $DIR/$NEW_NAME"
+          fi
+          
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: winetricks-cli/target/debian/*.deb
+          path: winetricks-cli/target/debian/Winetricks.rs-*.deb
           if-no-files-found: warn
 
   build-rpm:
@@ -137,7 +155,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rpm-package
-          path: target/release/rpmbuild/RPMS/**/*.rpm
+          path: target/release/rpmbuild/RPMS/**/Winetricks.rs-*.rpm
           if-no-files-found: warn
 
   build-arch:
@@ -179,7 +197,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arch-package
-          path: winetricks-*.pkg.tar.zst
+          path: Winetricks.rs-*.pkg.tar.zst
           if-no-files-found: warn
 
   create-release:
@@ -198,10 +216,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            binaries/*
-            deb-package/*.deb
-            rpm-package/*.rpm
-            arch-package/*.pkg.tar.zst
+            binaries/Winetricks.rs-*
+            deb-package/Winetricks.rs-*.deb
+            rpm-package/**/Winetricks.rs-*.rpm
+            arch-package/Winetricks.rs-*.pkg.tar.zst
           generate_release_notes: true
           draft: false
           prerelease: false

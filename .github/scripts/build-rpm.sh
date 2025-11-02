@@ -81,3 +81,11 @@ rpmbuild --define "_topdir $(pwd)/rpmbuild" --nodeps -ba rpmbuild/SPECS/winetric
 mkdir -p target/release/rpmbuild/RPMS
 cp -r rpmbuild/RPMS/* target/release/rpmbuild/RPMS/ || true
 
+# Rename RPM package to Winetricks.rs-<version>
+find target/release/rpmbuild/RPMS -name "winetricks-*.rpm" -type f | while read -r rpm_file; do
+    dir=$(dirname "$rpm_file")
+    new_name="Winetricks.rs-${VERSION}.rpm"
+    mv "$rpm_file" "$dir/$new_name" || echo "Failed to rename $rpm_file"
+    echo "Renamed to: $dir/$new_name"
+done
+

@@ -156,11 +156,22 @@ jobs:
         run: |
           cargo deb --manifest-path winetricks-cli/Cargo.toml --no-build
           
+      - name: Rename Debian package
+        run: |
+          VERSION=$(grep -m1 '^version\s*=' Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]' || echo "0.1.0")
+          DEB_FILE=$(find target/debian -name "*.deb" -type f | head -1)
+          if [ -n "$DEB_FILE" ] && [ -f "$DEB_FILE" ]; then
+            NEW_NAME="Winetricks.rs-${VERSION}.deb"
+            DIR=$(dirname "$DEB_FILE")
+            mv "$DEB_FILE" "$DIR/$NEW_NAME"
+            echo "Renamed DEB to: $DIR/$NEW_NAME"
+          fi
+          
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: target/debian/*.deb
+          path: target/debian/Winetricks.rs-*.deb
           if-no-files-found: warn
 
   build-rpm:
@@ -226,7 +237,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rpm-package
-          path: target/release/rpmbuild/RPMS/**/*.rpm
+          path: target/release/rpmbuild/RPMS/**/Winetricks.rs-*.rpm
           if-no-files-found: warn
 
   build-arch:
@@ -303,5 +314,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arch-package
-          path: winetricks-*.pkg.tar.zst
+          path: Winetricks.rs-*.pkg.tar.zst
           if-no-files-found: warn
