@@ -292,11 +292,41 @@ impl Executor {
                             error: e.to_string(),
                         })?;
 
+                    // Check exit code - some installers return non-zero codes that are still success
+                    let exit_code = status.code();
                     if !status.success() {
-                        return Err(WinetricksError::Verb(format!(
-                            "EXE installer failed with exit code: {:?}",
-                            status.code()
-                        )));
+                        // For .NET Framework installers, some exit codes indicate success but reboot required
+                        if is_dotnet {
+                            // Exit codes that indicate success but reboot required:
+                            // 236 - Success, reboot required (common for .NET 3.5)
+                            // 3010 - Success, reboot required (common Windows installer code)
+                            if let Some(code) = exit_code {
+                                if code == 236 || code == 3010 {
+                                    info!(
+                                        "Installer returned exit code {} (reboot required - OK in Wine)",
+                                        code
+                                    );
+                                    // Treat as success - no reboot needed in Wine environment
+                                } else {
+                                    // Other non-zero codes are still failures
+                                    return Err(WinetricksError::Verb(format!(
+                                        "EXE installer failed with exit code: {:?}",
+                                        exit_code
+                                    )));
+                                }
+                            } else {
+                                // No exit code available - treat as failure
+                                return Err(WinetricksError::Verb(
+                                    "EXE installer failed (no exit code available)".into(),
+                                ));
+                            }
+                        } else {
+                            // For non-.NET installers, all non-zero codes are failures
+                            return Err(WinetricksError::Verb(format!(
+                                "EXE installer failed with exit code: {:?}",
+                                exit_code
+                            )));
+                        }
                     }
                 }
                 "zip" => {
