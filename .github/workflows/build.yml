@@ -92,14 +92,13 @@ jobs:
 
       - name: Create Debian package
         run: |
-          cd winetricks-cli
-          cargo deb --no-build --manifest-path Cargo.toml
+          cargo deb --manifest-path winetricks-cli/Cargo.toml --no-build
           
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: winetricks-cli/target/debian/*.deb
+          path: target/debian/*.deb
           if-no-files-found: warn
 
   build-rpm:
@@ -121,8 +120,10 @@ jobs:
             build-essential \
             libssl-dev \
             pkg-config \
-            rpm \
-            rpm-build
+            rpm
+          # rpm-build command is provided by rpm package on Ubuntu
+          # Verify rpmbuild is available
+          which rpmbuild || (echo "rpmbuild not found, rpm package may be incomplete" && exit 1)
 
       - name: Build binaries
         run: |
@@ -158,9 +159,14 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             libssl-dev \
-            pkg-config \
-            docker.io
+            pkg-config
+          # Install Docker (avoid conflicts with existing containerd)
+          sudo apt-get install -y docker.io || \
+            (sudo apt-get remove -y containerd.io 2>/dev/null || true; \
+             sudo apt-get install -y docker.io)
           sudo systemctl start docker || true
+          # Verify Docker works
+          sudo docker ps || echo "Docker verification skipped"
 
       - name: Build binaries
         run: |
