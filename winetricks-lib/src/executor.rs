@@ -17,6 +17,8 @@ pub struct Executor {
     wine: Wine,
     downloader: DownloadManager,
     registry: VerbRegistry,
+    /// Stored Windows version (for restore after installation)
+    stored_windows_version: Option<String>,
 }
 
 impl Executor {
@@ -40,6 +42,7 @@ impl Executor {
             wine,
             downloader,
             registry,
+            stored_windows_version: None,
         })
     }
 
@@ -189,7 +192,8 @@ impl Executor {
             }
             
             // 2. Store current Windows version (to restore later)
-            // Note: We don't have a way to store/restore yet, but dotnet35 needs winxp
+            self.store_windows_version()?;
+            
             // 3. Set Windows version to Windows XP (required for .NET 3.5)
             self.set_windows_version("winxp")?;
             
@@ -227,8 +231,7 @@ impl Executor {
         } else if verb_name == "dotnet35" || verb_name == "dotnet35sp1" {
             // For dotnet35, DLL overrides are done BEFORE installation (already done above)
             // Restore Windows version (original winetricks does w_restore_winver)
-            // Note: We don't have a way to store/restore yet, so we'll leave it as winxp
-            // This is generally fine as most apps needing dotnet35 expect older Windows versions
+            self.restore_windows_version()?;
         }
 
         // Verify installation
@@ -620,21 +623,36 @@ impl Executor {
                     }
                 }
                 "zip" => {
-                    info!("Extracting zip: {:?}", file);
-                    // TODO: Extract zip to wineprefix
-                    return Err(WinetricksError::Verb(
-                        "ZIP extraction not yet implemented".into(),
-                    ));
+                    info!("Extracting ZIP: {:?}", file);
+                    self.extract_zip(file, &cache_dir)?;
                 }
                 "cab" => {
-                    info!("Extracting cab: {:?}", file);
-                    // TODO: Extract cab to wineprefix using cabextract
-                    return Err(WinetricksError::Verb(
-                        "CAB extraction not yet implemented".into(),
-                    ));
+                    info!("Extracting CAB: {:?}", file);
+                    self.extract_cab(file, &cache_dir)?;
+                }
+                "7z" => {
+                    info!("Extracting 7z: {:?}", file);
+                    self.extract_7z(file, &cache_dir)?;
+                }
+                "rar" => {
+                    info!("Extracting RAR: {:?}", file);
+                    self.extract_rar(file, &cache_dir)?;
+                }
+                "reg" => {
+                    info!("Importing registry file: {:?}", file);
+                    self.import_registry_file(file)?;
                 }
                 _ => {
-                    warn!("Unknown file type: {:?}", file);
+                    // Check if file might be an archive by magic bytes or try extraction
+                    // Some files might not have extensions but are archives
+                    let filename = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if filename.ends_with(".7z") || filename.contains(".7z.") {
+                        self.extract_7z(file, &cache_dir)?;
+                    } else if filename.ends_with(".rar") || filename.contains(".rar.") {
+                        self.extract_rar(file, &cache_dir)?;
+                    } else {
+                        warn!("Unknown file type: {:?}", file);
+                    }
                 }
             }
         }
@@ -1058,6 +1076,71 @@ impl Executor {
         Ok(())
     }
 
+    /// Store current Windows version (for restore later)
+    fn store_windows_version(&mut self) -> Result<()> {
+        use std::process::Command;
+        
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+
+        // Query current Windows version from registry
+        let output = Command::new(&self.wine.wine_bin)
+            .arg("reg")
+            .arg("query")
+            .arg("HKEY_CURRENT_USER\\Software\\Wine")
+            .arg("/v")
+            .arg("Version")
+            .env("WINEPREFIX", &wineprefix_str)
+            .output();
+
+        if let Ok(output) = output {
+            if output.status.success() {
+                // Parse version number from output (e.g., "0x0601")
+                let output_str = String::from_utf8_lossy(&output.stdout);
+                for line in output_str.lines() {
+                    if line.contains("REG_SZ") || line.contains("REG_DWORD") {
+                        // Extract version value (hex number)
+                        if let Some(version_val) = line.split_whitespace().last() {
+                            // Map version number back to name
+                            let version_name = match version_val {
+                                "0xa00" => "win10",
+                                "0x0603" => "win81",
+                                "0x0602" => "win8",
+                                "0x0601" => "win7",
+                                "0x0501" => "winxp",
+                                "0x0500" => "win2k",
+                                _ => {
+                                    warn!("Unknown Windows version number: {}, storing as win7", version_val);
+                                    "win7"
+                                }
+                            };
+                            self.stored_windows_version = Some(version_name.to_string());
+                            info!("Stored Windows version: {}", version_name);
+                            return Ok(());
+                        }
+                    }
+                }
+            }
+        }
+
+        // If we can't read current version, assume win7 (most common default)
+        warn!("Could not read current Windows version, assuming win7");
+        self.stored_windows_version = Some("win7".to_string());
+        Ok(())
+    }
+
+    /// Restore previously stored Windows version
+    fn restore_windows_version(&mut self) -> Result<()> {
+        if let Some(ref version) = self.stored_windows_version {
+            info!("Restoring Windows version to: {}", version);
+            self.set_windows_version(version)?;
+            self.stored_windows_version = None;
+        } else {
+            warn!("No stored Windows version to restore");
+        }
+        Ok(())
+    }
+
     /// Set DLL override in Wine registry
     fn set_dll_override(&self, dll_name: &str, override_type: &str) -> Result<()> {
         use std::fs;
@@ -1130,6 +1213,275 @@ impl Executor {
         }
 
         info!("Set DLL override: {} = {}", dll_name, override_type);
+        Ok(())
+    }
+
+    /// Extract ZIP archive (matching w_try_unzip behavior)
+    fn extract_zip(&self, zip_file: &Path, dest_dir: &Path) -> Result<()> {
+        use std::process::Command;
+        use which::which;
+
+        // Try unzip first (matches original winetricks)
+        if which("unzip").is_ok() {
+            info!("Using unzip to extract: {:?}", zip_file);
+            let status = Command::new("unzip")
+                .arg("-o") // Overwrite files without prompting
+                .arg("-q") // Quiet mode
+                .arg("-d") // Destination directory
+                .arg(dest_dir)
+                .arg(zip_file)
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("unzip -o -q -d {:?} {:?}", dest_dir, zip_file),
+                    error: e.to_string(),
+                })?;
+
+            if status.success() {
+                return Ok(());
+            }
+            warn!("unzip failed, falling back to 7z");
+        }
+
+        // Fallback to 7z (or Windows 7-Zip via Wine)
+        self.extract_7z(zip_file, dest_dir)
+    }
+
+    /// Extract CAB archive using cabextract (matching w_try_cabextract behavior)
+    fn extract_cab(&self, cab_file: &Path, dest_dir: &Path) -> Result<()> {
+        use std::process::Command;
+        use which::which;
+
+        // cabextract is required (original winetricks dies if not found)
+        let cabextract = which("cabextract")
+            .map_err(|_| WinetricksError::Config(
+                "cabextract not found. Please install it (e.g. 'sudo apt install cabextract' or 'sudo yum install cabextract')".into()
+            ))?;
+
+        info!("Using cabextract to extract: {:?}", cab_file);
+        
+        // cabextract extracts to current directory, so we need to change directory
+        let original_dir = std::env::current_dir()?;
+        std::env::set_current_dir(dest_dir)
+            .map_err(|e| WinetricksError::Config(format!("Failed to change to dest directory: {}", e)))?;
+
+        let status = Command::new(&cabextract)
+            .arg("-q") // Quiet mode
+            .arg(cab_file)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("cabextract -q {:?}", cab_file),
+                error: e.to_string(),
+            })?;
+
+        // Restore directory
+        std::env::set_current_dir(original_dir)?;
+
+        if !status.success() {
+            return Err(WinetricksError::Verb(format!(
+                "cabextract failed with exit code: {:?}",
+                status.code()
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Extract 7z archive (matching w_try_7z behavior)
+    fn extract_7z(&self, archive: &Path, dest_dir: &Path) -> Result<()> {
+        use std::process::Command;
+        use which::which;
+
+        // Try 7z first (matches original winetricks)
+        if which("7z").is_ok() {
+            info!("Using 7z to extract: {:?}", archive);
+            let status = Command::new("7z")
+                .arg("x") // Extract with full paths
+                .arg(archive)
+                .arg("-o") // Output directory (no space after -o)
+                .arg(dest_dir)
+                .arg("-y") // Assume yes on all queries
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("7z x {:?} -o{:?}", archive, dest_dir),
+                    error: e.to_string(),
+                })?;
+
+            if status.success() {
+                return Ok(());
+            }
+            warn!("7z failed, falling back to Windows 7-Zip via Wine");
+        }
+
+        // Fallback to Windows 7-Zip via Wine (original winetricks does this)
+        // First check if 7zip is installed in the wineprefix
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        let sevenzip_exe = wineprefix.join("drive_c/Program Files/7-Zip/7z.exe");
+
+        if sevenzip_exe.exists() {
+            info!("Using Windows 7-Zip via Wine to extract: {:?}", archive);
+            let archive_win_path = self.unix_to_wine_path(archive)?;
+            let dest_win_path = self.unix_to_wine_path(dest_dir)?;
+
+            let status = std::process::Command::new(&self.wine.wine_bin)
+                .arg(&sevenzip_exe)
+                .arg("x")
+                .arg(&archive_win_path)
+                .arg("-o")
+                .arg(&dest_win_path)
+                .arg("-y")
+                .env("WINEPREFIX", &wineprefix_str)
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("wine 7z.exe x {:?} -o{:?}", archive_win_path, dest_win_path),
+                    error: e.to_string(),
+                })?;
+
+            if status.success() {
+                return Ok(());
+            }
+        }
+
+        // If we get here, we need to install 7zip first
+        warn!("7z not available and Windows 7-Zip not found. Attempting to install 7zip...");
+        // TODO: Implement automatic 7zip installation
+        Err(WinetricksError::Config(
+            "Cannot extract archive: 7z not found and Windows 7-Zip not available. Please install 7z (e.g. 'sudo apt install 7zip')".into()
+        ))
+    }
+
+    /// Extract RAR archive (matching w_try_unrar behavior)
+    fn extract_rar(&self, rar_file: &Path, dest_dir: &Path) -> Result<()> {
+        use std::process::Command;
+        use which::which;
+
+        // Try unrar first (matches original winetricks)
+        if which("unrar").is_ok() {
+            info!("Using unrar to extract: {:?}", rar_file);
+            // Change to dest directory (unrar extracts to current directory)
+            let original_dir = std::env::current_dir()?;
+            std::env::set_current_dir(dest_dir)
+                .map_err(|e| WinetricksError::Config(format!("Failed to change to dest directory: {}", e)))?;
+
+            let status = Command::new("unrar")
+                .arg("x") // Extract with full paths
+                .arg(rar_file)
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("unrar x {:?}", rar_file),
+                    error: e.to_string(),
+                })?;
+
+            // Restore directory
+            std::env::set_current_dir(original_dir)?;
+
+            if status.success() {
+                return Ok(());
+            }
+            warn!("unrar failed, falling back to 7z");
+        }
+
+        // Fallback to 7z (or Windows 7-Zip)
+        self.extract_7z(rar_file, dest_dir)
+    }
+
+    /// Import registry file using regedit (matching w_try_regedit behavior)
+    fn import_registry_file(&self, reg_file: &Path) -> Result<()> {
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Convert Unix path to Wine Windows path
+        let reg_file_win_path = self.unix_to_wine_path(reg_file)?;
+
+        // Use regedit to import (silent mode if unattended)
+        let mut cmd = std::process::Command::new(&self.wine.wine_bin);
+        cmd.env("WINEPREFIX", &wineprefix_str);
+        
+        // Add /S flag for silent mode if unattended (matches original winetricks)
+        if self.config.unattended {
+            cmd.arg("regedit").arg("/S");
+        } else {
+            cmd.arg("regedit");
+        }
+        cmd.arg(&reg_file_win_path);
+
+        let status = cmd.status().map_err(|e| WinetricksError::CommandExecution {
+            command: format!("wine regedit {:?}", reg_file_win_path),
+            error: e.to_string(),
+        })?;
+
+        if !status.success() {
+            return Err(WinetricksError::Verb(format!(
+                "Registry import failed with exit code: {:?}",
+                status.code()
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Register DLL using regsvr32 (matching w_try_regsvr32 behavior)
+    pub fn register_dll(&self, dll_name: &str, dll_path: &Path) -> Result<()> {
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Convert DLL path to Wine Windows path
+        let dll_win_path = self.unix_to_wine_path(dll_path)?;
+
+        // Use regsvr32 to register DLL
+        let status = std::process::Command::new(&self.wine.wine_bin)
+            .arg("regsvr32")
+            .arg("/s") // Silent mode
+            .arg(&dll_win_path)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine regsvr32 /s {:?}", dll_win_path),
+                error: e.to_string(),
+            })?;
+
+        if !status.success() {
+            warn!("regsvr32 returned non-zero exit code for {}: {:?}", dll_name, status.code());
+            // Don't fail - DLL registration can sometimes fail but DLL might still work
+        }
+
+        info!("Registered DLL: {}", dll_name);
+        Ok(())
+    }
+
+    /// Register DLL using regsvr64 for 64-bit (matching w_try_regsvr64 behavior)
+    pub fn register_dll_64(&self, dll_name: &str, dll_path: &Path) -> Result<()> {
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Find wine64 binary
+        let wine64_bin = if let Some(wine_dir) = self.wine.wine_bin.parent() {
+            wine_dir.join("wine64")
+        } else {
+            which::which("wine64")
+                .map_err(|_| WinetricksError::Config("wine64 not found".into()))?
+        };
+
+        // Convert DLL path to Wine Windows path
+        let dll_win_path = self.unix_to_wine_path(dll_path)?;
+
+        // Use regsvr32 via wine64 to register 64-bit DLL
+        let status = std::process::Command::new(&wine64_bin)
+            .arg("regsvr32")
+            .arg("/s") // Silent mode
+            .arg(&dll_win_path)
+            .env("WINEPREFIX", &wineprefix_str)
+            .status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine64 regsvr32 /s {:?}", dll_win_path),
+                error: e.to_string(),
+            })?;
+
+        if !status.success() {
+            warn!("regsvr64 returned non-zero exit code for {}: {:?}", dll_name, status.code());
+        }
+
+        info!("Registered 64-bit DLL: {}", dll_name);
         Ok(())
     }
 }
