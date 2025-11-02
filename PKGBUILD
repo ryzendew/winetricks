@@ -8,17 +8,17 @@ url="https://github.com/Winetricks/winetricks"
 license=('LGPL')
 depends=('wine')
 makedepends=('rust' 'cargo' 'openssl')
-source=("$pkgname-$pkgver.tar.gz")
-sha256sums=('SKIP')
+# No source needed - we're using pre-built binaries
+source=()
+sha256sums=()
 
 build() {
-    cd "$srcdir/$pkgname-$pkgver"
-    cargo build --release --bin winetricks
-    cargo build --release --bin winetricks-gui
+    # No build needed - binaries are pre-built
+    return 0
 }
 
 package() {
-    cd "$srcdir/$pkgname-$pkgver"
+    # Install pre-built binaries
     install -Dm755 target/release/winetricks "$pkgdir/usr/bin/winetricks"
     install -Dm755 target/release/winetricks-gui "$pkgdir/usr/bin/winetricks-gui"
 }
