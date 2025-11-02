@@ -91,39 +91,17 @@ jobs:
           cargo build --release --bin winetricks
           cargo build --release --bin winetricks-gui
 
-      - name: Configure cargo-deb for winetricks-cli
-        run: |
-          cd winetricks-cli
-          mkdir -p debian
-          cat > debian/control << 'EOF'
-          Source: winetricks
-          Section: otherosfs
-          Priority: optional
-          Maintainer: Winetricks Contributors <winetricks@example.com>
-          Build-Depends: debhelper (>= 12), cargo, rustc (>= 1.70), libssl-dev, pkg-config
-          Standards-Version: 4.5.0
-          Homepage: https://github.com/Winetricks/winetricks
-          Rules-Requires-Root: no
-
-          Package: winetricks
-          Architecture: amd64
-          Depends: wine
-          Description: A fast, modern package manager for Wine
-           Winetricks is a package manager for Wine. This is a fast, modern Rust rewrite
-           that maintains compatibility with the original winetricks while providing
-           better performance and a modern GUI.
-          EOF
-
       - name: Create Debian package
         run: |
           cd winetricks-cli
-          cargo deb --no-build
+          cargo deb --no-build --manifest-path Cargo.toml
           
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: target/debian/*.deb
+          path: winetricks-cli/target/debian/*.deb
+          if-no-files-found: warn
 
   build-rpm:
     name: Build RPM Package
@@ -159,7 +137,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rpm-package
-          path: target/release/rpmbuild/RPMS/*/*.rpm
+          path: target/release/rpmbuild/RPMS/**/*.rpm
+          if-no-files-found: warn
 
   build-arch:
     name: Build Arch Package
@@ -201,6 +180,7 @@ jobs:
         with:
           name: arch-package
           path: winetricks-*.pkg.tar.zst
+          if-no-files-found: warn
 
   create-release:
     name: Create GitHub Release

@@ -11,6 +11,18 @@ description = "CLI frontend for Winetricks"
 name = "winetricks"
 path = "src/main.rs"
 
+[package.metadata.deb]
+maintainer = "Winetricks Contributors <winetricks@example.com>"
+copyright = "LGPL-2.1-or-later"
+section = "otherosfs"
+priority = "optional"
+depends = "$auto, wine"
+extended-description = """\
+Winetricks is a package manager for Wine. This is a fast, modern Rust rewrite
+that maintains compatibility with the original winetricks while providing
+better performance and a modern GUI.
+"""
+
 [dependencies]
 winetricks-lib = { path = "../winetricks-lib" }
 clap = { workspace = true }
