@@ -15,27 +15,32 @@ sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD || echo "PKGBUILD update skipp
 sudo systemctl start docker || true
 
 # Build in Docker (Arch Linux) - run as builder user to avoid root restriction
+# Note: We can't chown mounted volumes, so we copy files to a directory owned by builder
 docker run --rm \
-    -v "$(pwd)":/build \
-    -w /build \
+    -v "$(pwd)":/build:ro \
     -e PKGEXT=".pkg.tar.zst" \
     archlinux:latest \
     bash -c "
         pacman -Syu --noconfirm rust cargo openssl base-devel
-        useradd -m -s /bin/bash builder || true
-        chown -R builder:builder /build
-        su builder -c 'cd /build && makepkg -s --noconfirm --skipinteg'
+        useradd -m -s /bin/bash builder
+        mkdir -p /home/builder/build
+        cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
+        chown -R builder:builder /home/builder/build
+        su builder -c 'cd /home/builder/build && makepkg -s --noconfirm --skipinteg'
+        cp /home/builder/build/*.pkg.tar.zst /build/ 2>/dev/null || true
     " || {
     echo "Docker build failed, trying with podman..."
     podman run --rm \
-        -v "$(pwd)":/build \
-        -w /build \
+        -v "$(pwd)":/build:ro \
         archlinux:latest \
         bash -c "
             pacman -Syu --noconfirm rust cargo openssl base-devel
-            useradd -m -s /bin/bash builder || true
-            chown -R builder:builder /build
-            su builder -c 'cd /build && makepkg -s --noconfirm --skipinteg'
+            useradd -m -s /bin/bash builder
+            mkdir -p /home/builder/build
+            cp -r /build/* /home/builder/build/ 2>/dev/null || cp -r /build/. /home/builder/build/ 2>/dev/null || true
+            chown -R builder:builder /home/builder/build
+            su builder -c 'cd /home/builder/build && makepkg -s --noconfirm --skipinteg'
+            cp /home/builder/build/*.pkg.tar.zst /build/ 2>/dev/null || true
         "
 }
 

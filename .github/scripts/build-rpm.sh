@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
 
-# Get version from Cargo.toml
-VERSION=$(grep -m1 '^version' winetricks-cli/Cargo.toml | cut -d'"' -f2)
+# Get version from workspace Cargo.toml (since winetricks-cli uses version.workspace = true)
+VERSION=$(grep -m1 '^version\s*=' Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]')
+if [ -z "$VERSION" ] || [ "$VERSION" = "" ]; then
+    # Fallback: try winetricks-cli/Cargo.toml
+    VERSION=$(grep -m1 '^version\s*=' winetricks-cli/Cargo.toml | cut -d'"' -f2 | tr -d '[:space:]' || echo "0.1.0")
+fi
+echo "Building RPM for version: $VERSION"
 RELEASE="1"
 
 # Create RPM build directories
