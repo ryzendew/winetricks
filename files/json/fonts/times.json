@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "times32.exe"
+      "filename": "times32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/times32.exe",
+      "sha256": "db56595ec6ef5d3de5c24994f001f03b2a13e37cee27bc25c58f6f43e8f807ab"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/times.ttf"

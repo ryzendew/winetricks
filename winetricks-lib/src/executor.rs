@@ -25,8 +25,8 @@ impl Executor {
         let wine = Wine::detect()?;
         let downloader = DownloadManager::new(config.cache_dir.clone())?;
 
-        // Initialize cache from source JSON files if needed
-        config.ensure_cache_initialized()?;
+        // Initialize cache from source JSON files if needed (or download from GitHub)
+        config.ensure_cache_initialized().await?;
 
         // Load verb registry from cached metadata directory
         let registry = if config.metadata_dir().exists() {

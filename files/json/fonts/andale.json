@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "andale32.exe"
+      "filename": "andale32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/andale32.exe",
+      "sha256": "0524fe42951adc3a7eb870e32f0920313c71f170c859b5f770d82b4ee111e970"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/andalemo.ttf"

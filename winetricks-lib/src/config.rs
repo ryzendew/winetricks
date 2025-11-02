@@ -2,8 +2,10 @@
 
 use crate::error::{Result, WinetricksError};
 use dirs;
+use reqwest::Client;
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
-use tracing::info;
+use tracing::{info, warn};
 
 /// Winetricks configuration
 #[derive(Debug, Clone)]
@@ -112,33 +114,151 @@ impl Config {
     }
 
     /// Initialize cache from source JSON files if needed
-    pub fn ensure_cache_initialized(&self) -> Result<()> {
+    /// If local files not found, downloads from GitHub on first run
+    pub async fn ensure_cache_initialized(&self) -> Result<()> {
         let cached_dir = self.cached_verbs_dir();
-        let source_dir = match self.source_json_dir() {
-            Some(dir) => {
-                info!("Found source JSON directory: {:?}", dir);
-                dir
-            }
-            None => {
-                info!("No source JSON directory found, skipping cache initialization");
-                return Ok(()); // No source directory, skip cache initialization
-            }
-        };
+        let source_dir = self.source_json_dir();
 
-        // Check if cache needs updating
-        let needs_update = if !cached_dir.exists() {
-            true
-        } else {
-            // Check if any source file is newer than cache
-            self.is_cache_stale(&source_dir, &cached_dir)?
-        };
+        // If local source directory exists, use it (development mode)
+        if let Some(dir) = source_dir {
+            info!("Found source JSON directory: {:?}", dir);
+            
+            // Check if cache needs updating
+            let needs_update = if !cached_dir.exists() {
+                true
+            } else {
+                // Check if any source file is newer than cache
+                self.is_cache_stale(&dir, &cached_dir)?
+            };
 
-        if needs_update {
-            info!("Initializing/updating verb cache from source files...");
-            self.copy_json_to_cache(&source_dir, &cached_dir)?;
-            info!("Verb cache initialized at: {:?}", cached_dir);
+            if needs_update {
+                info!("Initializing/updating verb cache from local source files...");
+                self.copy_json_to_cache(&dir, &cached_dir)?;
+                info!("Verb cache initialized at: {:?}", cached_dir);
+            }
+            return Ok(());
         }
 
+        // No local source - check if we need to download from GitHub
+        if cached_dir.exists() {
+            // Cache already exists, check if we should update from GitHub
+            // For now, skip auto-update from GitHub to avoid breaking changes
+            info!("Using existing verb cache at: {:?}", cached_dir);
+            return Ok(());
+        }
+
+        // First run - download from GitHub
+        info!("No local source found and cache doesn't exist, downloading from GitHub...");
+        self.download_json_from_github(&cached_dir).await?;
+        info!("Verb cache downloaded and initialized at: {:?}", cached_dir);
+
+        Ok(())
+    }
+
+    /// Download JSON files from GitHub repository
+    async fn download_json_from_github(&self, cached_dir: &Path) -> Result<()> {
+        use std::fs;
+        
+        const GITHUB_REPO: &str = "ryzendew/winetricks";
+        const GITHUB_BRANCH: &str = "master";
+        const JSON_PATH: &str = "files/json";
+        
+        // Known category directories
+        let categories = ["apps", "benchmarks", "dlls", "download", "fonts", "manual-download", "settings"];
+        
+        info!("Downloading verb metadata from GitHub: {}/{}", GITHUB_REPO, JSON_PATH);
+        
+        let client = Client::builder()
+            .user_agent("Winetricks-RS/1.0")
+            .build()
+            .map_err(|e| WinetricksError::Config(format!("Failed to create HTTP client: {}", e)))?;
+        
+        // Ensure cache directory exists
+        fs::create_dir_all(cached_dir)?;
+        
+        let mut total_downloaded = 0;
+        let mut total_failed = 0;
+        
+        // Download each category
+        for category in &categories {
+            let category_dir = cached_dir.join(category);
+            fs::create_dir_all(&category_dir)?;
+            
+            info!("Downloading category: {}", category);
+            
+            // Use GitHub API to list files in the category directory
+            let api_url = format!(
+                "https://api.github.com/repos/{}/contents/{}/{}",
+                GITHUB_REPO, JSON_PATH, category
+            );
+            
+            let response = client.get(&api_url).send().await
+                .map_err(|e| WinetricksError::Config(format!("Failed to fetch GitHub API: {}", e)))?;
+            
+            if !response.status().is_success() {
+                warn!("Failed to list files for category {}: HTTP {}", category, response.status());
+                continue;
+            }
+            
+            #[derive(Deserialize)]
+            struct GitHubFile {
+                name: String,
+                #[serde(rename = "download_url")]
+                url: String,
+                #[serde(rename = "type")]
+                file_type: String,
+            }
+            
+            let files: Vec<GitHubFile> = response
+                .json()
+                .await
+                .map_err(|e| WinetricksError::Config(format!("Failed to parse GitHub API response: {}", e)))?;
+            
+            // Download each JSON file
+            for file in files {
+                if file.file_type != "file" || !file.name.ends_with(".json") {
+                    continue;
+                }
+                
+                let dest_path = category_dir.join(&file.name);
+                
+                // Download the file
+                match client.get(&file.url).send().await {
+                    Ok(resp) => {
+                        if resp.status().is_success() {
+                            match resp.text().await {
+                                Ok(content) => {
+                                    if let Err(e) = fs::write(&dest_path, &content) {
+                                        warn!("Failed to write {}: {}", dest_path.display(), e);
+                                        total_failed += 1;
+                                    } else {
+                                        total_downloaded += 1;
+                                    }
+                                }
+                                Err(e) => {
+                                    warn!("Failed to read content for {}: {}", file.name, e);
+                                    total_failed += 1;
+                                }
+                            }
+                        } else {
+                            warn!("Failed to download {}: HTTP {}", file.name, resp.status());
+                            total_failed += 1;
+                        }
+                    }
+                    Err(e) => {
+                        warn!("Failed to download {}: {}", file.name, e);
+                        total_failed += 1;
+                    }
+                }
+            }
+        }
+        
+        if total_failed > 0 {
+            warn!("Downloaded {} files, {} failed", total_downloaded, total_failed);
+        } else {
+            info!("Successfully downloaded {} JSON files from GitHub", total_downloaded);
+        }
+        
         Ok(())
     }
 

@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "trebuchet32.exe"
+      "filename": "trebuchet32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/trebuc32.exe",
+      "sha256": "5a690d9bb8510be1b8b4fe49f1f2319651fe51bbe54775ddddd8ef0bd07fdac9"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/trebuc.ttf"

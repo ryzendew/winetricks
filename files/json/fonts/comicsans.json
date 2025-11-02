@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "comic32.exe"
+      "filename": "comic32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/comic32.exe",
+      "sha256": "9c6df3feefde26d4e41d4a4fe5db2a89f9123a772594d7f59afd062625cd204e"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/comic.ttf"

@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "../vcrun2005/vcredist_x86.EXE"
+      "filename": "../vcrun2005/vcredist_x86.EXE",
+      "url": "https://download.microsoft.com/download/8/B/4/8B42259F-5D70-43F4-AC2E-4B208FD8D66A/vcredist_x86.EXE",
+      "sha256": "8648c5fc29c44b9112fe52f9a33f80e7fc42d10f3b5b42b2121542a13e44adfd"
     }
   ],
   "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc80.dll"

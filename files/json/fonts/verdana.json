@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "verdan32.exe"
+      "filename": "verdan32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master//verdan32.exe",
+      "sha256": "c1cb61255e363166794e47664e2f21af8e3a26cb6346eb8d2ae2fa85dd5aad96"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/verdana.ttf"

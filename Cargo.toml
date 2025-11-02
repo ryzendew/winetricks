@@ -30,7 +30,7 @@ glob = "0.3"
 regex = "1.10"
 
 # HTTP/Download
-reqwest = { version = "0.11", features = ["stream", "cookie_store"] }
+reqwest = { version = "0.11", features = ["stream", "cookie_store", "json"] }
 sha2 = "0.10"
 
 # Process/Command execution

@@ -382,8 +382,8 @@ async fn main() -> Result<()> {
 
     config.ensure_dirs()?;
     
-    // Initialize cache from source JSON files if needed
-    config.ensure_cache_initialized()?;
+    // Initialize cache from source JSON files if needed (or download from GitHub)
+    config.ensure_cache_initialized().await?;
 
     // Show startup message
     info!("Winetricks starting...");

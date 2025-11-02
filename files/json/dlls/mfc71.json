@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "BZEditW32_1.6.5.exe"
+      "filename": "BZEditW32_1.6.5.exe",
+      "url": "https://downloads.sourceforge.net/project/bzflag/bzedit%20win32/1.6.5/BZEditW32_1.6.5.exe",
+      "sha256": "84d1bda5dbf814742898a2e1c0e4bc793e9bc1fba4b7a93d59a7ef12bd0fd802"
     }
   ],
   "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc71.dll"

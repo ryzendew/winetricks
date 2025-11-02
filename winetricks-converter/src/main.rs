@@ -214,6 +214,9 @@ fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, Strin
     let load_func_re = Regex::new(r"^load_(\w+)\(\)")?;
     // Pattern to match w_download calls: w_download <url> <sha256>
     let w_download_re = Regex::new(r"^\s+w_download\s+(\S+)\s+(\S+)")?;
+    // Pattern to match w_download_to calls: w_download_to <cache_dir> "<url>" <sha256>
+    // We'll use a simpler regex and fallback to manual parsing
+    let w_download_to_re = Regex::new(r"^\s+w_download_to")?;
     
     let lines: Vec<&str> = content.lines().collect();
     let mut current_verb: Option<String> = None;
@@ -245,13 +248,34 @@ fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, Strin
                     let sha256 = caps.get(2).unwrap().as_str().to_string();
                     
                     // Try to extract filename from URL or previous file1= assignment
-                    // For now, we'll extract from URL or match with file1 from metadata
                     let filename = extract_filename_from_url(&url);
                     
                     downloads
                         .entry(verb_name.clone())
                         .or_insert_with(Vec::new)
                         .push((filename, url, sha256));
+                }
+                
+                // Check for w_download_to calls (used by fonts: w_download_to corefonts "url" sha256)
+                // Format: w_download_to <cache_dir> "<url>" <sha256>
+                if w_download_to_re.is_match(line) {
+                    // Parse manually: w_download_to corefonts "https://..." sha256
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() >= 4 {
+                        // parts[0] = "w_download_to"
+                        // parts[1] = cache_dir (e.g., "corefonts")
+                        // parts[2] = url (may be quoted)
+                        // parts[3] = sha256
+                        let mut url = parts[2].to_string();
+                        url = url.trim_matches('"').trim_matches('\'').to_string();
+                        let sha256 = parts[3].to_string();
+                        let filename = extract_filename_from_url(&url);
+                        
+                        downloads
+                            .entry(verb_name.clone())
+                            .or_insert_with(Vec::new)
+                            .push((filename, url, sha256));
+                    }
                 }
                 
                 // Function ended

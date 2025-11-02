@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "webdin32.exe"
+      "filename": "webdin32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/webdin32.exe",
+      "sha256": "64595b5abc1080fba8610c5c34fab5863408e806aafe84653ca8575bed17d75a"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/webdings.ttf"

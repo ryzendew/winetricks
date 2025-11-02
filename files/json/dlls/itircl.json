@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "../hhw/htmlhelp.exe"
+      "filename": "../hhw/htmlhelp.exe",
+      "url": "https://web.archive.org/web/20160423015142if_/http://download.microsoft.com/download/0/a/9/0a939ef6-e31c-430f-a3df-dfae7960d564/htmlhelp.exe",
+      "sha256": "b2b3140d42a818870c1ab13c1c7b8d4536f22bd994fa90aade89729a6009a3ae"
     }
   ],
   "installed_file": "${W_SYSTEM32_DLLS_WIN}/itircl.dll"

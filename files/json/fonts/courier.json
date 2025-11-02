@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "courie32.exe"
+      "filename": "courie32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/courie32.exe",
+      "sha256": "bb511d861655dde879ae552eb86b134d6fae67cb58502e6ff73ec5d9151f3384"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/cour.ttf"

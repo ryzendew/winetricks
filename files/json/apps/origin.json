@@ -7,10 +7,14 @@
   "media": "download",
   "files": [
     {
-      "filename": "OriginSetup.exe"
+      "filename": "OriginSetup.exe",
+      "url": "https://taskinoz.com/downloads/OriginSetup-10.5.119.52718.exe",
+      "sha256": "ed6ee5174f697744ac7c5783ff9021da603bbac42ae9836cd468d432cadc9779"
     },
     {
-      "filename": "version_v3.dll"
+      "filename": "version_v3.dll",
+      "url": "https://taskinoz.com/downloads/OriginSetup-10.5.119.52718.exe",
+      "sha256": "ed6ee5174f697744ac7c5783ff9021da603bbac42ae9836cd468d432cadc9779"
     }
   ],
   "installed_file": "${W_PROGRAMS_X86_WIN}/Origin/Origin.exe"

@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "impact32.exe"
+      "filename": "impact32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/impact32.exe",
+      "sha256": "6061ef3b7401d9642f5dfdb5f2b376aa14663f6275e60a51207ad4facf2fccfb"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/impact.ttf"

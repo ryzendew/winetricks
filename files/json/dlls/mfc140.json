@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "../vcrun2015/vc_redist.x86.exe"
+      "filename": "../vcrun2015/vc_redist.x86.exe",
+      "url": "https://download.microsoft.com/download/6/D/F/6DF3FF94-F7F9-4F0B-838C-A328D1A7D0EE/vc_redist.x86.exe",
+      "sha256": "dafb8b5f4b46bfaf7faa1d0ad05211f5c9855f0005cd603f8b5037b6a708d6b6"
     }
   ],
   "installed_file": "${W_SYSTEM32_DLLS_WIN}/mfc140u.dll"

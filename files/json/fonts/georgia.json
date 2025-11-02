@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "georgi32.exe"
+      "filename": "georgi32.exe",
+      "url": "https://github.com/pushcx/corefonts/raw/master/georgi32.exe",
+      "sha256": "2c2c7dcda6606ea5cf08918fb7cd3f3359e9e84338dc690013f20cd42e930301"
     }
   ],
   "installed_file": "${W_FONTSDIR_WIN}/georgia.ttf"

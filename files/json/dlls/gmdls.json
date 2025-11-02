@@ -7,7 +7,9 @@
   "media": "download",
   "files": [
     {
-      "filename": "../directx9/directx_apr2006_redist.exe"
+      "filename": "../directx9/directx_apr2006_redist.exe",
+      "url": "https://web.archive.org/web/20100920035904/https://download.microsoft.com/download/3/9/7/3972f80c-5711-4e14-9483-959d48a2d03b/directx_apr2006_redist.exe",
+      "sha256": "dd8c3d401efe4561b67bd88475201b2f62f43cd23e4acc947bb34a659fa74952"
     }
   ],
   "installed_file": "${W_SYSTEM32_DLLS_WIN}/drivers/gm.dls"
