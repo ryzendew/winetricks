@@ -58,13 +58,19 @@ docker run --rm \
         
         # Temporarily modify PKGBUILD to remove wine from depends (runtime dependency, not needed for build)
         # Also ensure source is empty since we're using pre-built binaries
-        sed -i 's/^depends=(\x27wine\x27)/depends=()/' /home/builder/build/PKGBUILD || \
-        sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD || \
-        sed -i '/^depends=.*wine/s/wine//g' /home/builder/build/PKGBUILD || \
-        sed -i 's/depends=(.*wine.*)/depends=()/' /home/builder/build/PKGBUILD || true
-        # Remove source requirement if present
+        # Use safer sed commands to avoid corrupting the file
+        if grep -q "^depends=('wine')" /home/builder/build/PKGBUILD; then
+            sed -i "s/^depends=('wine')/depends=()/" /home/builder/build/PKGBUILD
+        elif grep -q '^depends=("wine")' /home/builder/build/PKGBUILD; then
+            sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD
+        elif grep -q "^depends=.*wine" /home/builder/build/PKGBUILD; then
+            sed -i "s/'wine'//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
+        fi
+        # Ensure source and sha256sums are empty
         sed -i 's/^source=.*$/source=()/' /home/builder/build/PKGBUILD || true
         sed -i 's/^sha256sums=.*$/sha256sums=()/' /home/builder/build/PKGBUILD || true
+        # Verify PKGBUILD syntax is still valid after modifications
+        bash -n /home/builder/build/PKGBUILD || echo "Warning: PKGBUILD syntax check failed after modifications"
         
         # Run makepkg - use --ignorearch and --skipinteg to bypass checks
         su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch' || {
@@ -111,13 +117,19 @@ docker run --rm \
             ls -la /home/builder/build/target/release/winetricks* 2>/dev/null || echo 'Binaries still not found'
             
             # Temporarily modify PKGBUILD to remove wine from depends
-            sed -i 's/^depends=(\x27wine\x27)/depends=()/' /home/builder/build/PKGBUILD || \
-            sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD || \
-            sed -i '/^depends=.*wine/s/wine//g' /home/builder/build/PKGBUILD || \
-            sed -i 's/depends=(.*wine.*)/depends=()/' /home/builder/build/PKGBUILD || true
-            # Remove source requirement if present
+            # Use safer sed commands to avoid corrupting the file
+            if grep -q "^depends=('wine')" /home/builder/build/PKGBUILD; then
+                sed -i "s/^depends=('wine')/depends=()/" /home/builder/build/PKGBUILD
+            elif grep -q '^depends=("wine")' /home/builder/build/PKGBUILD; then
+                sed -i 's/^depends=("wine")/depends=()/' /home/builder/build/PKGBUILD
+            elif grep -q "^depends=.*wine" /home/builder/build/PKGBUILD; then
+                sed -i "s/'wine'//g; s/\"wine\"//g" /home/builder/build/PKGBUILD
+            fi
+            # Ensure source and sha256sums are empty
             sed -i 's/^source=.*$/source=()/' /home/builder/build/PKGBUILD || true
             sed -i 's/^sha256sums=.*$/sha256sums=()/' /home/builder/build/PKGBUILD || true
+            # Verify PKGBUILD syntax is still valid after modifications
+            bash -n /home/builder/build/PKGBUILD || echo "Warning: PKGBUILD syntax check failed after modifications"
             
             # Run makepkg
             su builder -c 'cd /home/builder/build && makepkg --noconfirm --nodeps --skipinteg --ignorearch' || {
