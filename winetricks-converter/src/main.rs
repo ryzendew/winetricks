@@ -209,7 +209,7 @@ fn extract_value(line: &str) -> String {
 /// Returns a map of verb name to (filename, url, sha256)
 fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, String, String)>>> {
     let mut downloads: HashMap<String, Vec<(String, String, String)>> = HashMap::new();
-    
+
     // Pattern to match load_<verb_name>() function
     let load_func_re = Regex::new(r"^load_(\w+)\(\)")?;
     // Pattern to match w_download calls: w_download <url> <sha256>
@@ -217,45 +217,45 @@ fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, Strin
     // Pattern to match w_download_to calls: w_download_to <cache_dir> "<url>" <sha256>
     // We'll use a simpler regex and fallback to manual parsing
     let w_download_to_re = Regex::new(r"^\s+w_download_to")?;
-    
+
     let lines: Vec<&str> = content.lines().collect();
     let mut current_verb: Option<String> = None;
     let mut in_function = false;
     let mut brace_depth = 0;
-    
+
     for line in lines.iter() {
         // Check if this is a load_* function definition
         if let Some(caps) = load_func_re.captures(line) {
             current_verb = Some(caps[1].to_string());
             in_function = true;
             brace_depth = 0;
-            
+
             // Count opening braces on this line
             brace_depth += line.matches('{').count();
             brace_depth -= line.matches('}').count();
             continue;
         }
-        
+
         if let Some(ref verb_name) = current_verb {
             if in_function {
                 // Count braces to track function scope
                 brace_depth += line.matches('{').count();
                 brace_depth -= line.matches('}').count();
-                
+
                 // Check for w_download calls
                 if let Some(caps) = w_download_re.captures(line) {
                     let url = caps.get(1).unwrap().as_str().to_string();
                     let sha256 = caps.get(2).unwrap().as_str().to_string();
-                    
+
                     // Try to extract filename from URL or previous file1= assignment
                     let filename = extract_filename_from_url(&url);
-                    
+
                     downloads
                         .entry(verb_name.clone())
                         .or_insert_with(Vec::new)
                         .push((filename, url, sha256));
                 }
-                
+
                 // Check for w_download_to calls (used by fonts: w_download_to corefonts "url" sha256)
                 // Format: w_download_to <cache_dir> "<url>" <sha256>
                 if w_download_to_re.is_match(line) {
@@ -270,14 +270,14 @@ fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, Strin
                         url = url.trim_matches('"').trim_matches('\'').to_string();
                         let sha256 = parts[3].to_string();
                         let filename = extract_filename_from_url(&url);
-                        
+
                         downloads
                             .entry(verb_name.clone())
                             .or_insert_with(Vec::new)
                             .push((filename, url, sha256));
                     }
                 }
-                
+
                 // Function ended
                 if brace_depth <= 0 {
                     in_function = false;
@@ -286,7 +286,7 @@ fn extract_downloads(content: &str) -> Result<HashMap<String, Vec<(String, Strin
             }
         }
     }
-    
+
     Ok(downloads)
 }
 
@@ -306,23 +306,27 @@ fn extract_filename_from_url(url: &str) -> String {
 }
 
 /// Enrich verb metadata with download URLs and SHA256 hashes
-fn enrich_with_downloads(verb: &mut VerbMetadata, downloads: &HashMap<String, Vec<(String, String, String)>>) {
+fn enrich_with_downloads(
+    verb: &mut VerbMetadata,
+    downloads: &HashMap<String, Vec<(String, String, String)>>,
+) {
     if let Some(download_list) = downloads.get(&verb.name) {
         // Match downloads to files based on filename
         for file in &mut verb.files {
             if file.url.is_none() {
                 // Try to find matching download by filename
                 for (filename, url, sha256) in download_list {
-                    if filename == &file.filename || 
-                       file.filename.contains(filename) || 
-                       filename.contains(&file.filename) ||
-                       filename == "unknown" {
+                    if filename == &file.filename
+                        || file.filename.contains(filename)
+                        || filename.contains(&file.filename)
+                        || filename == "unknown"
+                    {
                         file.url = Some(url.clone());
                         file.sha256 = Some(sha256.clone());
                         break;
                     }
                 }
-                
+
                 // If still no match and we have downloads, use the first one
                 if file.url.is_none() && !download_list.is_empty() {
                     let (filename, url, sha256) = &download_list[0];
@@ -334,7 +338,7 @@ fn enrich_with_downloads(verb: &mut VerbMetadata, downloads: &HashMap<String, Ve
                 }
             }
         }
-        
+
         // If verb has no files defined but we have downloads, add them
         if verb.files.is_empty() {
             for (filename, url, sha256) in download_list {

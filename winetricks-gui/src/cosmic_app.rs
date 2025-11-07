@@ -90,7 +90,11 @@ pub mod cosmic_impl {
 
     impl WaylandDisplay {
         pub fn all() -> [WaylandDisplay; 3] {
-            [WaylandDisplay::Auto, WaylandDisplay::Wayland, WaylandDisplay::XWayland]
+            [
+                WaylandDisplay::Auto,
+                WaylandDisplay::Wayland,
+                WaylandDisplay::XWayland,
+            ]
         }
     }
 
@@ -126,7 +130,7 @@ pub mod cosmic_impl {
         VerbosityChanged(u8),
         OperationStatusUpdate(Option<OperationStatus>),
     }
-    
+
     #[derive(Debug, Clone)]
     enum OperationStatus {
         Uninstalling { verb_name: String },
@@ -180,7 +184,7 @@ pub mod cosmic_impl {
                 Some("win64") => Some(WineArch::Win64),
                 _ => Some(WineArch::Auto),
             };
-            
+
             // Load renderer from wineprefix registry
             config.load_renderer_from_prefix();
             let renderer_selection = config.renderer.as_ref().and_then(|renderer| {
@@ -190,16 +194,18 @@ pub mod cosmic_impl {
                     _ => None,
                 }
             });
-            
+
             // Load wayland setting from wineprefix registry (with env fallback for initial load)
             config.load_wayland_from_prefix_with_env();
-            let wayland_selection = config.wayland.as_ref().and_then(|wayland| {
-                match wayland.to_lowercase().as_str() {
-                    "wayland" => Some(WaylandDisplay::Wayland),
-                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                    _ => None,
-                }
-            });
+            let wayland_selection =
+                config
+                    .wayland
+                    .as_ref()
+                    .and_then(|wayland| match wayland.to_lowercase().as_str() {
+                        "wayland" => Some(WaylandDisplay::Wayland),
+                        "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                        _ => None,
+                    });
 
             (
                 Self {
@@ -239,10 +245,10 @@ pub mod cosmic_impl {
                 Message::UninstallVerb(verb_name) => {
                     eprintln!("Uninstalling verb: {}", verb_name);
                     // Show progress dialog
-                    self.operation_status = Some(OperationStatus::Uninstalling { 
-                        verb_name: verb_name.clone() 
+                    self.operation_status = Some(OperationStatus::Uninstalling {
+                        verb_name: verb_name.clone(),
                     });
-                    
+
                     // Spawn async task to uninstall
                     let config = self.config.clone();
                     let verb_name_clone = verb_name.clone();
@@ -254,13 +260,23 @@ pub mod cosmic_impl {
                                 Ok(mut executor) => {
                                     match executor.uninstall_verb(&verb_name_clone).await {
                                         Ok(_) => {
-                                            eprintln!("Successfully uninstalled: {}", verb_name_clone);
+                                            eprintln!(
+                                                "Successfully uninstalled: {}",
+                                                verb_name_clone
+                                            );
                                             // Reload installed verbs list after successful uninstall
-                                            let updated_verbs = load_installed_verbs(&config_for_reload);
-                                            eprintln!("Remaining installed verbs: {:?}", updated_verbs);
+                                            let updated_verbs =
+                                                load_installed_verbs(&config_for_reload);
+                                            eprintln!(
+                                                "Remaining installed verbs: {:?}",
+                                                updated_verbs
+                                            );
                                         }
                                         Err(e) => {
-                                            eprintln!("Error uninstalling {}: {}", verb_name_clone, e);
+                                            eprintln!(
+                                                "Error uninstalling {}: {}",
+                                                verb_name_clone, e
+                                            );
                                         }
                                     }
                                 }
@@ -272,7 +288,7 @@ pub mod cosmic_impl {
                     });
                     // Optimistically remove from UI list immediately for instant feedback
                     self.installed_verbs.retain(|v| v != &verb_name);
-                    
+
                     // Auto-close dialog after operation completes
                     let verb_name_for_close = verb_name.clone();
                     let config_for_check = self.config.clone();
@@ -282,7 +298,10 @@ pub mod cosmic_impl {
                             std::thread::sleep(std::time::Duration::from_millis(200));
                             let updated = load_installed_verbs(&config_for_check);
                             if !updated.contains(&verb_name_for_close) {
-                                eprintln!("Uninstall completed - closing dialog (after {}ms)", i * 200);
+                                eprintln!(
+                                    "Uninstall completed - closing dialog (after {}ms)",
+                                    i * 200
+                                );
                                 break;
                             }
                         }
@@ -345,30 +364,36 @@ pub mod cosmic_impl {
                                     } else {
                                         PathBuf::from(&selected)
                                     };
-                    self.config.wineprefix = Some(new_path);
-                    
-                    // Load renderer from new wineprefix
-                    self.config.load_renderer_from_prefix();
-                    self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                        match renderer.to_lowercase().as_str() {
-                            "opengl" | "gl" => Some(Renderer::OpenGL),
-                            "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                            _ => None,
-                        }
-                    });
-                    
-                    // Load wayland setting from new wineprefix
-                    self.config.load_wayland_from_prefix();
-                    self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                        match wayland.to_lowercase().as_str() {
-                            "wayland" => Some(WaylandDisplay::Wayland),
-                            "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                            _ => None,
-                        }
-                    });
-                    
-                    self.installed_verbs = load_installed_verbs(&self.config);
-                                    return Command::none();
+                                self.config.wineprefix = Some(new_path);
+
+                                // Load renderer from new wineprefix
+                                self.config.load_renderer_from_prefix();
+                                self.renderer_selection = self.config.renderer.as_ref().and_then(
+                                    |renderer| match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    },
+                                );
+
+                                // Load wayland setting from new wineprefix
+                                self.config.load_wayland_from_prefix();
+                                self.wayland_selection =
+                                    self.config
+                                        .wayland
+                                        .as_ref()
+                                        .and_then(|wayland| {
+                                            match wayland.to_lowercase().as_str() {
+                                                "wayland" => Some(WaylandDisplay::Wayland),
+                                                "xwayland" | "x11" => {
+                                                    Some(WaylandDisplay::XWayland)
+                                                }
+                                                _ => None,
+                                            }
+                                        });
+
+                                self.installed_verbs = load_installed_verbs(&self.config);
+                                return Command::none();
                             }
                         }
                     }
@@ -392,30 +417,36 @@ pub mod cosmic_impl {
                                     } else {
                                         PathBuf::from(&selected)
                                     };
-                    self.config.wineprefix = Some(new_path);
-                    
-                    // Load renderer from new wineprefix
-                    self.config.load_renderer_from_prefix();
-                    self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                        match renderer.to_lowercase().as_str() {
-                            "opengl" | "gl" => Some(Renderer::OpenGL),
-                            "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                            _ => None,
-                        }
-                    });
-                    
-                    // Load wayland setting from new wineprefix
-                    self.config.load_wayland_from_prefix();
-                    self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                        match wayland.to_lowercase().as_str() {
-                            "wayland" => Some(WaylandDisplay::Wayland),
-                            "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                            _ => None,
-                        }
-                    });
-                    
-                    self.installed_verbs = load_installed_verbs(&self.config);
-                                    return Command::none();
+                                self.config.wineprefix = Some(new_path);
+
+                                // Load renderer from new wineprefix
+                                self.config.load_renderer_from_prefix();
+                                self.renderer_selection = self.config.renderer.as_ref().and_then(
+                                    |renderer| match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    },
+                                );
+
+                                // Load wayland setting from new wineprefix
+                                self.config.load_wayland_from_prefix();
+                                self.wayland_selection =
+                                    self.config
+                                        .wayland
+                                        .as_ref()
+                                        .and_then(|wayland| {
+                                            match wayland.to_lowercase().as_str() {
+                                                "wayland" => Some(WaylandDisplay::Wayland),
+                                                "xwayland" | "x11" => {
+                                                    Some(WaylandDisplay::XWayland)
+                                                }
+                                                _ => None,
+                                            }
+                                        });
+
+                                self.installed_verbs = load_installed_verbs(&self.config);
+                                return Command::none();
                             }
                         }
                     }
@@ -439,30 +470,36 @@ pub mod cosmic_impl {
                                     } else {
                                         PathBuf::from(&selected)
                                     };
-                    self.config.wineprefix = Some(new_path);
-                    
-                    // Load renderer from new wineprefix
-                    self.config.load_renderer_from_prefix();
-                    self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                        match renderer.to_lowercase().as_str() {
-                            "opengl" | "gl" => Some(Renderer::OpenGL),
-                            "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                            _ => None,
-                        }
-                    });
-                    
-                    // Load wayland setting from new wineprefix
-                    self.config.load_wayland_from_prefix();
-                    self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                        match wayland.to_lowercase().as_str() {
-                            "wayland" => Some(WaylandDisplay::Wayland),
-                            "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                            _ => None,
-                        }
-                    });
-                    
-                    self.installed_verbs = load_installed_verbs(&self.config);
-                                    return Command::none();
+                                self.config.wineprefix = Some(new_path);
+
+                                // Load renderer from new wineprefix
+                                self.config.load_renderer_from_prefix();
+                                self.renderer_selection = self.config.renderer.as_ref().and_then(
+                                    |renderer| match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    },
+                                );
+
+                                // Load wayland setting from new wineprefix
+                                self.config.load_wayland_from_prefix();
+                                self.wayland_selection =
+                                    self.config
+                                        .wayland
+                                        .as_ref()
+                                        .and_then(|wayland| {
+                                            match wayland.to_lowercase().as_str() {
+                                                "wayland" => Some(WaylandDisplay::Wayland),
+                                                "xwayland" | "x11" => {
+                                                    Some(WaylandDisplay::XWayland)
+                                                }
+                                                _ => None,
+                                            }
+                                        });
+
+                                self.installed_verbs = load_installed_verbs(&self.config);
+                                return Command::none();
                             }
                         }
                     }
@@ -501,7 +538,7 @@ pub mod cosmic_impl {
                         Renderer::Vulkan => Some("vulkan"),
                     };
                     self.config.renderer = renderer_str.map(|s| s.to_string());
-                    
+
                     // Set in wineprefix registry for persistence
                     if let Err(e) = self.config.set_renderer_in_registry(renderer_str) {
                         eprintln!("Warning: Failed to set renderer in registry: {}", e);
@@ -515,7 +552,7 @@ pub mod cosmic_impl {
                         WaylandDisplay::XWayland => Some("xwayland"),
                     };
                     self.config.wayland = wayland_str.map(|s| s.to_string());
-                    
+
                     // Set or clear in wineprefix registry for persistence
                     if let Err(e) = self.config.set_wayland_in_registry(wayland_str) {
                         eprintln!("Warning: Failed to set Graphics driver in registry: {}", e);
@@ -528,13 +565,14 @@ pub mod cosmic_impl {
                         // Only reload if we set a specific value, not Auto
                         if wayland_str.is_some() {
                             self.config.load_wayland_from_prefix();
-                            self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                                match wayland.to_lowercase().as_str() {
-                                    "wayland" => Some(WaylandDisplay::Wayland),
-                                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                                    _ => None,
-                                }
-                            });
+                            self.wayland_selection =
+                                self.config.wayland.as_ref().and_then(|wayland| {
+                                    match wayland.to_lowercase().as_str() {
+                                        "wayland" => Some(WaylandDisplay::Wayland),
+                                        "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                                        _ => None,
+                                    }
+                                });
                         }
                     }
                     return Command::none();

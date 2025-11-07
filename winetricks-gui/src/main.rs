@@ -158,7 +158,11 @@ enum WaylandDisplay {
 
 impl WaylandDisplay {
     fn all() -> [WaylandDisplay; 3] {
-        [WaylandDisplay::Auto, WaylandDisplay::Wayland, WaylandDisplay::XWayland]
+        [
+            WaylandDisplay::Auto,
+            WaylandDisplay::Wayland,
+            WaylandDisplay::XWayland,
+        ]
     }
 }
 
@@ -238,26 +242,30 @@ impl Sandbox for WinetricksApp {
             Some("win64") => Some(WineArch::Win64),
             _ => Some(WineArch::Auto),
         };
-        
+
         // Load renderer from wineprefix registry
         config.load_renderer_from_prefix();
-        let renderer_selection = config.renderer.as_ref().and_then(|renderer| {
-            match renderer.to_lowercase().as_str() {
-                "opengl" | "gl" => Some(Renderer::OpenGL),
-                "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                _ => None,
-            }
-        });
-        
+        let renderer_selection =
+            config
+                .renderer
+                .as_ref()
+                .and_then(|renderer| match renderer.to_lowercase().as_str() {
+                    "opengl" | "gl" => Some(Renderer::OpenGL),
+                    "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                    _ => None,
+                });
+
         // Load wayland setting from wineprefix registry (with env fallback for initial load)
         config.load_wayland_from_prefix_with_env();
-        let wayland_selection = config.wayland.as_ref().and_then(|wayland| {
-            match wayland.to_lowercase().as_str() {
-                "wayland" => Some(WaylandDisplay::Wayland),
-                "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                _ => None,
-            }
-        });
+        let wayland_selection =
+            config
+                .wayland
+                .as_ref()
+                .and_then(|wayland| match wayland.to_lowercase().as_str() {
+                    "wayland" => Some(WaylandDisplay::Wayland),
+                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                    _ => None,
+                });
 
         Self {
             config,
@@ -297,10 +305,10 @@ impl Sandbox for WinetricksApp {
             Message::UninstallVerb(verb_name) => {
                 eprintln!("Uninstalling verb: {}", verb_name);
                 // Show progress dialog
-                self.operation_status = Some(OperationStatus::Uninstalling { 
-                    verb_name: verb_name.clone() 
+                self.operation_status = Some(OperationStatus::Uninstalling {
+                    verb_name: verb_name.clone(),
                 });
-                
+
                 // Spawn async task to uninstall
                 let config = self.config.clone();
                 let verb_name_clone = verb_name.clone();
@@ -314,7 +322,8 @@ impl Sandbox for WinetricksApp {
                                     Ok(_) => {
                                         eprintln!("Successfully uninstalled: {}", verb_name_clone);
                                         // Reload installed verbs list after successful uninstall
-                                        let updated_verbs = load_installed_verbs(&config_for_reload);
+                                        let updated_verbs =
+                                            load_installed_verbs(&config_for_reload);
                                         eprintln!("Remaining installed verbs: {:?}", updated_verbs);
                                     }
                                     Err(e) => {
@@ -328,10 +337,10 @@ impl Sandbox for WinetricksApp {
                         }
                     });
                 });
-                
+
                 // Optimistically remove from UI immediately for instant feedback
                 self.installed_verbs.retain(|v| v != &verb_name);
-                
+
                 // Auto-close dialog after a delay (simulate completion check)
                 // In a real implementation, we'd poll for completion or use a timer
                 let verb_name_for_close = verb_name.clone();
@@ -368,7 +377,7 @@ impl Sandbox for WinetricksApp {
                     std::path::PathBuf::from(&value)
                 };
                 self.config.wineprefix = Some(new_path);
-                
+
                 // Load renderer from new wineprefix
                 self.config.load_renderer_from_prefix();
                 // Update renderer selection UI to match detected value
@@ -379,7 +388,7 @@ impl Sandbox for WinetricksApp {
                         _ => None,
                     }
                 });
-                
+
                 // Load wayland setting from new wineprefix
                 self.config.load_wayland_from_prefix();
                 self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
@@ -389,7 +398,7 @@ impl Sandbox for WinetricksApp {
                         _ => None,
                     }
                 });
-                
+
                 // Reload installed verbs when prefix changes
                 self.installed_verbs = load_installed_verbs(&self.config);
             }
@@ -433,27 +442,29 @@ impl Sandbox for WinetricksApp {
                                 std::path::PathBuf::from(&selected)
                             };
                             self.config.wineprefix = Some(new_path);
-                            
+
                             // Load renderer from new wineprefix
                             self.config.load_renderer_from_prefix();
-                            self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                                match renderer.to_lowercase().as_str() {
-                                    "opengl" | "gl" => Some(Renderer::OpenGL),
-                                    "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.renderer_selection =
+                                self.config.renderer.as_ref().and_then(|renderer| {
+                                    match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    }
+                                });
+
                             // Load wayland setting from new wineprefix
                             self.config.load_wayland_from_prefix();
-                            self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                                match wayland.to_lowercase().as_str() {
-                                    "wayland" => Some(WaylandDisplay::Wayland),
-                                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.wayland_selection =
+                                self.config.wayland.as_ref().and_then(|wayland| {
+                                    match wayland.to_lowercase().as_str() {
+                                        "wayland" => Some(WaylandDisplay::Wayland),
+                                        "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                                        _ => None,
+                                    }
+                                });
+
                             // Reload installed verbs for the new prefix
                             self.installed_verbs = load_installed_verbs(&self.config);
                             return;
@@ -482,27 +493,29 @@ impl Sandbox for WinetricksApp {
                                 std::path::PathBuf::from(&selected)
                             };
                             self.config.wineprefix = Some(new_path);
-                            
+
                             // Load renderer from new wineprefix
                             self.config.load_renderer_from_prefix();
-                            self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                                match renderer.to_lowercase().as_str() {
-                                    "opengl" | "gl" => Some(Renderer::OpenGL),
-                                    "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.renderer_selection =
+                                self.config.renderer.as_ref().and_then(|renderer| {
+                                    match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    }
+                                });
+
                             // Load wayland setting from new wineprefix
                             self.config.load_wayland_from_prefix();
-                            self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                                match wayland.to_lowercase().as_str() {
-                                    "wayland" => Some(WaylandDisplay::Wayland),
-                                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.wayland_selection =
+                                self.config.wayland.as_ref().and_then(|wayland| {
+                                    match wayland.to_lowercase().as_str() {
+                                        "wayland" => Some(WaylandDisplay::Wayland),
+                                        "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                                        _ => None,
+                                    }
+                                });
+
                             // Reload installed verbs for the new prefix
                             self.installed_verbs = load_installed_verbs(&self.config);
                             return;
@@ -531,27 +544,29 @@ impl Sandbox for WinetricksApp {
                                 std::path::PathBuf::from(&selected)
                             };
                             self.config.wineprefix = Some(new_path);
-                            
+
                             // Load renderer from new wineprefix
                             self.config.load_renderer_from_prefix();
-                            self.renderer_selection = self.config.renderer.as_ref().and_then(|renderer| {
-                                match renderer.to_lowercase().as_str() {
-                                    "opengl" | "gl" => Some(Renderer::OpenGL),
-                                    "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.renderer_selection =
+                                self.config.renderer.as_ref().and_then(|renderer| {
+                                    match renderer.to_lowercase().as_str() {
+                                        "opengl" | "gl" => Some(Renderer::OpenGL),
+                                        "vulkan" | "vk" | "v" => Some(Renderer::Vulkan),
+                                        _ => None,
+                                    }
+                                });
+
                             // Load wayland setting from new wineprefix
                             self.config.load_wayland_from_prefix();
-                            self.wayland_selection = self.config.wayland.as_ref().and_then(|wayland| {
-                                match wayland.to_lowercase().as_str() {
-                                    "wayland" => Some(WaylandDisplay::Wayland),
-                                    "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
-                                    _ => None,
-                                }
-                            });
-                            
+                            self.wayland_selection =
+                                self.config.wayland.as_ref().and_then(|wayland| {
+                                    match wayland.to_lowercase().as_str() {
+                                        "wayland" => Some(WaylandDisplay::Wayland),
+                                        "xwayland" | "x11" => Some(WaylandDisplay::XWayland),
+                                        _ => None,
+                                    }
+                                });
+
                             // Reload installed verbs for the new prefix
                             self.installed_verbs = load_installed_verbs(&self.config);
                             return;
@@ -589,7 +604,7 @@ impl Sandbox for WinetricksApp {
                     Renderer::Vulkan => Some("vulkan"),
                 };
                 self.config.renderer = renderer_str.map(|s| s.to_string());
-                
+
                 // Set in wineprefix registry for persistence
                 if let Err(e) = self.config.set_renderer_in_registry(renderer_str) {
                     eprintln!("Warning: Failed to set renderer in registry: {}", e);
@@ -603,7 +618,7 @@ impl Sandbox for WinetricksApp {
                     WaylandDisplay::XWayland => Some("xwayland"),
                 };
                 self.config.wayland = wayland_str.map(|s| s.to_string());
-                
+
                 // Set or clear in wineprefix registry for persistence
                 if let Err(e) = self.config.set_wayland_in_registry(wayland_str) {
                     eprintln!("Warning: Failed to set Graphics driver in registry: {}", e);
@@ -654,23 +669,21 @@ impl Sandbox for WinetricksApp {
             .style(iced::theme::Container::Custom(Box::new(
                 BackgroundContainerStyle,
             )));
-        
+
         // Show operation status overlay if there's an ongoing operation
         if let Some(ref status) = self.operation_status {
             container(
                 column![
                     main_content,
                     // Overlay that covers the entire screen with semi-transparent background
-                    container(
-                        self.operation_status_overlay(status)
-                    )
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .align_x(iced::alignment::Horizontal::Center)
-                    .align_y(iced::alignment::Vertical::Center)
-                    .style(iced::theme::Container::Custom(Box::new(OverlayStyle)))
+                    container(self.operation_status_overlay(status))
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .align_x(iced::alignment::Horizontal::Center)
+                        .align_y(iced::alignment::Vertical::Center)
+                        .style(iced::theme::Container::Custom(Box::new(OverlayStyle)))
                 ]
-                .spacing(0)
+                .spacing(0),
             )
             .width(Length::Fill)
             .height(Length::Fill)
@@ -689,20 +702,16 @@ impl Sandbox for WinetricksApp {
 impl WinetricksApp {
     fn operation_status_overlay(&self, status: &OperationStatus) -> Element<'_, Message> {
         let (title, message) = match status {
-            OperationStatus::Uninstalling { verb_name } => {
-                (
-                    format!("Uninstalling {}", verb_name),
-                    "Removing verb from wineprefix...".to_string()
-                )
-            }
-            OperationStatus::Installing { verb_name } => {
-                (
-                    format!("Installing {}", verb_name),
-                    "Installing verb to wineprefix...".to_string()
-                )
-            }
+            OperationStatus::Uninstalling { verb_name } => (
+                format!("Uninstalling {}", verb_name),
+                "Removing verb from wineprefix...".to_string(),
+            ),
+            OperationStatus::Installing { verb_name } => (
+                format!("Installing {}", verb_name),
+                "Installing verb to wineprefix...".to_string(),
+            ),
         };
-        
+
         // Progress dialog content
         container(
             column![
@@ -718,13 +727,15 @@ impl WinetricksApp {
             ]
             .spacing(12)
             .padding(24)
-            .align_items(Alignment::Center)
+            .align_items(Alignment::Center),
         )
-        .style(iced::theme::Container::Custom(Box::new(OperationStatusStyle)))
+        .style(iced::theme::Container::Custom(Box::new(
+            OperationStatusStyle,
+        )))
         .width(Length::Fixed(400.0))
         .into()
     }
-    
+
     fn sidebar(&self) -> Element<'_, Message> {
         let is_browse = self.current_view == View::Browse;
         let is_installed = self.current_view == View::Installed;
@@ -1064,21 +1075,27 @@ impl WinetricksApp {
                             .into()
                         ),
                         {
-                            let current_renderer = self.config.renderer.as_ref()
+                            let current_renderer = self
+                                .config
+                                .renderer
+                                .as_ref()
                                 .map(|r| r.as_str())
                                 .unwrap_or("Auto (default)");
-                            let description = format!("Wine Direct3D renderer (renderer=opengl|vulkan) - Current: {}", current_renderer);
+                            let description = format!(
+                                "Wine Direct3D renderer (renderer=opengl|vulkan) - Current: {}",
+                                current_renderer
+                            );
                             self.setting_row(
                                 "D3D Renderer",
                                 description.as_str(),
                                 pick_list(
                                     Renderer::all(),
                                     self.renderer_selection,
-                                    Message::RendererChanged
+                                    Message::RendererChanged,
                                 )
                                 .padding(10)
                                 .width(Length::Fill)
-                                .into()
+                                .into(),
                             )
                         },
                         {
@@ -1091,18 +1108,21 @@ impl WinetricksApp {
                                     _ => "Auto (detect)",
                                 }
                             };
-                            let description = format!("Wine display driver (wayland=wayland|xwayland|auto) - Current: {}", current_wayland_str);
+                            let description = format!(
+                                "Wine display driver (wayland=wayland|xwayland|auto) - Current: {}",
+                                current_wayland_str
+                            );
                             self.setting_row(
                                 "Display Driver",
                                 description.as_str(),
                                 pick_list(
                                     WaylandDisplay::all(),
                                     self.wayland_selection,
-                                    Message::WaylandChanged
+                                    Message::WaylandChanged,
                                 )
                                 .padding(10)
                                 .width(Length::Fill)
-                                .into()
+                                .into(),
                             )
                         },
                     ]

@@ -122,7 +122,7 @@ impl Config {
         // If local source directory exists, use it (development mode)
         if let Some(dir) = source_dir {
             info!("Found source JSON directory: {:?}", dir);
-            
+
             // Check if cache needs updating
             let needs_update = if !cached_dir.exists() {
                 true
@@ -158,48 +158,64 @@ impl Config {
     /// Download JSON files from GitHub repository
     async fn download_json_from_github(&self, cached_dir: &Path) -> Result<()> {
         use std::fs;
-        
+
         const GITHUB_REPO: &str = "ryzendew/winetricks";
         const GITHUB_BRANCH: &str = "master";
         const JSON_PATH: &str = "files/json";
-        
+
         // Known category directories
-        let categories = ["apps", "benchmarks", "dlls", "download", "fonts", "manual-download", "settings"];
-        
-        info!("Downloading verb metadata from GitHub: {}/{}", GITHUB_REPO, JSON_PATH);
-        
+        let categories = [
+            "apps",
+            "benchmarks",
+            "dlls",
+            "download",
+            "fonts",
+            "manual-download",
+            "settings",
+        ];
+
+        info!(
+            "Downloading verb metadata from GitHub: {}/{}",
+            GITHUB_REPO, JSON_PATH
+        );
+
         let client = Client::builder()
             .user_agent("Winetricks-RS/1.0")
             .build()
             .map_err(|e| WinetricksError::Config(format!("Failed to create HTTP client: {}", e)))?;
-        
+
         // Ensure cache directory exists
         fs::create_dir_all(cached_dir)?;
-        
+
         let mut total_downloaded = 0;
         let mut total_failed = 0;
-        
+
         // Download each category
         for category in &categories {
             let category_dir = cached_dir.join(category);
             fs::create_dir_all(&category_dir)?;
-            
+
             info!("Downloading category: {}", category);
-            
+
             // Use GitHub API to list files in the category directory
             let api_url = format!(
                 "https://api.github.com/repos/{}/contents/{}/{}",
                 GITHUB_REPO, JSON_PATH, category
             );
-            
-            let response = client.get(&api_url).send().await
-                .map_err(|e| WinetricksError::Config(format!("Failed to fetch GitHub API: {}", e)))?;
-            
+
+            let response = client.get(&api_url).send().await.map_err(|e| {
+                WinetricksError::Config(format!("Failed to fetch GitHub API: {}", e))
+            })?;
+
             if !response.status().is_success() {
-                warn!("Failed to list files for category {}: HTTP {}", category, response.status());
+                warn!(
+                    "Failed to list files for category {}: HTTP {}",
+                    category,
+                    response.status()
+                );
                 continue;
             }
-            
+
             #[derive(Deserialize)]
             struct GitHubFile {
                 name: String,
@@ -208,20 +224,19 @@ impl Config {
                 #[serde(rename = "type")]
                 file_type: String,
             }
-            
-            let files: Vec<GitHubFile> = response
-                .json()
-                .await
-                .map_err(|e| WinetricksError::Config(format!("Failed to parse GitHub API response: {}", e)))?;
-            
+
+            let files: Vec<GitHubFile> = response.json().await.map_err(|e| {
+                WinetricksError::Config(format!("Failed to parse GitHub API response: {}", e))
+            })?;
+
             // Download each JSON file
             for file in files {
                 if file.file_type != "file" || !file.name.ends_with(".json") {
                     continue;
                 }
-                
+
                 let dest_path = category_dir.join(&file.name);
-                
+
                 // Download the file
                 match client.get(&file.url).send().await {
                     Ok(resp) => {
@@ -252,13 +267,19 @@ impl Config {
                 }
             }
         }
-        
+
         if total_failed > 0 {
-            warn!("Downloaded {} files, {} failed", total_downloaded, total_failed);
+            warn!(
+                "Downloaded {} files, {} failed",
+                total_downloaded, total_failed
+            );
         } else {
-            info!("Successfully downloaded {} JSON files from GitHub", total_downloaded);
+            info!(
+                "Successfully downloaded {} JSON files from GitHub",
+                total_downloaded
+            );
         }
-        
+
         Ok(())
     }
 
@@ -312,7 +333,7 @@ impl Config {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             let mtime = if path.is_dir() {
                 self.get_dir_mtime(&path)?
             } else {
@@ -337,13 +358,13 @@ impl Config {
         for entry in fs::read_dir(source_dir)? {
             let entry = entry?;
             let source_path = entry.path();
-            
+
             if source_path.is_dir() {
                 let category_name = source_path
                     .file_name()
                     .and_then(|n| n.to_str())
                     .ok_or_else(|| WinetricksError::Config("Invalid category directory".into()))?;
-                
+
                 let cached_category_dir = cached_dir.join(category_name);
                 fs::create_dir_all(&cached_category_dir)?;
 
@@ -351,12 +372,12 @@ impl Config {
                 for json_entry in fs::read_dir(&source_path)? {
                     let json_entry = json_entry?;
                     let json_path = json_entry.path();
-                    
+
                     if json_path.extension().and_then(|s| s.to_str()) == Some("json") {
                         let filename = json_path
                             .file_name()
                             .ok_or_else(|| WinetricksError::Config("Invalid filename".into()))?;
-                        
+
                         let dest_path = cached_category_dir.join(filename);
                         fs::copy(&json_path, &dest_path)?;
                     }
@@ -381,13 +402,9 @@ impl Config {
                 // Check if it has category subdirectories (dlls/, apps/, etc.)
                 let has_categories = std::fs::read_dir(&cached_dir)
                     .ok()
-                    .map(|entries| {
-                        entries
-                            .filter_map(|e| e.ok())
-                            .any(|e| e.path().is_dir())
-                    })
+                    .map(|entries| entries.filter_map(|e| e.ok()).any(|e| e.path().is_dir()))
                     .unwrap_or(false);
-                
+
                 if has_categories {
                     cached_dir
                 } else if self.data_dir.ends_with("files") {
@@ -427,13 +444,13 @@ impl Config {
 
     /// Set D3D renderer in wineprefix registry (persistent setting)
     pub fn set_renderer_in_registry(&self, renderer: Option<&str>) -> Result<()> {
+        use crate::Wine;
         use std::fs;
         use std::io::Write;
         use std::process::Command;
-        use crate::Wine;
 
         let wineprefix = self.wineprefix();
-        
+
         // Create temp directory for registry file
         let temp_dir = dirs::cache_dir()
             .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
@@ -476,7 +493,7 @@ impl Config {
         // Convert Unix path to Wine Windows path
         let wineprefix_str = wineprefix.to_string_lossy().to_string();
         let reg_file_str = reg_file.to_string_lossy().to_string();
-        
+
         // Get Windows path for the reg file
         let output = Command::new(&wine.wine_bin)
             .arg("winepath")
@@ -518,8 +535,8 @@ impl Config {
 
     /// Get D3D renderer from wineprefix registry
     pub fn get_renderer_from_registry(&self) -> Option<String> {
-        use std::process::Command;
         use crate::Wine;
+        use std::process::Command;
 
         let wineprefix = self.wineprefix();
         let wine = match Wine::detect() {
@@ -580,8 +597,8 @@ impl Config {
 
     /// Get Graphics driver from wineprefix registry
     pub fn get_wayland_from_registry(&self) -> Option<String> {
-        use std::process::Command;
         use crate::Wine;
+        use std::process::Command;
 
         let wineprefix = self.wineprefix();
         let wine = match Wine::detect() {
@@ -652,12 +669,12 @@ impl Config {
             self.wayland = Some(wayland);
             return;
         }
-        
+
         // If no registry setting, clear it (don't use environment as fallback)
         // This allows Auto to remain as Auto when user selects it
         self.wayland = None;
     }
-    
+
     /// Load wayland setting with environment fallback (for initial detection)
     pub fn load_wayland_from_prefix_with_env(&mut self) {
         // First try registry
@@ -665,7 +682,7 @@ impl Config {
             self.wayland = Some(wayland);
             return;
         }
-        
+
         // Fallback to detection from environment (for initial load only)
         if let Some(display_server) = self.detect_display_server() {
             self.wayland = Some(display_server);
@@ -674,13 +691,13 @@ impl Config {
 
     /// Set Graphics driver in wineprefix registry (persistent setting)
     pub fn set_wayland_in_registry(&self, wayland: Option<&str>) -> Result<()> {
+        use crate::Wine;
         use std::fs;
         use std::io::Write;
         use std::process::Command;
-        use crate::Wine;
 
         let wineprefix = self.wineprefix();
-        
+
         // Create temp directory for registry file
         let temp_dir = dirs::cache_dir()
             .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
@@ -691,7 +708,7 @@ impl Config {
         let wine = Wine::detect()?;
 
         let wineprefix_str = wineprefix.to_string_lossy().to_string();
-        
+
         // Handle Auto - delete the registry key to let Wine decide
         if wayland.is_none() {
             // Delete the Graphics key using wine reg delete
@@ -705,7 +722,9 @@ impl Config {
                 .env("WINEPREFIX", &wineprefix_str)
                 .status()
                 .map_err(|e| WinetricksError::CommandExecution {
-                    command: format!("wine reg delete HKEY_CURRENT_USER\\Software\\Wine\\Drivers /v Graphics /f"),
+                    command: format!(
+                        "wine reg delete HKEY_CURRENT_USER\\Software\\Wine\\Drivers /v Graphics /f"
+                    ),
                     error: e.to_string(),
                 })?;
 
@@ -725,9 +744,10 @@ impl Config {
             Some("wayland") => "wayland",
             Some("xwayland") | Some("x11") => "x11",
             _ => {
-                return Err(WinetricksError::Config(
-                    format!("Invalid wayland value: {}", wayland.unwrap_or("None"))
-                ));
+                return Err(WinetricksError::Config(format!(
+                    "Invalid wayland value: {}",
+                    wayland.unwrap_or("None")
+                )));
             }
         };
 
@@ -747,7 +767,7 @@ impl Config {
 
         // Convert Unix path to Wine Windows path
         let reg_file_str = reg_file.to_string_lossy().to_string();
-        
+
         // Get Windows path for the reg file
         let output = Command::new(&wine.wine_bin)
             .arg("winepath")

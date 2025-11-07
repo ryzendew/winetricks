@@ -344,12 +344,15 @@ async fn main() -> Result<()> {
     if let Some(ref renderer) = config.renderer {
         // Normalize renderer name to Wine format
         let wine_renderer = match renderer.to_lowercase().as_str() {
-            "opengl" | "gl" | "w" => "gl",      // Wine uses 'gl' for OpenGL
-            "vulkan" | "vk" | "v" => "vulkan",   // Wine uses 'vulkan' for Vulkan
+            "opengl" | "gl" | "w" => "gl",     // Wine uses 'gl' for OpenGL
+            "vulkan" | "vk" | "v" => "vulkan", // Wine uses 'vulkan' for Vulkan
             "gdi" => "gdi",
             "no3d" => "no3d",
             _ => {
-                eprintln!("Warning: Unknown renderer '{}'. Using '{}'.", renderer, renderer);
+                eprintln!(
+                    "Warning: Unknown renderer '{}'. Using '{}'.",
+                    renderer, renderer
+                );
                 renderer.as_str()
             }
         };
@@ -381,18 +384,21 @@ async fn main() -> Result<()> {
     }
 
     config.ensure_dirs()?;
-    
+
     // Initialize cache from source JSON files if needed (or download from GitHub)
     config.ensure_cache_initialized().await?;
 
     // Show startup message
     info!("Winetricks starting...");
-    
+
     // Debug: Log what commands were parsed
     if !cli.commands.is_empty() {
         info!("Parsed commands: {:?}", cli.commands);
     }
-    info!("Force flag: {}, Unattended flag: {}", cli.force, cli.unattended);
+    info!(
+        "Force flag: {}, Unattended flag: {}",
+        cli.force, cli.unattended
+    );
 
     // Parse commands
     // If only flags were provided without commands, show help
@@ -453,18 +459,24 @@ async fn main() -> Result<()> {
             // Convert to Wine environment variable format
             // Wine uses WINE_D3D_CONFIG="renderer=<value>" format
             let wine_renderer = match renderer {
-                "opengl" => "gl",      // Wine uses 'gl' for OpenGL
-                "vulkan" => "vulkan",  // Wine uses 'vulkan' for Vulkan
+                "opengl" => "gl",     // Wine uses 'gl' for OpenGL
+                "vulkan" => "vulkan", // Wine uses 'vulkan' for Vulkan
                 _ => unreachable!(),
             };
             std::env::set_var("WINE_D3D_CONFIG", &format!("renderer={}", wine_renderer));
-            
+
             // Also set in wineprefix registry for persistence
             if let Err(e) = config.set_renderer_in_registry(Some(renderer)) {
-                warn!("Failed to set renderer in registry (will use environment variable): {}", e);
+                warn!(
+                    "Failed to set renderer in registry (will use environment variable): {}",
+                    e
+                );
             }
-            
-            info!("Set WINE_D3D_CONFIG=renderer={} (renderer={})", wine_renderer, renderer);
+
+            info!(
+                "Set WINE_D3D_CONFIG=renderer={} (renderer={})",
+                wine_renderer, renderer
+            );
             i += 1;
             continue;
         }
@@ -485,7 +497,7 @@ async fn main() -> Result<()> {
             };
 
             config.wayland = Some(wayland.to_string());
-            
+
             // Set DISPLAY environment variable
             match wayland {
                 "wayland" => {
@@ -497,7 +509,7 @@ async fn main() -> Result<()> {
                 }
                 _ => {} // Auto - don't modify
             }
-            
+
             // Also set in wineprefix registry for persistence (or clear if auto)
             let wayland_for_registry = if wayland == "auto" {
                 None
@@ -505,9 +517,12 @@ async fn main() -> Result<()> {
                 Some(wayland)
             };
             if let Err(e) = config.set_wayland_in_registry(wayland_for_registry) {
-                warn!("Failed to set Graphics driver in registry (will use environment variable): {}", e);
+                warn!(
+                    "Failed to set Graphics driver in registry (will use environment variable): {}",
+                    e
+                );
             }
-            
+
             info!("Set wayland={}", wayland);
             i += 1;
             continue;
@@ -807,8 +822,9 @@ async fn main() -> Result<()> {
                         "wayland=",
                     ]
                     .iter()
-                    .any(|&cmd| verb_name.starts_with(cmd) || verb_name == cmd.trim_end_matches('='))
-                    {
+                    .any(|&cmd| {
+                        verb_name.starts_with(cmd) || verb_name == cmd.trim_end_matches('=')
+                    }) {
                         break;
                     }
 

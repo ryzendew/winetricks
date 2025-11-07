@@ -33,24 +33,24 @@ impl Wine {
         let wineprefix = Self::get_wineprefix();
         let mut wine_bin = None;
         let mut wineserver_bin = None;
-        
+
         // Try common custom Wine locations
         let mut custom_wine_paths = vec![
             wineprefix.join("bin").join("wine"),
             wineprefix.join("wine").join("bin").join("wine"),
         ];
-        
+
         // Add parent directory paths if they exist
         if let Some(parent) = wineprefix.parent() {
             custom_wine_paths.push(parent.join("ElementalWarriorWine").join("bin").join("wine"));
             custom_wine_paths.push(parent.join("wine").join("bin").join("wine"));
         }
-        
+
         for wine_path in &custom_wine_paths {
             if wine_path.exists() && wine_path.is_file() {
-                let potential_wineserver = wine_path.parent()
-                    .and_then(|p| Some(p.join("wineserver")));
-                
+                let potential_wineserver =
+                    wine_path.parent().and_then(|p| Some(p.join("wineserver")));
+
                 if let Some(ws_path) = potential_wineserver {
                     if ws_path.exists() {
                         wine_bin = Some(wine_path.clone());
@@ -60,7 +60,7 @@ impl Wine {
                 }
             }
         }
-        
+
         // Fall back to PATH if no custom Wine found
         let wine_bin = match wine_bin {
             Some(bin) => bin,
@@ -140,16 +140,16 @@ impl Wine {
     /// Supports formats: ",max" (<= max), "min," (>= min), "min,max" (>= min && <= max)
     pub fn version_in_range(&self, range: &str) -> Result<bool> {
         let parts: Vec<&str> = range.split(',').collect();
-        
+
         if parts.len() == 1 {
             // Single version (exact match or >=)
             return self.version_ge(parts[0]);
         }
-        
+
         if parts.len() == 2 {
             let min = parts[0].trim();
             let max = parts[1].trim();
-            
+
             if min.is_empty() {
                 // ",max" format (<= max)
                 return self.version_le(max);
@@ -163,7 +163,7 @@ impl Wine {
                 return Ok(ge_min && le_max);
             }
         }
-        
+
         Ok(false)
     }
 

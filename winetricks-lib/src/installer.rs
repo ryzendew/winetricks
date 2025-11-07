@@ -64,10 +64,13 @@ pub fn detect_installer_type(filename: &str, verb_name: &str) -> InstallerType {
     if filename_lower.contains("innosetup") || filename_lower.contains("inno") {
         return InstallerType::InnoSetup;
     }
-    
+
     // Files named "Setup.exe" or ending in "-Setup.exe" are commonly Inno Setup
     // Check this before generic fallback
-    if filename_lower == "setup.exe" || filename_lower.ends_with("-setup.exe") || filename_lower.ends_with("_setup.exe") {
+    if filename_lower == "setup.exe"
+        || filename_lower.ends_with("-setup.exe")
+        || filename_lower.ends_with("_setup.exe")
+    {
         // This might be Inno Setup, but we'll let file-based detection confirm
         // For now, we'll still return Generic but prioritize Inno Setup switches in generic handler
         // Actually, let's be more aggressive - many Setup.exe files are Inno Setup
@@ -97,7 +100,11 @@ pub fn get_silent_switches(installer_type: InstallerType, unattended: bool) -> V
             vec!["/S".to_string()]
         }
         InstallerType::InnoSetup => {
-            vec!["/VERYSILENT".to_string(), "/NORESTART".to_string(), "/SP-".to_string()]
+            vec![
+                "/VERYSILENT".to_string(),
+                "/NORESTART".to_string(),
+                "/SP-".to_string(),
+            ]
         }
         InstallerType::InstallShield => {
             vec!["/s".to_string()]
@@ -141,7 +148,7 @@ pub fn detect_from_file(file_path: &Path) -> Option<InstallerType> {
     // Try reading first 32KB - installer signatures can appear in various places
     if let Ok(mut file) = File::open(file_path) {
         let mut buffer = vec![0u8; 32768]; // 32KB buffer
-        
+
         // Try to read up to 32KB
         match file.read(&mut buffer) {
             Ok(bytes_read) if bytes_read > 0 => {
@@ -171,4 +178,3 @@ pub fn detect_from_file(file_path: &Path) -> Option<InstallerType> {
 
     None
 }
-
