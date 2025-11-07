@@ -53,6 +53,11 @@ pub fn detect_installer_type(filename: &str, verb_name: &str) -> InstallerType {
         return InstallerType::NSIS;
     }
 
+    // Known NSIS installers (7zip, etc.)
+    if filename_lower.starts_with("7z") && filename_lower.ends_with(".exe") {
+        return InstallerType::NSIS;
+    }
+
     // Inno Setup installers
     // Many Inno Setup installers are named "Setup.exe" or have "setup" in the name
     // Try to detect by filename pattern first - files ending in "-Setup.exe" or just "Setup.exe" are often Inno Setup

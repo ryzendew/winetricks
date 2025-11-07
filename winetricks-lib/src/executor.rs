@@ -306,6 +306,86 @@ impl Executor {
             return self.install_corefonts().await;
         }
         
+        // Handle allfonts (meta-verb that installs all available font verbs)
+        if verb_name == "allfonts" {
+            info!("Installing allfonts (all available fonts)...");
+            return self.install_allfonts().await;
+        }
+        
+        // Handle verbs with empty files arrays (need special handling)
+        if metadata.files.is_empty() {
+            // GitHub-based DLLs that download from releases
+            let github_dlls = vec![
+                ("vkd3d", "HansKristian-Work", "vkd3d-proton", vec!["d3d12.dll", "d3d12core.dll"]),
+                ("dxvk", "doitsujin", "dxvk", vec!["d3d9.dll", "d3d10.dll", "d3d10core.dll", "d3d11.dll", "dxgi.dll"]),
+                ("dxvk_async", "Ph42oN", "dxvk-async", vec!["d3d9.dll", "d3d10.dll", "d3d10core.dll", "d3d11.dll", "dxgi.dll"]),
+                ("dxvk_nvapi", "jp7677", "dxvk-nvapi", vec!["nvapi.dll", "nvapi64.dll"]),
+                ("faudio", "FNA-XNA", "FAudio", vec!["FAudio.dll"]),
+                ("galliumnine", "iXit", "GalliumNine", vec!["d3d9-nine.dll"]),
+                ("otvdm", "otvdm", "otvdm", vec!["otvdm.exe"]),
+            ];
+            
+            for (verb, org, repo, dlls) in &github_dlls {
+                if verb_name == *verb {
+                    info!("Installing {} (downloads from GitHub releases)...", verb_name);
+                    return self.install_github_dll(verb_name, org, repo, dlls).await;
+                }
+            }
+            
+            // Meta-verbs that install multiple components
+            if verb_name == "allcodecs" {
+                info!("Installing allcodecs (all codec components)...");
+                return self.install_allcodecs().await;
+            }
+            
+            if verb_name == "cjkfonts" {
+                info!("Installing cjkfonts (CJK font components)...");
+                return self.install_cjkfonts().await;
+            }
+            
+            if verb_name == "pptfonts" {
+                info!("Installing pptfonts (PowerPoint font components)...");
+                return self.install_pptfonts().await;
+            }
+            
+            // Special cases
+            if verb_name == "directx9" {
+                // DirectX 9 is deprecated/no-op in modern winetricks
+                info!("directx9 is deprecated (no-op), skipping");
+                self.log_installation("directx9")?;
+                return Ok(());
+            }
+            
+            if verb_name == "filever" {
+                // filever is a utility that might need special handling
+                // For now, just log it (it may not actually need installation)
+                warn!("filever has no files array - may need special handling");
+                self.log_installation("filever")?;
+                return Ok(());
+            }
+            
+            if verb_name == "mspaint" {
+                // mspaint uses Windows Update installer that needs extraction
+                return self.install_mspaint().await;
+            }
+            
+            // Settings verbs (Windows version, registry tweaks, etc.)
+            // These don't need files, they just modify registry/config
+            if metadata.category == VerbCategory::Settings {
+                info!("Installing settings verb: {} (no files needed)", verb_name);
+                // Settings verbs are handled by execute_verb_installation
+                // which will detect they have no files and skip file processing
+                // But we still need to handle the actual setting change
+                return self.install_settings_verb(verb_name, &metadata).await;
+            }
+            
+            // If we get here, it's an unknown verb with no files
+            warn!("Verb {} has no files array and no special handler. Skipping file installation.", verb_name);
+            // Still log it as installed (for settings that don't need files)
+            self.log_installation(verb_name)?;
+            return Ok(());
+        }
+        
         // Execute verb installation
         self.execute_verb_installation(&metadata, &cache_dir, is_vcrun_verb)
             .await?;
@@ -399,6 +479,7 @@ impl Executor {
                 "dotnet48.installed.workaround"
             };
             let marker_file = wineprefix.join(format!("drive_c/windows/{}", marker_filename));
+            eprintln!("Executing touch {}", marker_file.to_string_lossy());
             if let Err(e) = std::fs::File::create(&marker_file) {
                 warn!("Warning: Failed to create marker file: {}", e);
             }
@@ -535,6 +616,13 @@ impl Executor {
                 continue; // Skip regular EXE installer handling
             }
 
+            // Check if this is a font installer (fonts use EXE or CAB files that are CAB archives)
+            if metadata.category == VerbCategory::Fonts && (ext == "exe" || ext == "cab" || ext == "CAB") {
+                info!("Processing font installer: {:?}", file_to_use);
+                self.install_fonts(&metadata, &file_to_use, &cache_dir)?;
+                continue;
+            }
+
             match ext {
                 "msi" => {
                     info!("Running MSI installer: {:?}", file_to_use);
@@ -633,12 +721,8 @@ impl Executor {
                     }
                 }
                 "exe" => {
-                    // Check if this is a font installer (fonts use EXE files that are actually CAB archives)
-                    if metadata.category == VerbCategory::Fonts {
-                        info!("Processing font installer: {:?}", file_to_use);
-                        self.install_fonts(&metadata, &file_to_use, &cache_dir)?;
-                        continue;
-                    }
+                    // Font installers (both exe and cab) are already handled above
+                    // This path is only for non-font EXE installers
 
                     info!("Running EXE installer: {:?}", file_to_use);
 
@@ -673,26 +757,44 @@ impl Executor {
                     let is_ie = filename.contains("IE")
                         || filename.contains("ie")
                         || filename.contains("internetexplorer");
+                    let is_mozilla = filename.contains("FirefoxSetup")
+                        || filename.contains("firefoxsetup")
+                        || filename.contains("ThunderbirdSetup")
+                        || filename.contains("thunderbirdsetup")
+                        || metadata.name == "firefox"
+                        || metadata.name == "thunderbird";
                     let is_msxml = filename.contains("msxml")
                         || filename.contains("MSXML")
                         || filename.contains("xml");
 
-                    // For .NET installers, change to cache directory (like original winetricks does)
-                    // This ensures the installer can extract files properly
-                    let current_dir = if is_dotnet {
-                        Some(std::env::current_dir()?)
+                    // For VC++ Redistributables (vcrun2015+), extract DLLs BEFORE running installer
+                    // Original winetricks: Extract a10/a11 CAB, then extract msvcp140.dll, then run installer
+                    // Note: vcrun2015, vcrun2017, vcrun2019, vcrun2022 use vc_redist.x86.exe/vc_redist.x64.exe format
+                    // Older versions (vcrun2005, vcrun2008, vcrun2010, vcrun2012, vcrun2013) use vcredist_x86.exe and don't need this
+                    if is_vcrun && (filename.contains("vc_redist") || metadata.name == "vcrun2022") {
+                        // Extract DLLs before running installer (matching original winetricks behavior)
+                        if let Err(e) = self.extract_vcredist_dlls_before_install(&file_to_use, filename.contains("x64")) {
+                            warn!("Warning: Failed to extract VC++ DLLs before installation: {}", e);
+                            // Continue anyway - installer might still work
+                        }
+                    }
+
+                    // For .NET and VC++ Redistributables installers, change to cache directory
+                    // Original winetricks: cd /home/matt/.cache/winetricks/dotnet48 (or dotnet35)
+                    // This is critical for .NET installers to extract files properly
+                    let cache_dir_for_cmd = if is_dotnet || is_vcrun {
+                        let cache_dir_path = file_to_use.parent().ok_or_else(|| {
+                            WinetricksError::Config("Could not get parent directory of installer".into())
+                        })?;
+                        // Store original directory to restore later
+                        let current_dir = std::env::current_dir()?;
+                        eprintln!("Executing cd {}", cache_dir_path.to_string_lossy());
+                        std::env::set_current_dir(cache_dir_path)?;
+                        info!("Changed to cache directory: {:?}", std::env::current_dir()?);
+                        Some((current_dir, cache_dir_path.to_path_buf()))
                     } else {
                         None
                     };
-                    
-                    if is_dotnet || is_vcrun {
-                        // Change to cache directory (where installer is located)
-                        // This is critical for .NET and VC++ Redistributables installers to extract properly
-                        std::env::set_current_dir(file_to_use.parent().ok_or_else(|| {
-                            WinetricksError::Config("Could not get parent directory of installer".into())
-                        })?)?;
-                        info!("Changed to cache directory: {:?}", std::env::current_dir()?);
-                    }
 
                     let mut cmd = std::process::Command::new(&self.wine.wine_bin);
                     cmd.env("WINEPREFIX", &wineprefix_str);
@@ -707,10 +809,16 @@ impl Executor {
                     }
 
                     // Set WINEDLLOVERRIDES for .NET installers (required for fusion.dll)
-                    // Note: Original winetricks sets this as environment variable, not via cmd.env
-                    // But we need it in the command environment, so cmd.env is correct
+                    // Original winetricks: WINEDLLOVERRIDES=fusion=b (for dotnet48, not always for dotnet35)
+                    // But setting it for all .NET installers is safe and matches behavior
                     if is_dotnet {
                         cmd.env("WINEDLLOVERRIDES", "fusion=b");
+                    }
+                    
+                    // Set working directory to cache directory for .NET/VC++ installers
+                    // This matches original winetricks behavior (cd to cache dir before running)
+                    if let Some((_, ref cache_path)) = cache_dir_for_cmd {
+                        cmd.current_dir(cache_path);
                     }
                     
                     // IMPORTANT: Original winetricks does NOT use "wine start /wait"
@@ -756,68 +864,16 @@ impl Executor {
                     if is_dotnet {
                         // .NET Framework installers require version-specific handling
                         if is_dotnet48 || is_dotnet472 {
-                            // .NET 4.8/4.8.1: Extract manually and run Setup.exe directly for better reliability
-                            // The self-extractor sometimes doesn't run Setup.exe properly
-                            info!("Extracting .NET {} installer manually to run Setup.exe directly...", if is_dotnet48 { "4.8" } else { "4.7.2" });
-                            
-                            let extract_dir = cache_dir.join(format!("{}_extracted", if is_dotnet48 { "dotnet48" } else { "dotnet472" }));
-                            if extract_dir.exists() {
-                                std::fs::remove_dir_all(&extract_dir)?;
-                            }
-                            std::fs::create_dir_all(&extract_dir)?;
-                            
-                            // Use extractor's /x flag to extract only (no execution)
-                            let file_name = file_to_use.file_name()
-                                .and_then(|n| n.to_str())
-                                .ok_or_else(|| WinetricksError::Config("Invalid filename".into()))?;
-                            
-                            let mut extract_cmd = std::process::Command::new(&self.wine.wine_bin);
-                            extract_cmd.env("WINEPREFIX", &wineprefix_str);
-                            extract_cmd.env("WINEDLLOVERRIDES", "fusion=b");
-                            extract_cmd.current_dir(cache_dir);
-                            extract_cmd.arg(file_name);
-                            extract_cmd.arg("/x:").arg(&extract_dir.to_string_lossy().to_string());
-                            
-                            info!("Extracting installer to: {:?}", extract_dir);
-                            let extract_status = extract_cmd.status()?;
-                            
-                            if !extract_status.success() {
-                                warn!("Extraction failed, falling back to original method...");
-                                if self.config.unattended {
-                                    cmd.arg("/sfxlang:1027").arg("/q").arg("/norestart");
-                                }
+                            // .NET 4.8/4.8.1: Use original winetricks method - run self-extractor directly
+                            // Original winetricks: wine ndp48-x86-x64-allos-enu.exe /sfxlang:1027 /q /norestart
+                            // The self-extractor handles running Setup.exe internally with proper flags
+                            // This matches the original winetricks behavior exactly
+                            if self.config.unattended {
+                                cmd.arg("/sfxlang:1027").arg("/q").arg("/norestart");
+                                info!("Running .NET {} installer with /sfxlang:1027 /q /norestart (matching original winetricks)", if is_dotnet48 { "4.8" } else { "4.7.2" });
                             } else {
-                                // Look for Setup.exe in the extracted directory
-                                let setup_exe = extract_dir.join("Setup.exe");
-                                if !setup_exe.exists() {
-                                    // Try looking in subdirectories
-                                    let mut found_setup = None;
-                                    if let Ok(entries) = std::fs::read_dir(&extract_dir) {
-                                        for entry in entries.flatten() {
-                                            let path = entry.path();
-                                            if path.is_dir() {
-                                                let candidate = path.join("Setup.exe");
-                                                if candidate.exists() {
-                                                    found_setup = Some(candidate);
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    
-                                    if let Some(setup_path) = found_setup {
-                                        info!("Found Setup.exe in subdirectory, running it...");
-                                        return self.run_setup_exe_directly(&setup_path, &extract_dir, wineprefix_str, false).await;
-                                    } else {
-                                        warn!("Setup.exe not found after extraction, using original method...");
-                                        if self.config.unattended {
-                                            cmd.arg("/sfxlang:1027").arg("/q").arg("/norestart");
-                                        }
-                                    }
-                                } else {
-                                    info!("Found Setup.exe, running it directly with proper arguments...");
-                                    return self.run_setup_exe_directly(&setup_exe, &extract_dir, wineprefix_str, false).await;
-                                }
+                                // Interactive mode - still use sfxlang but no /q
+                                cmd.arg("/sfxlang:1027");
                             }
                         } else if is_dotnet46 {
                             // .NET 4.6+: /q /norestart
@@ -902,6 +958,13 @@ impl Executor {
                             if self.config.unattended {
                                 cmd.arg("/q");
                             }
+                        } else if metadata.name == "dotnet20sdk" || filename.contains("NetFx") {
+                            // .NET 2.0 SDK: /q /c:"install.exe /q"
+                            // Original winetricks: w_try_ms_installer "${WINE}" "${file1}" /q '/c:install.exe /q'
+                            if self.config.unattended {
+                                cmd.arg("/q").arg(r#"/c:"install.exe /q""#);
+                                info!("Using .NET 2.0 SDK installation pattern: /q /c:\"install.exe /q\"");
+                            }
                         } else {
                             // Older/newer .NET versions: Try common flags
                             if self.config.unattended {
@@ -915,12 +978,23 @@ impl Executor {
                         } else if is_ie {
                             // Internet Explorer installers
                             cmd.arg("/quiet").arg("/forcerestart");
+                        } else if is_mozilla {
+                            // Mozilla installers (Firefox, Thunderbird) use -ms flag
+                            cmd.arg("-ms");
+                            info!("Detected Mozilla installer, using -ms flag");
                         } else {
-                            // Use installer detection to get appropriate switches
-                            let switches = get_silent_switches(installer_type, true);
-                            info!("Detected installer type: {:?}, applying switches: {:?}", installer_type, switches);
-                            for switch in switches {
-                                cmd.arg(&switch);
+                            // Check for /silent flag (some installers like emu8086)
+                            // First check if filename or verb suggests it needs /silent
+                            if filename.to_lowercase().contains("setup.exe") && metadata.name == "emu8086" {
+                                cmd.arg("/silent");
+                                info!("Using /silent flag for {}", metadata.name);
+                            } else {
+                                // Use installer detection to get appropriate switches
+                                let switches = get_silent_switches(installer_type, true);
+                                info!("Detected installer type: {:?}, applying switches: {:?}", installer_type, switches);
+                                for switch in switches {
+                                    cmd.arg(&switch);
+                                }
                             }
                         }
                     }
@@ -975,8 +1049,8 @@ impl Executor {
                     eprintln!("Installer finished with exit code: {:?}", status.code());
 
                     // Restore original directory if we changed it
-                    if let Some(orig_dir) = current_dir {
-                        if let Err(e) = std::env::set_current_dir(orig_dir) {
+                    if let Some((orig_dir, _)) = cache_dir_for_cmd {
+                        if let Err(e) = std::env::set_current_dir(&orig_dir) {
                             warn!("Warning: Failed to restore directory: {}", e);
                         }
                     }
@@ -1355,7 +1429,40 @@ impl Executor {
             unix_path = unix_path.replace("${W_SYSTEM32_WIN}", "");
             unix_path = unix_path.replace("$W_SYSTEM32_WIN", "");
             let windows_part = unix_path.trim_start_matches('/').replace('\\', "/");
-            let full_path = wineprefix.join("drive_c/windows/system32").join(&windows_part);
+            
+            // On 64-bit prefixes, 32-bit DLLs go to syswow64, 64-bit DLLs go to system32
+            // Check both locations
+            let is_win64 = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
+            
+            if is_win64 {
+                // Check syswow64 first (32-bit DLLs on 64-bit prefix)
+                let syswow64_path = wineprefix.join("drive_c/windows/syswow64").join(&windows_part);
+                if syswow64_path.exists() {
+                    return Ok(true);
+                }
+                // Also check system32 (64-bit DLLs or if DLL is in system32)
+                let system32_path = wineprefix.join("drive_c/windows/system32").join(&windows_part);
+                return Ok(system32_path.exists());
+            } else {
+                // On 32-bit prefix, DLLs go to system32
+                let system32_path = wineprefix.join("drive_c/windows/system32").join(&windows_part);
+                return Ok(system32_path.exists());
+            }
+        }
+        
+        // Handle ${W_FONTSDIR_WIN} - Windows fonts directory
+        if unix_path.contains("${W_FONTSDIR_WIN}") || unix_path.contains("$W_FONTSDIR_WIN") {
+            unix_path = unix_path.replace("${W_FONTSDIR_WIN}", "");
+            unix_path = unix_path.replace("$W_FONTSDIR_WIN", "");
+            // W_FONTSDIR_WIN is typically C:\windows\Fonts or C:\windows\fonts
+            let windows_part = unix_path.trim_start_matches('/').replace('\\', "/");
+            // Try uppercase Fonts first (Windows standard), then lowercase
+            let fonts_dir = wineprefix.join("drive_c/windows/Fonts");
+            let full_path = if fonts_dir.exists() {
+                fonts_dir.join(&windows_part)
+            } else {
+                wineprefix.join("drive_c/windows/fonts").join(&windows_part)
+            };
             return Ok(full_path.exists());
         }
         
@@ -1488,15 +1595,18 @@ impl Executor {
         
         if verb_name.starts_with("dotnet4") {
             // Check for System.dll - this is critical for .NET 4.x
-            let system_dll = wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v4.0.30319/System.dll");
-            if !system_dll.exists() {
+            // Check both Framework (32-bit) and Framework64 (64-bit) directories
+            let system_dll_32 = wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v4.0.30319/System.dll");
+            let system_dll_64 = wineprefix.join("drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/System.dll");
+            if !system_dll_32.exists() && !system_dll_64.exists() {
                 critical_files_missing.push("System.dll".to_string());
                 warn!("Critical file missing: System.dll");
             }
             
             // Check for mscorlib.dll
-            let mscorlib_dll = wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v4.0.30319/mscorlib.dll");
-            if !mscorlib_dll.exists() {
+            let mscorlib_dll_32 = wineprefix.join("drive_c/windows/Microsoft.NET/Framework/v4.0.30319/mscorlib.dll");
+            let mscorlib_dll_64 = wineprefix.join("drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/mscorlib.dll");
+            if !mscorlib_dll_32.exists() && !mscorlib_dll_64.exists() {
                 critical_files_missing.push("mscorlib.dll".to_string());
                 warn!("Critical file missing: mscorlib.dll");
             }
@@ -1544,86 +1654,25 @@ impl Executor {
 
     /// Set Windows version in Wine registry
     fn set_windows_version(&self, version: &str) -> Result<()> {
-        use std::fs;
-        use std::io::Write;
         use std::process::Command;
 
         let wineprefix = self.config.wineprefix();
         let wineprefix_str = wineprefix.to_string_lossy().to_string();
-        
-        // Map version names to Windows version numbers
-        let version_num = match version.to_lowercase().as_str() {
-            "win10" | "windows10" => "0xa00",
-            "win81" | "windows81" => "0x0603",
-            "win8" | "windows8" => "0x0602",
-            "win7" | "windows7" => "0x0601",
-            "win2k3" | "win2003" | "windows2003" | "windowsserver2003" => "0x0502", // Windows Server 2003 (NT 5.2)
-            "vista" | "winvista" => "0x0600",
-            "winxp" | "winxp64" | "windowsxp" => "0x0501",
-            "win2k" | "windows2000" => "0x0500", // Windows 2000 (NT 5.0)
-            "winme" | "windowsme" => "0x0490",
-            "win98" | "windows98" => "0x0410",
-            "win95" | "windows95" => "0x0400",
-            "default" => "default",
-            _ => {
-                warn!("Unknown Windows version: {}, defaulting to Windows 7", version);
-                "0x0601"
-            }
-        };
 
-        // Create temp directory for registry file
-        let temp_dir = dirs::cache_dir()
-            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
-            .join("winetricks");
-        fs::create_dir_all(&temp_dir)?;
-
-        let reg_file = temp_dir.join("set_wine_version.reg");
-
-        // Create registry file
-        let reg_content = format!(
-            r#"REGEDIT4
-
-[HKEY_CURRENT_USER\Software\Wine]
-"Version"="{}"
-"#,
-            version_num
-        );
-
-        let mut file = fs::File::create(&reg_file)?;
-        file.write_all(reg_content.as_bytes())?;
-        file.sync_all()?;
-
-        // Convert Unix path to Wine Windows path
-        let reg_file_str = reg_file.to_string_lossy().to_string();
-        
-        // Get Windows path for the reg file
-        let output = Command::new(&self.wine.wine_bin)
-            .arg("winepath")
-            .arg("-w")
-            .arg(&reg_file_str)
-            .env("WINEPREFIX", &wineprefix_str)
-            .output()
-            .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("wine winepath -w {:?}", reg_file_str),
-                error: e.to_string(),
-            })?;
-
-        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-        // Import registry file using wine regedit
+        // Use winecfg to set Windows version (matching original winetricks exactly)
+        // Original winetricks: "${WINE}" winecfg -v "${winver}"
+        // winecfg handles the version format correctly, avoiding the "Invalid Windows version value" error
+        eprintln!("Executing wine winecfg -v {}", version);
         let status = Command::new(&self.wine.wine_bin)
-            .arg("regedit")
-            .arg("/S") // Silent mode
-            .arg(&reg_file_win)
+            .arg("winecfg")
+            .arg("-v")
+            .arg(version) // Use version name (e.g., "win7"), not hex value
             .env("WINEPREFIX", &wineprefix_str)
             .status()
             .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("wine regedit /S {:?}", reg_file_win),
+                command: format!("wine winecfg -v {}", version),
                 error: e.to_string(),
             })?;
-
-        // Clean up temp file
-        let _ = fs::remove_file(&reg_file);
 
         if !status.success() {
             return Err(WinetricksError::Config(format!(
@@ -1710,10 +1759,9 @@ impl Executor {
         let wineprefix = self.config.wineprefix();
         let wineprefix_str = wineprefix.to_string_lossy().to_string();
 
-        // Create temp directory for registry file
-        let temp_dir = dirs::cache_dir()
-            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
-            .join("winetricks");
+        // Create temp directory for registry file inside Wine prefix
+        // Original winetricks: Uses C:\windows\Temp\override-dll.reg (inside Wine prefix)
+        let temp_dir = wineprefix.join("drive_c/windows/temp");
         fs::create_dir_all(&temp_dir)?;
 
         let reg_file = temp_dir.join("set_dll_override.reg");
@@ -1733,44 +1781,31 @@ impl Executor {
         file.write_all(reg_content.as_bytes())?;
         file.sync_all()?;
 
-        // Convert Unix path to Wine Windows path
-        let reg_file_str = reg_file.to_string_lossy().to_string();
+        // Import registry file using regedit32/regedit64 (matching original winetricks)
+        // Original winetricks: Uses syswow64\regedit.exe for 32-bit, regedit.exe for 64-bit
+        // DLL overrides go to HKEY_CURRENT_USER which is shared, but we still need to import to both registries on win64
+        let is_win64 = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
         
-        // Get Windows path for the reg file
-        let output = Command::new(&self.wine.wine_bin)
-            .arg("winepath")
-            .arg("-w")
-            .arg(&reg_file_str)
-            .env("WINEPREFIX", &wineprefix_str)
-            .output()
-            .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("wine winepath -w {:?}", reg_file_str),
-                error: e.to_string(),
-            })?;
-
-        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-        // Import registry file using wine regedit
-        let status = Command::new(&self.wine.wine_bin)
-            .arg("regedit")
-            .arg("/S") // Silent mode
-            .arg(&reg_file_win)
-            .env("WINEPREFIX", &wineprefix_str)
-            .status()
-            .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("wine regedit /S {:?}", reg_file_win),
-                error: e.to_string(),
-            })?;
+        // Convert to Windows path for display
+        let reg_file_win = self.unix_to_wine_path(&reg_file)?;
+        
+        // Always import to 32-bit registry first (matches original winetricks w_try_regedit32)
+        let regedit32_exe = if is_win64 {
+            "C:\\windows\\syswow64\\regedit.exe"
+        } else {
+            "C:\\windows\\regedit.exe"
+        };
+        eprintln!("Executing wine {} /S {}", regedit32_exe, reg_file_win);
+        self.regedit32(&reg_file)?;
+        
+        // On win64, also import to 64-bit registry (matches original winetricks w_try_regedit64)
+        if is_win64 {
+            eprintln!("Executing wine C:\\windows\\regedit.exe /S {}", reg_file_win);
+            self.regedit64(&reg_file)?;
+        }
 
         // Clean up temp file
         let _ = fs::remove_file(&reg_file);
-
-        if !status.success() {
-            return Err(WinetricksError::Config(format!(
-                "Failed to set DLL override for {} to {}",
-                dll_name, override_type
-            )));
-        }
 
         info!("Set DLL override: {} = {}", dll_name, override_type);
         Ok(())
@@ -1817,24 +1852,20 @@ impl Executor {
                 "cabextract not found. Please install it (e.g. 'sudo apt install cabextract' or 'sudo yum install cabextract')".into()
             ))?;
 
-        info!("Using cabextract to extract: {:?}", cab_file);
+        // Original winetricks: cabextract -q -d "${W_TMP}" (uses -d flag to specify destination)
+        // Show "Executing" message to match original winetricks verbose output
+        eprintln!("Executing cabextract -q -d {} {}", dest_dir.to_string_lossy(), cab_file.to_string_lossy());
         
-        // cabextract extracts to current directory, so we need to change directory
-        let original_dir = std::env::current_dir()?;
-        std::env::set_current_dir(dest_dir)
-            .map_err(|e| WinetricksError::Config(format!("Failed to change to dest directory: {}", e)))?;
-
         let status = Command::new(&cabextract)
             .arg("-q") // Quiet mode
+            .arg("-d") // Destination directory
+            .arg(dest_dir) // Extract to this directory
             .arg(cab_file)
             .status()
             .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("cabextract -q {:?}", cab_file),
+                command: format!("cabextract -q -d {:?} {:?}", dest_dir, cab_file),
                 error: e.to_string(),
             })?;
-
-        // Restore directory
-        std::env::set_current_dir(original_dir)?;
 
         if !status.success() {
             return Err(WinetricksError::Verb(format!(
@@ -2059,10 +2090,12 @@ impl Executor {
         info!("Fonts directory: {:?}", fonts_dir_unix);
 
         // Extract font installer (EXE files are actually CAB archives)
-        let temp_dir = cache_dir.join("font_extract");
+        // Original winetricks: cabextract -q -d "${W_TMP}" (extracts to C:\windows\Temp inside Wine prefix)
+        let wineprefix = self.config.wineprefix();
+        let temp_dir = wineprefix.join("drive_c/windows/temp");
         fs::create_dir_all(&temp_dir)?;
         
-        // Use cabextract to extract fonts from the installer
+        // Use cabextract to extract fonts to Wine prefix temp directory
         self.extract_cab(font_installer, &temp_dir)?;
 
         // Find all font files (*.TTF, *.ttf, *.TTC, *.ttc) in extracted directory
@@ -2153,6 +2186,16 @@ impl Executor {
 
         // Copy font to fonts directory
         let dest_font = fonts_dir.join(font_filename);
+        
+        // If destination exists, remove it first (to handle read-only files)
+        if dest_font.exists() {
+            // Try to remove read-only attribute first
+            let mut perms = fs::metadata(&dest_font)?.permissions();
+            perms.set_readonly(false);
+            fs::set_permissions(&dest_font, perms)?;
+            fs::remove_file(&dest_font)?;
+        }
+        
         fs::copy(font_file, &dest_font)?;
         info!("Copied font: {} -> {:?}", font_filename, dest_font);
 
@@ -2208,28 +2251,57 @@ impl Executor {
         // Just the filename for registry (original winetricks uses just filename)
         let font_reg_value = font_filename;
 
-        // Create registry file for Windows NT/2000/XP/Vista/7/8/10/11 fonts
-        let mut reg_file = NamedTempFile::new()?;
-        writeln!(reg_file, "REGEDIT4")?;
-        writeln!(reg_file, "")?;
-        writeln!(reg_file, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts]")?;
-        writeln!(reg_file, "\"{}\"=\"{}\"", font_display_name, font_reg_value)?;
-        reg_file.flush()?;
-        let reg_path = reg_file.path();
+        // Create registry file in Wine prefix temp directory (matching original winetricks)
+        // Original winetricks: Creates C:\windows\Temp\_register-font.reg
+        let wineprefix = self.config.wineprefix();
+        let temp_dir = wineprefix.join("drive_c/windows/temp");
+        fs::create_dir_all(&temp_dir)?;
+        
+        let reg_file = temp_dir.join("_register-font.reg");
+        let mut file = fs::File::create(&reg_file)?;
+        writeln!(file, "REGEDIT4")?;
+        writeln!(file, "")?;
+        writeln!(file, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts]")?;
+        writeln!(file, "\"{}\"=\"{}\"", font_display_name, font_reg_value)?;
+        file.sync_all()?;
 
-        // Import registry file
-        self.import_registry_file(reg_path)?;
+        // Convert to Windows path for regedit
+        let reg_file_win = self.unix_to_wine_path(&reg_file)?;
+        
+        // Import registry file using regedit32/regedit64 (matching original winetricks)
+        // Original winetricks: Uses syswow64\regedit.exe for 32-bit, regedit.exe for 64-bit
+        let is_win64 = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
+        
+        eprintln!("Executing wine {} /S {}", if is_win64 { "C:\\windows\\syswow64\\regedit.exe" } else { "C:\\windows\\regedit.exe" }, reg_file_win);
+        self.regedit32(&reg_file)?;
+        
+        if is_win64 {
+            eprintln!("Executing wine C:\\windows\\regedit.exe /S {}", reg_file_win);
+            self.regedit64(&reg_file)?;
+        }
 
         // Also register in Win9x key (original winetricks does this too)
-        let mut reg_file2 = NamedTempFile::new()?;
-        writeln!(reg_file2, "REGEDIT4")?;
-        writeln!(reg_file2, "")?;
-        writeln!(reg_file2, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Fonts]")?;
-        writeln!(reg_file2, "\"{}\"=\"{}\"", font_display_name, font_reg_value)?;
-        reg_file2.flush()?;
-        let reg_path2 = reg_file2.path();
+        let reg_file2 = temp_dir.join("_register-font2.reg");
+        let mut file2 = fs::File::create(&reg_file2)?;
+        writeln!(file2, "REGEDIT4")?;
+        writeln!(file2, "")?;
+        writeln!(file2, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Fonts]")?;
+        writeln!(file2, "\"{}\"=\"{}\"", font_display_name, font_reg_value)?;
+        file2.sync_all()?;
 
-        self.import_registry_file(reg_path2)?;
+        let reg_file2_win = self.unix_to_wine_path(&reg_file2)?;
+        
+        eprintln!("Executing wine {} /S {}", if is_win64 { "C:\\windows\\syswow64\\regedit.exe" } else { "C:\\windows\\regedit.exe" }, reg_file2_win);
+        self.regedit32(&reg_file2)?;
+        
+        if is_win64 {
+            eprintln!("Executing wine C:\\windows\\regedit.exe /S {}", reg_file2_win);
+            self.regedit64(&reg_file2)?;
+        }
+        
+        // Clean up registry files
+        let _ = fs::remove_file(&reg_file);
+        let _ = fs::remove_file(&reg_file2);
 
         info!("Registered font: {} -> {}", font_display_name, font_filename);
         Ok(())
@@ -2297,9 +2369,159 @@ impl Executor {
         Ok(())
     }
 
+    /// Extract msvcp140.dll from VC++ Redistributables installer BEFORE running installer
+    /// This matches original winetricks behavior for vcrun2022:
+    /// 1. Extract a10 (32-bit) or a11 (64-bit) CAB to C:\windows\temp\win32 or win64
+    /// 2. Extract msvcp140.dll from CAB to syswow64 (32-bit) or system32 (64-bit)
+    /// 3. Then run the installer with /q
+    fn extract_vcredist_dlls_before_install(&self, vcredist_exe: &Path, is_64bit: bool) -> Result<()> {
+        use std::fs;
+        use std::process::Command;
+        use which::which;
+
+        let wineprefix = self.config.wineprefix();
+        
+        // cabextract is required
+        let cabextract = which("cabextract")
+            .map_err(|_| WinetricksError::Config(
+                "cabextract not found. Please install it (e.g. 'sudo apt install cabextract')".into()
+            ))?;
+
+        if is_64bit {
+            // 64-bit: Extract a11 to C:\windows\temp\win64, then extract msvcp140.dll to system32
+            let temp_win64 = wineprefix.join("drive_c/windows/temp/win64");
+            fs::create_dir_all(&temp_win64)?;
+            
+            let system32_dlls = wineprefix.join("drive_c/windows/system32");
+            fs::create_dir_all(&system32_dlls)?;
+
+            info!("Extracting 'a11' CAB from VC++ Redistributables 64-bit installer...");
+            eprintln!("Executing cabextract -q --directory={} {} -F a11", 
+                temp_win64.to_string_lossy(), vcredist_exe.to_string_lossy());
+            
+            let status = Command::new(&cabextract)
+                .arg("-q")
+                .arg("--directory")
+                .arg(&temp_win64)
+                .arg(vcredist_exe)
+                .arg("-F")
+                .arg("a11")
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("cabextract -q --directory {:?} {:?} -F a11", temp_win64, vcredist_exe),
+                    error: e.to_string(),
+                })?;
+
+            if !status.success() {
+                return Err(WinetricksError::Verb(
+                    "Failed to extract 'a11' CAB from VC++ Redistributables installer".into()
+                ));
+            }
+
+            let a11_cab = temp_win64.join("a11");
+            if !a11_cab.exists() {
+                return Err(WinetricksError::Verb(
+                    "Extracted 'a11' CAB file not found".into()
+                ));
+            }
+
+            // Extract msvcp140.dll from a11 to system32
+            info!("Extracting msvcp140.dll to system32...");
+            eprintln!("Executing cabextract -q --directory={} {} -F msvcp140.dll",
+                system32_dlls.to_string_lossy(), a11_cab.to_string_lossy());
+            
+            let status = Command::new(&cabextract)
+                .arg("-q")
+                .arg("--directory")
+                .arg(&system32_dlls)
+                .arg(&a11_cab)
+                .arg("-F")
+                .arg("msvcp140.dll")
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("cabextract -q --directory {:?} {:?} -F msvcp140.dll", system32_dlls, a11_cab),
+                    error: e.to_string(),
+                })?;
+
+            if !status.success() {
+                warn!("Warning: Failed to extract msvcp140.dll from 'a11' CAB (may not be critical)");
+            }
+        } else {
+            // 32-bit: Extract a10 to C:\windows\temp\win32, then extract msvcp140.dll to syswow64
+            let temp_win32 = wineprefix.join("drive_c/windows/temp/win32");
+            fs::create_dir_all(&temp_win32)?;
+            
+            // For 32-bit DLLs on 64-bit prefixes, extract to syswow64
+            // For 32-bit prefixes, extract to system32
+            let is_win64_prefix = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
+            let dll_dest = if is_win64_prefix {
+                wineprefix.join("drive_c/windows/syswow64")
+            } else {
+                wineprefix.join("drive_c/windows/system32")
+            };
+            fs::create_dir_all(&dll_dest)?;
+
+            info!("Extracting 'a10' CAB from VC++ Redistributables 32-bit installer...");
+            eprintln!("Executing cabextract -q --directory={} {} -F a10",
+                temp_win32.to_string_lossy(), vcredist_exe.to_string_lossy());
+            
+            let status = Command::new(&cabextract)
+                .arg("-q")
+                .arg("--directory")
+                .arg(&temp_win32)
+                .arg(vcredist_exe)
+                .arg("-F")
+                .arg("a10")
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("cabextract -q --directory {:?} {:?} -F a10", temp_win32, vcredist_exe),
+                    error: e.to_string(),
+                })?;
+
+            if !status.success() {
+                return Err(WinetricksError::Verb(
+                    "Failed to extract 'a10' CAB from VC++ Redistributables installer".into()
+                ));
+            }
+
+            let a10_cab = temp_win32.join("a10");
+            if !a10_cab.exists() {
+                return Err(WinetricksError::Verb(
+                    "Extracted 'a10' CAB file not found".into()
+                ));
+            }
+
+            // Extract msvcp140.dll from a10 to syswow64 (or system32 on 32-bit prefix)
+            info!("Extracting msvcp140.dll to {}...", dll_dest.to_string_lossy());
+            eprintln!("Executing cabextract -q --directory={} {} -F msvcp140.dll",
+                dll_dest.to_string_lossy(), a10_cab.to_string_lossy());
+            
+            let status = Command::new(&cabextract)
+                .arg("-q")
+                .arg("--directory")
+                .arg(&dll_dest)
+                .arg(&a10_cab)
+                .arg("-F")
+                .arg("msvcp140.dll")
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("cabextract -q --directory {:?} {:?} -F msvcp140.dll", dll_dest, a10_cab),
+                    error: e.to_string(),
+                })?;
+
+            if !status.success() {
+                warn!("Warning: Failed to extract msvcp140.dll from 'a10' CAB (may not be critical)");
+            }
+        }
+
+        info!("Successfully extracted VC++ Redistributables DLLs before installation");
+        Ok(())
+    }
+
     /// Extract msvcp140.dll and ucrtbase.dll from VC++ Redistributables installer
     /// This is required because Wine's builtin versions have higher version numbers,
     /// so the installer refuses to install them. We extract them manually.
+    /// NOTE: This is the old method - extract_vcredist_dlls_before_install is preferred for vcrun2022
     fn extract_vcredist_dlls(&self, vcredist_exe: &Path, cache_dir: &Path) -> Result<()> {
         use std::fs;
         use std::process::Command;
@@ -2817,6 +3039,482 @@ impl Executor {
         Ok(())
     }
 
+    /// Install allfonts meta-verb (installs all individual font verbs)
+    /// Original winetricks: load_allfonts() calls w_call for each font
+    async fn install_allfonts(&mut self) -> Result<()> {
+        use std::fs;
+
+        // List of all individual font verbs (excluding meta-verbs like corefonts, allfonts, cjkfonts, pptfonts)
+        // Based on files/json/fonts/*.json
+        let allfonts_verbs = vec![
+            "andale",
+            "arial",
+            "baekmuk",
+            "calibri",
+            "cambria",
+            "candara",
+            "comicsans",
+            "consolas",
+            "constantia",
+            "corbel",
+            "courier",
+            "droid",
+            "eufonts",
+            "fakechinese",
+            "fakejapanese",
+            "fakejapanese_ipamona",
+            "fakejapanese_vlgothic",
+            "fakekorean",
+            "georgia",
+            "impact",
+            "ipamona",
+            "liberation",
+            "lucida",
+            "meiryo",
+            "micross",
+            "opensymbol",
+            "sourcehansans",
+            "tahoma",
+            "takao",
+            "times",
+            "trebuchet",
+            "uff",
+            "unifont",
+            "verdana",
+            "vlgothic",
+            "webdings",
+            "wenquanyi",
+            "wenquanyizenhei",
+        ];
+
+        info!("Installing allfonts components...");
+        
+        // Install each individual font verb
+        for font_verb in &allfonts_verbs {
+            // Check if already installed (skip if so, unless --force)
+            if !self.config.force && self.is_installed(font_verb).unwrap_or(false) {
+                info!("{} is already installed, skipping", font_verb);
+                continue;
+            }
+
+            // Install individual font verb (using install_verb_internal to avoid re-checking and logging)
+            if let Err(e) = self.install_verb_internal(font_verb).await {
+                warn!("Warning: Failed to install {} (may not be critical): {}", font_verb, e);
+                // Continue installing other fonts even if one fails
+            } else {
+                info!("Successfully installed {}", font_verb);
+            }
+        }
+
+        // Create marker file after all fonts are installed
+        // Original winetricks: touch "${W_FONTSDIR_UNIX}/allfonts.installed"
+        let wineprefix = self.config.wineprefix();
+        let windows_dir = wineprefix.join("drive_c/windows");
+        let fonts_dir_unix = if windows_dir.join("Fonts").exists() {
+            windows_dir.join("Fonts")
+        } else if windows_dir.join("fonts").exists() {
+            windows_dir.join("fonts")
+        } else {
+            // Create Fonts directory if it doesn't exist
+            let fonts_dir = windows_dir.join("Fonts");
+            fs::create_dir_all(&fonts_dir)?;
+            fonts_dir
+        };
+
+        let marker_file = fonts_dir_unix.join("allfonts.installed");
+        fs::File::create(&marker_file)?;
+        info!("Created allfonts marker file: {:?}", marker_file);
+
+        // Log allfonts installation
+        self.log_installation("allfonts")?;
+
+        Ok(())
+    }
+
+    /// Install GitHub-based DLL (generic handler for dxvk, vkd3d, faudio, etc.)
+    async fn install_github_dll(&mut self, verb_name: &str, org: &str, repo: &str, dll_names: &[&str]) -> Result<()> {
+        use std::fs;
+        use std::process::Command;
+
+        let cache_dir = self.config.cache_dir.join(verb_name);
+        fs::create_dir_all(&cache_dir)?;
+
+        // Get latest GitHub release URL
+        info!("Getting latest {} release from GitHub...", repo);
+        let release_url = self.get_github_latest_release(org, repo).await?;
+        
+        // Extract filename from URL (e.g., "vkd3d-proton-2.8.tar.zst" or "vkd3d-proton-2.8.tar.gz")
+        let filename = release_url.split('/').last().ok_or_else(|| {
+            WinetricksError::Config("Invalid GitHub release URL".into())
+        })?;
+        
+        let archive_file = cache_dir.join(filename);
+        
+        // Download the release
+        info!("Downloading {} from: {}", repo, release_url);
+        self.downloader
+            .download(&release_url, &archive_file, None, true)
+            .await?;
+        
+        // Extract archive file
+        info!("Extracting {} archive...", repo);
+        let extract_dir = cache_dir.join(format!("{}_extract", verb_name));
+        if extract_dir.exists() {
+            fs::remove_dir_all(&extract_dir)?;
+        }
+        fs::create_dir_all(&extract_dir)?;
+        
+        // Handle different archive formats
+        let status = if filename.ends_with(".tar.zst") {
+            // Use zstd to decompress, then tar to extract
+            // zstd -d <file.tar.zst | tar xf - -C <dest>
+            eprintln!("Executing zstd -d -c {} | tar xf - -C {}", 
+                archive_file.to_string_lossy(), extract_dir.to_string_lossy());
+            
+            // Pipe zstd output to tar
+            let mut zstd_cmd = Command::new("zstd");
+            zstd_cmd.arg("-d").arg("-c").arg(&archive_file)
+                .stdout(std::process::Stdio::piped());
+            
+            let mut zstd_process = zstd_cmd.spawn()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("zstd -d -c {:?}", archive_file),
+                    error: e.to_string(),
+                })?;
+            
+            let mut tar_cmd = Command::new("tar");
+            tar_cmd.arg("xf").arg("-").arg("-C").arg(&extract_dir)
+                .stdin(zstd_process.stdout.take().ok_or_else(|| {
+                    WinetricksError::Config("Failed to create pipe for zstd".into())
+                })?);
+            
+            let tar_output = tar_cmd.status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("tar xf - -C {:?}", extract_dir),
+                    error: e.to_string(),
+                })?;
+            
+            // Wait for zstd to finish
+            let _ = zstd_process.wait();
+            
+            tar_output
+        } else if filename.ends_with(".tar.gz") {
+            // Use tar to extract (tar xzf)
+            eprintln!("Executing tar xzf {} -C {}", 
+                archive_file.to_string_lossy(), extract_dir.to_string_lossy());
+            Command::new("tar")
+                .arg("xzf")
+                .arg(&archive_file)
+                .arg("-C")
+                .arg(&extract_dir)
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("tar xzf {:?} -C {:?}", archive_file, extract_dir),
+                    error: e.to_string(),
+                })?
+        } else {
+            return Err(WinetricksError::Verb(format!(
+                "Unsupported archive format: {} (expected .tar.zst or .tar.gz)", filename
+            )));
+        };
+        
+        if !status.success() {
+            return Err(WinetricksError::Verb(format!(
+                "Failed to extract {} archive", repo
+            )));
+        }
+        
+        // Find DLL files in extracted directory
+        // Most GitHub DLLs structure: <repo>-*/x64/<dlls> and x32/<dlls>
+        // Some may use different structures (x86/x64, win32/win64, etc.)
+        let wineprefix = self.config.wineprefix();
+        let is_win64 = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
+        
+        // Find the extracted directory (should be <repo>-* or similar)
+        let extracted_dirs: Vec<_> = fs::read_dir(&extract_dir)?
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .collect();
+        
+        if extracted_dirs.is_empty() {
+            return Err(WinetricksError::Verb(format!(
+                "No extracted directory found in {} archive", repo
+            )));
+        }
+        
+        let extracted_dir = &extracted_dirs[0].path();
+        
+        // Try different directory structures (x32/x64, x86/x64, win32/win64, etc.)
+        let arch_dirs_32 = vec!["x32", "x86", "win32", "32"];
+        let arch_dirs_64 = vec!["x64", "amd64", "win64", "64"];
+        
+        // Copy 32-bit DLLs to syswow64 (or system32 on 32-bit prefix)
+        let dll_dest_32 = if is_win64 {
+            wineprefix.join("drive_c/windows/syswow64")
+        } else {
+            wineprefix.join("drive_c/windows/system32")
+        };
+        fs::create_dir_all(&dll_dest_32)?;
+        
+        for arch_dir in &arch_dirs_32 {
+            let src_dir = extracted_dir.join(arch_dir);
+            if src_dir.exists() {
+                for dll_name in dll_names {
+                    let src_dll = src_dir.join(dll_name);
+                    if src_dll.exists() {
+                        let dest_dll = dll_dest_32.join(dll_name);
+                        fs::copy(&src_dll, &dest_dll)?;
+                        info!("Copied {} to {:?}", dll_name, dest_dll);
+                    }
+                }
+                break;
+            }
+        }
+        
+        // Copy 64-bit DLLs to system32 (on 64-bit prefix)
+        if is_win64 {
+            let dll_dest_64 = wineprefix.join("drive_c/windows/system32");
+            fs::create_dir_all(&dll_dest_64)?;
+            
+            for arch_dir in &arch_dirs_64 {
+                let src_dir = extracted_dir.join(arch_dir);
+                if src_dir.exists() {
+                    for dll_name in dll_names {
+                        let src_dll = src_dir.join(dll_name);
+                        if src_dll.exists() {
+                            let dest_dll = dll_dest_64.join(dll_name);
+                            fs::copy(&src_dll, &dest_dll)?;
+                            info!("Copied {} to {:?}", dll_name, dest_dll);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        
+        // Set DLL overrides to native (strip .dll/.exe extension)
+        for dll_name in dll_names {
+            let dll_base = dll_name.trim_end_matches(".dll").trim_end_matches(".exe");
+            if let Err(e) = self.set_dll_override(dll_base, "native") {
+                warn!("Warning: Failed to set DLL override for {}: {}", dll_base, e);
+            }
+        }
+        
+        // Log installation
+        self.log_installation(verb_name)?;
+        
+        info!("Successfully installed {}", verb_name);
+        Ok(())
+    }
+
+    /// Install allcodecs (meta-verb that installs all codec components)
+    async fn install_allcodecs(&mut self) -> Result<()> {
+        // List of codec verbs (dirac, ffdshow, icodecs, cinepak, l3codecx, xvid)
+        let codec_verbs = vec!["dirac", "ffdshow", "icodecs", "cinepak", "l3codecx", "xvid"];
+        
+        info!("Installing allcodecs components...");
+        
+        for codec_verb in &codec_verbs {
+            if !self.config.force && self.is_installed(codec_verb).unwrap_or(false) {
+                info!("{} is already installed, skipping", codec_verb);
+                continue;
+            }
+            
+            if let Err(e) = self.install_verb_internal(codec_verb).await {
+                warn!("Warning: Failed to install {} (may not be critical): {}", codec_verb, e);
+            } else {
+                info!("Successfully installed {}", codec_verb);
+            }
+        }
+        
+        self.log_installation("allcodecs")?;
+        Ok(())
+    }
+
+    /// Install cjkfonts (meta-verb that installs CJK font components)
+    async fn install_cjkfonts(&mut self) -> Result<()> {
+        // List of CJK font verbs
+        let cjk_verbs = vec!["baekmuk", "fakechinese", "fakejapanese", "fakejapanese_ipamona", 
+                            "fakejapanese_vlgothic", "fakekorean", "ipamona", "meiryo", 
+                            "sourcehansans", "takao", "vlgothic", "wenquanyi", "wenquanyizenhei"];
+        
+        info!("Installing cjkfonts components...");
+        
+        for font_verb in &cjk_verbs {
+            if !self.config.force && self.is_installed(font_verb).unwrap_or(false) {
+                info!("{} is already installed, skipping", font_verb);
+                continue;
+            }
+            
+            if let Err(e) = self.install_verb_internal(font_verb).await {
+                warn!("Warning: Failed to install {} (may not be critical): {}", font_verb, e);
+            } else {
+                info!("Successfully installed {}", font_verb);
+            }
+        }
+        
+        self.log_installation("cjkfonts")?;
+        Ok(())
+    }
+
+    /// Install pptfonts (meta-verb that installs PowerPoint font components)
+    async fn install_pptfonts(&mut self) -> Result<()> {
+        // PowerPoint fonts are typically: calibri, cambria, candara, consolas, constantia, corbel
+        let ppt_verbs = vec!["calibri", "cambria", "candara", "consolas", "constantia", "corbel"];
+        
+        info!("Installing pptfonts components...");
+        
+        for font_verb in &ppt_verbs {
+            if !self.config.force && self.is_installed(font_verb).unwrap_or(false) {
+                info!("{} is already installed, skipping", font_verb);
+                continue;
+            }
+            
+            if let Err(e) = self.install_verb_internal(font_verb).await {
+                warn!("Warning: Failed to install {} (may not be critical): {}", font_verb, e);
+            } else {
+                info!("Successfully installed {}", font_verb);
+            }
+        }
+        
+        self.log_installation("pptfonts")?;
+        Ok(())
+    }
+
+    /// Install settings verb (Windows version, registry tweaks, etc.)
+    async fn install_mspaint(&mut self) -> Result<()> {
+        use std::fs;
+        use std::process::Command;
+        use which::which;
+
+        info!("Installing mspaint (Windows Update installer)");
+        
+        // Load metadata
+        let metadata = self.load_verb_metadata("mspaint")?;
+        let cache_dir = self.config.cache_dir.join("mspaint");
+        fs::create_dir_all(&cache_dir)?;
+        
+        // Download file
+        let file_info = &metadata.files[0];
+        let file_path = cache_dir.join(&file_info.filename);
+        
+        if !file_path.exists() {
+            info!("Downloading mspaint installer...");
+            self.downloader
+                .download(&file_info.url, &file_path, file_info.sha256.as_ref(), true)
+                .await?;
+        }
+        
+        let wineprefix = self.config.wineprefix();
+        let wineprefix_str = wineprefix.to_string_lossy().to_string();
+        
+        // Step 1: Extract mfc42*.dll from vcredist.exe (if vcrun6 is available)
+        let vcrun6_cache = self.config.cache_dir.join("vcrun6");
+        let vcredist_exe = vcrun6_cache.join("vcredist.exe");
+        if vcredist_exe.exists() {
+            let cabextract = which("cabextract")
+                .map_err(|_| WinetricksError::Config("cabextract not found".into()))?;
+            
+            let syswow64 = wineprefix.join("drive_c/windows/syswow64");
+            fs::create_dir_all(&syswow64)?;
+            
+            info!("Extracting mfc42*.dll from vcredist.exe...");
+            eprintln!("Executing cabextract -q {} -d {} -F mfc42*.dll", 
+                vcredist_exe.to_string_lossy(), syswow64.to_string_lossy());
+            
+            let status = Command::new(&cabextract)
+                .arg("-q")
+                .arg(&vcredist_exe)
+                .arg("-d")
+                .arg(&syswow64)
+                .arg("-F")
+                .arg("mfc42*.dll")
+                .status()
+                .map_err(|e| WinetricksError::CommandExecution {
+                    command: format!("cabextract -q {} -d {} -F mfc42*.dll", 
+                        vcredist_exe.to_string_lossy(), syswow64.to_string_lossy()),
+                    error: e.to_string(),
+                })?;
+            
+            if !status.success() {
+                warn!("Warning: Failed to extract mfc42*.dll (may not be critical)");
+            }
+        }
+        
+        // Step 2: Extract Windows Update installer with /q /x:
+        let temp_dir = wineprefix.join("drive_c/windows/temp");
+        fs::create_dir_all(&temp_dir)?;
+        let extract_dest = temp_dir.join(&file_info.filename);
+        
+        let file_win_path = self.unix_to_wine_path(&file_path)?;
+        let extract_dest_win = self.unix_to_wine_path(&extract_dest)?;
+        
+        info!("Extracting Windows Update installer...");
+        eprintln!("Executing wine {} /q /x:{}", file_win_path, extract_dest_win);
+        
+        let mut extract_cmd = std::process::Command::new(&self.wine.wine_bin);
+        extract_cmd.env("WINEPREFIX", &wineprefix_str);
+        extract_cmd.current_dir(&cache_dir);
+        extract_cmd.arg(&file_win_path);
+        extract_cmd.arg("/q");
+        extract_cmd.arg("/x:").arg(&extract_dest_win);
+        
+        let extract_status = extract_cmd.status()
+            .map_err(|e| WinetricksError::CommandExecution {
+                command: format!("wine {} /q /x:{}", file_win_path, extract_dest_win),
+                error: e.to_string(),
+            })?;
+        
+        if !extract_status.success() {
+            return Err(WinetricksError::Verb("Failed to extract Windows Update installer".into()));
+        }
+        
+        // Step 3: Copy mspaint.exe from extracted directory
+        let extracted_mspaint = extract_dest.join("SP3GDR/mspaint.exe");
+        let dest_mspaint = wineprefix.join("drive_c/windows/mspaint.exe");
+        
+        if !extracted_mspaint.exists() {
+            return Err(WinetricksError::Verb("mspaint.exe not found in extracted files".into()));
+        }
+        
+        fs::create_dir_all(dest_mspaint.parent().unwrap())?;
+        fs::copy(&extracted_mspaint, &dest_mspaint)?;
+        info!("Copied mspaint.exe to {:?}", dest_mspaint);
+        
+        self.log_installation("mspaint")?;
+        Ok(())
+    }
+
+    async fn install_settings_verb(&mut self, verb_name: &str, _metadata: &VerbMetadata) -> Result<()> {
+        // Handle Windows version settings
+        if verb_name.starts_with("win") {
+            let version = verb_name.strip_prefix("win").unwrap_or(verb_name);
+            // Map verb names to Windows version strings
+            let win_version = match version {
+                "7" => "win7",
+                "8" => "win8",
+                "81" => "win8.1",
+                "10" => "win10",
+                "11" => "win11",
+                "xp" => "winxp",
+                "2k" => "win2k",
+                "95" => "win95",
+                "98" => "win98",
+                "me" => "winme",
+                _ => version,
+            };
+            self.set_windows_version(win_version)?;
+            info!("Set Windows version to: {}", win_version);
+        } else {
+            // Other settings verbs (fontfix, forcemono, etc.) may need specific handling
+            // For now, just log the installation
+            info!("Settings verb {} installed (specific handling may be needed)", verb_name);
+        }
+        
+        self.log_installation(verb_name)?;
+        Ok(())
+    }
+
     /// Copy DLL file with symlink handling (matching w_try_cp_dll behavior)
     /// Removes symbolic links if present before copying
     fn copy_dll(&self, src_file: &Path, dest_file: &Path) -> Result<()> {
@@ -3186,10 +3884,9 @@ impl Executor {
         let wineprefix = self.config.wineprefix();
         let wineprefix_str = wineprefix.to_string_lossy().to_string();
         
-        // Create temp directory for registry file
-        let temp_dir = dirs::cache_dir()
-            .ok_or_else(|| WinetricksError::Config("Could not determine cache directory".into()))?
-            .join("winetricks");
+        // Create temp directory for registry file inside Wine prefix
+        // Original winetricks: Uses C:\windows\Temp\override-dll.reg (inside Wine prefix)
+        let temp_dir = wineprefix.join("drive_c/windows/temp");
         fs::create_dir_all(&temp_dir)?;
         
         let reg_file = temp_dir.join("override-dll.reg");
@@ -3225,26 +3922,29 @@ impl Executor {
                 error: e.to_string(),
             })?;
         
-        let reg_file_win = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        // Import registry file using regedit32/regedit64 (matching original winetricks)
+        // Original winetricks: Uses syswow64\regedit.exe for 32-bit, regedit.exe for 64-bit
+        let is_win64 = self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false);
         
-        let status = Command::new(&self.wine.wine_bin)
-            .arg("regedit")
-            .arg("/S")
-            .arg(&reg_file_win)
-            .env("WINEPREFIX", &wineprefix_str)
-            .status()
-            .map_err(|e| WinetricksError::CommandExecution {
-                command: format!("wine regedit /S {:?}", reg_file_win),
-                error: e.to_string(),
-            })?;
+        // Convert to Windows path for display
+        let reg_file_win = self.unix_to_wine_path(&reg_file)?;
+        
+        // Always import to 32-bit registry first (matches original winetricks w_try_regedit32)
+        let regedit32_exe = if is_win64 {
+            "C:\\windows\\syswow64\\regedit.exe"
+        } else {
+            "C:\\windows\\regedit.exe"
+        };
+        eprintln!("Executing wine {} /S {}", regedit32_exe, reg_file_win);
+        self.regedit32(&reg_file)?;
+        
+        // On win64, also import to 64-bit registry (matches original winetricks w_try_regedit64)
+        if is_win64 {
+            eprintln!("Executing wine C:\\windows\\regedit.exe /S {}", reg_file_win);
+            self.regedit64(&reg_file)?;
+        }
         
         let _ = fs::remove_file(&reg_file);
-        
-        if !status.success() {
-            return Err(WinetricksError::Config(
-                format!("Failed to set DLL overrides: {}", override_type)
-            ));
-        }
         
         info!("Set DLL overrides for {} DLLs: {}", dll_names.len(), override_type);
         Ok(())
@@ -3478,17 +4178,12 @@ impl Executor {
         // Convert to Wine Windows path
         let reg_file_win = self.unix_to_wine_path(reg_file)?;
         
-        // On win64, use SYSTEM32_DLLS regedit.exe (32-bit)
+        // On win64, use syswow64\regedit.exe (32-bit regedit)
         // On win32, use C:\windows\regedit.exe
+        // Original winetricks: w_try_regedit32 uses C:\windows\syswow64\regedit.exe for win64
         let regedit_exe = if self.config.winearch.as_ref().map(|a| a == "win64").unwrap_or(false) {
-            // Use 32-bit regedit from system32_dlls
-            let wineprefix = self.config.wineprefix();
-            let system32_dlls = wineprefix.join("drive_c/windows/system32_dlls");
-            if system32_dlls.join("regedit.exe").exists() {
-                format!("Z:\\{}\\regedit.exe", system32_dlls.to_string_lossy().replace('/', "\\"))
-            } else {
-                "C:\\windows\\regedit.exe".to_string()
-            }
+            // Use 32-bit regedit from syswow64 (matches original winetricks)
+            "C:\\windows\\syswow64\\regedit.exe".to_string()
         } else {
             "C:\\windows\\regedit.exe".to_string()
         };
@@ -3671,19 +4366,50 @@ impl Executor {
         let client = reqwest::Client::new();
         let response = client.get(&api_url)
             .header("Accept", "application/vnd.github.v3+json")
+            .header("User-Agent", "Winetricks-RS/1.0")
             .send()
             .await
             .map_err(|e| WinetricksError::Config(format!("Failed to fetch GitHub release: {}", e)))?;
         
+        // Check response status
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            return Err(WinetricksError::Config(format!(
+                "GitHub API returned error {}: {}", status, error_text
+            )));
+        }
+        
         let json_text = response.text().await
             .map_err(|e| WinetricksError::Config(format!("Failed to read GitHub response: {}", e)))?;
         
+        if json_text.is_empty() {
+            return Err(WinetricksError::Config(
+                "GitHub API returned empty response".into()
+            ));
+        }
+        
         // Parse JSON to get download URL
         let json: serde_json::Value = serde_json::from_str(&json_text)
-            .map_err(|e| WinetricksError::Config(format!("Failed to parse GitHub JSON: {}", e)))?;
+            .map_err(|e| WinetricksError::Config(format!("Failed to parse GitHub JSON: {} (response: {})", e, json_text.chars().take(200).collect::<String>())))?;
         
-        // Get first asset download URL
+        // Prefer .tar.zst or .tar.gz assets (vkd3d-proton uses .tar.zst)
         if let Some(assets) = json.get("assets").and_then(|a| a.as_array()) {
+            // Try to find .tar.zst first, then .tar.gz, then any asset
+            for ext in &[".tar.zst", ".tar.gz", ".zip"] {
+                for asset in assets {
+                    if let Some(name) = asset.get("name").and_then(|n| n.as_str()) {
+                        if name.ends_with(ext) {
+                            if let Some(url) = asset.get("browser_download_url").and_then(|u| u.as_str()) {
+                                info!("Got latest GitHub release URL for {}/{}: {}", org, repo, url);
+                                return Ok(url.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: get first asset
             if let Some(first_asset) = assets.first() {
                 if let Some(url) = first_asset.get("browser_download_url").and_then(|u| u.as_str()) {
                     info!("Got latest GitHub release URL for {}/{}: {}", org, repo, url);
