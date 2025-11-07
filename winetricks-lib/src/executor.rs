@@ -3389,8 +3389,12 @@ impl Executor {
 
         info!("Installing mspaint (Windows Update installer)");
         
-        // Load metadata
-        let metadata = self.load_verb_metadata("mspaint")?;
+        // Load metadata from registry
+        let metadata = self
+            .registry
+            .get("mspaint")
+            .ok_or_else(|| WinetricksError::VerbNotFound("mspaint".to_string()))?
+            .clone();
         let cache_dir = self.config.cache_dir.join("mspaint");
         fs::create_dir_all(&cache_dir)?;
         
@@ -3399,10 +3403,14 @@ impl Executor {
         let file_path = cache_dir.join(&file_info.filename);
         
         if !file_path.exists() {
-            info!("Downloading mspaint installer...");
-            self.downloader
-                .download(&file_info.url, &file_path, file_info.sha256.as_ref(), true)
-                .await?;
+            if let Some(ref url) = file_info.url {
+                info!("Downloading mspaint installer...");
+                self.downloader
+                    .download(url, &file_path, file_info.sha256.as_deref(), true)
+                    .await?;
+            } else {
+                return Err(WinetricksError::Verb("mspaint file has no URL".into()));
+            }
         }
         
         let wineprefix = self.config.wineprefix();
